@@ -1,4 +1,5 @@
 import "./App.css";
+import Footer from "./components/general/footer/Footer";
 import Navbar from "./components/general/navbar/Navbar";
 import Block from "./components/landing/block/Block";
 
@@ -38,7 +39,7 @@ function App() {
         />
       </main>
       {/* FOOTER */}
-      {/* <Footer /> */}
+      <Footer />
     </>
   );
 }
