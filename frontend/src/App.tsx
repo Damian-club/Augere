@@ -2,6 +2,7 @@ import styles from "./App.module.css";
 import Footer from "./components/general/footer/Footer";
 import Navbar from "./components/general/navbar/Navbar";
 import Block from "./components/landing/block/Block";
+import Form from "./components/auth/Form";
 
 function App() {
   return (
@@ -37,6 +38,9 @@ function App() {
           src="https://placehold.co/1200x600/png"
           reverse={true}
         />
+
+        <Form isLogin={true}/>
+        <Form isLogin={false}/>
       </main>
       {/* FOOTER */}
       <Footer />
