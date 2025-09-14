@@ -49,7 +49,6 @@ body {
     orange
   );
   background-size: 200%;
-  -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   animation: gradient-text-animation 3s alternate infinite;

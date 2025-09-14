@@ -1,34 +1,34 @@
 import logo from "../../../assets/logo.svg";
-import "./Navbar.css";
+import styles from "./Navbar.module.css";
 
 const Navbar = () => {
   return (
-    <nav className="navbar">
+    <nav className={styles["navbar"]}>
       {/* Logo y Nombre */}
-      <div className="navbar__brand">
-        <img src={logo} alt="Logo" className="navbar__logo" />
-        <span className="navbar__title">Augere</span>
+      <div className={styles["navbar__brand"]}>
+        <img src={logo} alt="Logo" className={styles["navbar__logo"]} />
+        <span className={styles["navbar__title"]}>Augere</span>
       </div>
       {/* Links Navegación */}
-      <ul className="navbar__links">
-        <li className="navbar__item">
-          <a href="#" className="navbar__link">
+      <ul className={styles["navbar__links"]}>
+        <li className={styles["navbar__item"]}>
+          <a href="#" className={styles["navbar__link"]}>
             Contáctanos
           </a>
         </li>
-        <li className="navbar__item">
-          <a href="#" className="navbar__link">
+        <li className={styles["navbar__item"]}>
+          <a href="#" className={styles["navbar__link"]}>
             Características
           </a>
         </li>
-        <li className="navbar__item">
-          <a href="#" className="navbar__link">
+        <li className={styles["navbar__item"]}>
+          <a href="#" className={styles["navbar__link"]}>
             Sobre nosotros
           </a>
         </li>
       </ul>
       {/* Boton Login */}
-      <button className="navbar__button">Ingresar</button>
+      <button className={styles["navbar__button"]}>Ingresar</button>
     </nav>
   );
 };
