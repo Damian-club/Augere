@@ -1,4 +1,4 @@
-import "./App.css";
+import styles from "./App.module.css";
 import Footer from "./components/general/footer/Footer";
 import Navbar from "./components/general/navbar/Navbar";
 import Block from "./components/landing/block/Block";
@@ -11,17 +11,17 @@ function App() {
         <Navbar />
       </header>
       {/* MAIN */}
-      <main className="main">
+      <main className={styles.main}>
         {/* PRINCIPAL */}
-        <section className="main__entry">
-          <h1 className="main__entry-title gradient-background">
+        <section className={styles["main__entry"]}>
+          <h1 className={`${styles["main__entry-title"]} ${styles["gradient-background"]}`}>
             Tutor virtual con IA
           </h1>
 
           <img
             src="https://placehold.co/1200x600/png"
             alt="Imagen Principal Augere"
-            className="main__entry-imagen"
+            className={styles["main__entry-imagen"]}
           />
         </section>
         {/* BLOCKS */}

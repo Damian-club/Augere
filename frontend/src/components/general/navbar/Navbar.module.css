@@ -65,7 +65,7 @@
   font-weight: 500;
   cursor: pointer;
   box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.15);
-  transition: background 0.2s ease-in-out;
+  transition: background-color 0.2s ease-in-out;
 }
 .navbar__button:hover {
   background-color: #e0e0e0;

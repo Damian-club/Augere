@@ -1,4 +1,4 @@
-import "./Block.css";
+import styles from "./Block.module.css";
 
 type BlockInput = {
   title: string;
@@ -14,16 +14,16 @@ export default function Block({
   reverse,
 }: BlockInput) {
   return (
-    <article className="block">
+    <article className={styles.block}>
       <img
         src={src}
         alt="Block Imagen 1"
-        className="img"
+        className={styles.img}
         style={reverse ? { order: 0 } : { order: 2 }}
       />
-      <div className="info-container">
-        <h2 className="title">{title}</h2>
-        <p className="description">{description}</p>
+      <div className={styles["info-container"]}>
+        <h2 className={styles.title}>{title}</h2>
+        <p className={styles.description}>{description}</p>
       </div>
     </article>
   );
