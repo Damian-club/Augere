@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import logo from "../../../assets/logo.svg";
 import styles from "./Navbar.module.css";
 
@@ -12,8 +13,9 @@ const Navbar = () => {
       {/* Links Navegación */}
       <ul className={styles["navbar__links"]}>
         <li className={styles["navbar__item"]}>
-          <a href="#" className={styles["navbar__link"]}>
-            Contáctanos
+          <a className={styles["navbar__link"]}>
+            {/* Contáctanos */}
+            Inicio
           </a>
         </li>
         <li className={styles["navbar__item"]}>
