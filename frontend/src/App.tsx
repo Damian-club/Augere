@@ -1,25 +1,26 @@
 import { BrowserRouter, Routes, Route } from "react-router";
 import LandingPage from "./LandingPage";
-import Login from "./components/page/auth/Login";
 import Navbar from "./components/general/navbar/Navbar";
 import Footer from "./components/general/footer/Footer";
+import NotFound from "./components/general/notFound/NotFound";
+import styles from "./App.module.css";
+import Auth from "./components/page/auth/Auth";
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/Augere">
       {/* HEADER */}
       <header>
         <Navbar />
       </header>
-
-      {/* Aquí es donde se renderizará el contenido de la página */}
-      <main>
+      {/* MAIN */}
+      <main className={styles["main-content"]}>
         <Routes>
           <Route path="/" element={<LandingPage />} />
-          <Route path="/login" element={<Login />} />
+          <Route path="/auth" element={<Auth />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
-
       {/* FOOTER */}
       <Footer />
     </BrowserRouter>

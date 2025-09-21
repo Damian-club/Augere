@@ -13,7 +13,7 @@ const Navbar = () => {
       {/* Links Navegación */}
       <ul className={styles["navbar__links"]}>
         <li className={styles["navbar__item"]}>
-          <a className={styles["navbar__link"]}>
+          <a href="#" className={styles["navbar__link"]}>
             {/* Contáctanos */}
             Inicio
           </a>
@@ -30,7 +30,9 @@ const Navbar = () => {
         </li>
       </ul>
       {/* Boton Login */}
-      <button className={styles["navbar__button"]}>Ingresar</button>
+      <Link to="/login" className={styles["navbar__button"]}>
+        Ingresar
+      </Link>
     </nav>
   );
 };
