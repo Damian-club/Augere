@@ -1,6 +1,4 @@
 import styles from "./App.module.css";
-import CourseCard from "./components/general/course/CourseCard";
-import Sidebar from "./components/general/sidebar/Sidebar";
 import Block from "./components/landing/block/Block";
 
 function LandingPage() {
