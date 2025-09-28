@@ -41,7 +41,7 @@ import DashboardLayout from "./components/layout/dashboardLayout/DashboardLayout
 
 function App() {
   return (
-    <BrowserRouter basename="/augere">
+    <BrowserRouter basename="/Augere">
       <Routes>
         <Route
           path="/"
