@@ -1,4 +1,6 @@
 import styles from "./App.module.css";
+import CourseCard from "./components/general/course/CourseCard";
+import Sidebar from "./components/general/sidebar/Sidebar";
 import Block from "./components/landing/block/Block";
 
 function LandingPage() {
@@ -30,6 +32,13 @@ function LandingPage() {
         description="Recibe retroalimentación al instante, aprende de tus errores"
         src="https://placehold.co/1200x600/png"
         reverse={true}
+      />
+      <Sidebar />
+      <CourseCard
+        title="Hola pez"
+        author="Adrian Vargas"
+        description="HOLA PEX COMO VA JHAJAJAJ"
+        progress={55}
       />
     </>
   );
