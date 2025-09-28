@@ -33,13 +33,6 @@ function LandingPage() {
         src="https://placehold.co/1200x600/png"
         reverse={true}
       />
-      <Sidebar />
-      <CourseCard
-        title="Hola pez"
-        author="Adrian Vargas"
-        description="HOLA PEX COMO VA JHAJAJAJ"
-        progress={55}
-      />
     </>
   );
 }

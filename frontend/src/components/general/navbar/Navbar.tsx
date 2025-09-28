@@ -30,7 +30,7 @@ const Navbar = () => {
         </li>
       </ul>
       {/* Boton Login */}
-      <Link to="/login" className={styles["navbar__button"]}>
+      <Link to="/auth" className={styles["navbar__button"]}>
         Ingresar
       </Link>
     </nav>
