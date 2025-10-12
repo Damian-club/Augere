@@ -38,6 +38,8 @@ import CoursesPage from "./components/page/courses/CoursesPage";
 
 import MainLayout from "./components/layout/mainLayout/MainLayout";
 import DashboardLayout from "./components/layout/dashboardLayout/DashboardLayout";
+import DashboardHome from "./components/page/dashboard/DashboardHome";
+import DashboardSettings from "./components/page/settings/DashboardSettings";
 
 function App() {
   return (
@@ -60,12 +62,31 @@ function App() {
             </MainLayout>
           }
         />
-
+        {/* DASHBOARD COURSES */}
         <Route
           path="/courses"
           element={
             <DashboardLayout>
               <CoursesPage />
+            </DashboardLayout>
+          }
+        />
+        {/* DASHBOARD INICIO */}
+        <Route
+          path="/dashboard"
+          element={
+            <DashboardLayout>
+              <DashboardHome />
+            </DashboardLayout>
+          }
+        />
+
+        {/* DASHBOARD CONFIGURACIÓN */}
+        <Route
+          path="/settings"
+          element={
+            <DashboardLayout>
+              <DashboardSettings />
             </DashboardLayout>
           }
         />

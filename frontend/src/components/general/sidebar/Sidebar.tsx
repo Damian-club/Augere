@@ -1,3 +1,4 @@
+import { NavLink } from "react-router-dom";
 import Logo from "../../../assets/logo.svg";
 import styles from "./Sidebar.module.css";
 import {
@@ -27,15 +28,24 @@ export default function Sidebar() {
 
         {/* Menu */}
         <nav className={styles.menu}>
-          <button>
+          <NavLink
+            to="/dashboard"
+            className={({ isActive }) => (isActive ? styles.active : "")}
+          >
             <IoHomeOutline size={18} /> Inicio
-          </button>
-          <button className={styles.active}>
+          </NavLink>
+          <NavLink
+            to="/courses"
+            className={({ isActive }) => (isActive ? styles.active : "")}
+          >
             <IoBookOutline size={18} /> Cursos
-          </button>
-          <button>
+          </NavLink>
+          <NavLink
+            to="/settings"
+            className={({ isActive }) => (isActive ? styles.active : "")}
+          >
             <IoSettingsOutline size={18} /> Configuración
-          </button>
+          </NavLink>
         </nav>
       </div>
 

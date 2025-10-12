@@ -8,6 +8,12 @@
   gap: 0.5rem;
   color: #111;
   min-height: 180px;
+  transition: transform 0.2s ease;
+  cursor: pointer;
+}
+
+.card:hover {
+  transform: translateY(-4px);
 }
 
 .iconBtn {
@@ -27,6 +33,11 @@
 
 .iconBtn:hover {
   background: rgba(255, 255, 255, 1);
+}
+
+.title {
+  font-size: 1rem;
+  font-weight: 600;
 }
 
 .author {
@@ -58,4 +69,34 @@
   font-size: 0.75rem;
   text-align: right;
   color: #111;
+}
+
+/* VARIANTE COMPACTA */
+.compact {
+  min-height: 120px;
+  width: 150px;
+  padding: 0.8rem;
+  gap: 0.4rem;
+  border-radius: 1rem;
+  color: #f2f2f2;
+  background: var(--card-color);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.4s ease;
+}
+
+.compact:hover {
+  /* transform: translateY(-6px) scale(1.03); */
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.15);
+  filter: brightness(1.1);
+}
+
+.compact .title {
+  font-size: 0.9rem;
+}
+
+.compact .progressText {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.85);
 }

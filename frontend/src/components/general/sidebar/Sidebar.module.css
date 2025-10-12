@@ -3,7 +3,7 @@
   background: #fff;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: flex-start;
   padding: 1rem;
   border-right: 1px solid #eee;
 }
@@ -37,7 +37,7 @@
   gap: 0.5rem;
 }
 
-.menu button {
+.menu a {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -48,9 +48,10 @@
   border-radius: 6px;
   font-size: 0.9rem;
   color: #333;
+  text-decoration: none;
 }
 
-.menu button:hover {
+.menu a:hover {
   background: #f5f5f5;
 }
 
@@ -87,6 +88,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
+  margin-top: auto;
 }
 
 .userContainer {
