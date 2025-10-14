@@ -1,0 +1,103 @@
+.layout {
+  display: flex;
+  min-height: 100vh;
+  background: #f1f5f9;
+  color: #111827;
+}
+
+.content {
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+  /* background-color: #f9fafc;
+  background-image: radial-gradient(#dfe3ebc9 1px, transparent 1px);
+  background-size: 20px 20px; */
+  background: linear-gradient(135deg, #f9fafc 0%, #f0f4f8 100%);
+  position: relative;
+  overflow: hidden; /* para que las burbujas no se salgan */
+}
+
+/* contenedor de burbujas */
+.bubbles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.bubbles span {
+  position: absolute;
+  bottom: -100px;
+  border-radius: 50%;
+  background: rgba(99, 102, 241, 0.12);
+  animation: rise 20s linear infinite;
+}
+
+/* contenedor de burbujas */
+.bubbles {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  overflow: hidden;
+  z-index: 0;
+}
+
+/* burbujas grandes estilo vidrio */
+.bubbles span {
+  position: absolute;
+  bottom: -150px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 30% 30%,
+    rgba(255, 255, 255, 0.9),
+    rgba(173, 216, 230, 0.2)
+  );
+  backdrop-filter: blur(6px);
+  animation: rise 20s linear infinite;
+  box-shadow: inset -4px -6px 12px rgba(255, 255, 255, 0.6),
+              inset 4px 6px 12px rgba(0, 0, 0, 0.1);
+}
+
+.bubbles span:nth-child(1) { width: 100px; height: 100px; left: 15%; animation-duration: 22s; }
+.bubbles span:nth-child(2) { width: 140px; height: 140px; left: 45%; animation-duration: 28s; }
+.bubbles span:nth-child(3) { width: 90px;  height: 90px;  left: 70%; animation-duration: 20s; }
+.bubbles span:nth-child(4) { width: 120px; height: 120px; left: 85%; animation-duration: 26s; }
+.bubbles span:nth-child(5) { width: 160px; height: 160px; left: 30%; animation-duration: 30s; }
+
+/* burbujas pequeñas extra */
+.bubbles i {
+  position: absolute;
+  bottom: -20px;
+  width: 10px;
+  height: 10px;
+  background: rgba(200, 220, 255, 0.3);
+  border-radius: 50%;
+  animation: riseSmall 12s linear infinite;
+}
+
+.bubbles i:nth-child(6)  { left: 10%; width: 8px;  height: 8px;  animation-duration: 9s; }
+.bubbles i:nth-child(7)  { left: 25%; width: 6px;  height: 6px;  animation-duration: 11s; }
+.bubbles i:nth-child(8)  { left: 35%; width: 12px; height: 12px; animation-duration: 13s; }
+.bubbles i:nth-child(9)  { left: 55%; width: 7px;  height: 7px;  animation-duration: 8s; }
+.bubbles i:nth-child(10) { left: 65%; width: 5px;  height: 5px;  animation-duration: 10s; }
+.bubbles i:nth-child(11) { left: 75%; width: 9px;  height: 9px;  animation-duration: 14s; }
+.bubbles i:nth-child(12) { left: 90%; width: 6px;  height: 6px;  animation-duration: 12s; }
+
+@keyframes rise {
+  0%   { transform: translateY(0) scale(1); opacity: 0.4; }
+  50%  { opacity: 0.7; }
+  100% { transform: translateY(-110vh) scale(1.2); opacity: 0; }
+}
+
+@keyframes riseSmall {
+  0%   { transform: translateY(0); opacity: 0.3; }
+  50%  { opacity: 0.6; }
+  100% { transform: translateY(-110vh); opacity: 0; }
+}
+
+.innerContent {
+  position: relative;
+  z-index: 1;
+}
