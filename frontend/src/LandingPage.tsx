@@ -2,6 +2,7 @@ import styles from "./App.module.css";
 import Footer from "./components/general/footer/Footer";
 import Navbar from "./components/general/navbar/Navbar";
 import Block from "./components/landing/block/Block";
+import { Link } from "react-router-dom";
 
 function LandingPage() {
   return (
@@ -17,7 +18,12 @@ function LandingPage() {
           <h1
             className={`${styles["main__entry-title"]} ${styles["gradient-background"]}`}
           >
+
             Tutor virtual con IA
+            <div>
+              <Link to="/login">AASd</Link>
+
+            </div>
           </h1>
 
           <img

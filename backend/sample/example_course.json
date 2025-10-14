@@ -1,0 +1,42 @@
+[
+    {
+        "name": "Búsqueda binaria",
+        "content": [
+            {
+                "type": "topic",
+                "name": "Explicación",
+                "body": "# Título\nEste es un *markdown* con fórmula: $E=mc^2$.",
+                "context": "$E=mc^2$"
+            },
+            {
+                "type": "assignment",
+                "name": "Trabajo algoritmo",
+                "body": "# Título\nEste es un *markdown* con fórmula: $E=mc^2$.",
+                "context": "$E=mc^2$"
+            }
+        ]
+    },
+    {
+        "name": "Búsqueda secuencial",
+        "content": [
+            {
+                "type": "topic",
+                "name": "Concepto lista",
+                "body": "# Título\nEste es un *markdown* con fórmula: $E=mc^2$.",
+                "context": "$E=mc^2$"
+            },
+            {
+                "type": "topic",
+                "name": "Idea búsqueda",
+                "body": "# Título\nEste es un *markdown* con fórmula: $E=mc^2$.",
+                "context": "$E=mc^2$"
+            },
+            {
+                "type": "assignment",
+                "name": "Trabajo algoritmo",
+                "body": "# Título\nEste es un *markdown* con fórmula: $E=mc^2$.",
+                "context": "$E=mc^2$"
+            }
+        ]
+    }
+]
