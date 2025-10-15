@@ -3,6 +3,7 @@ from functools import lru_cache
 
 class Settings(BaseSettings):
     DB_CONN: str = 'sqlite:///./app.db'
+    SECRET_KEY: str = 'holapezjaja'
 
     class Config:
         env_file: str = '.env'
