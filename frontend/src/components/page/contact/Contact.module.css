@@ -1,0 +1,102 @@
+.contactContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 6rem;
+  background: #f9fafb;
+  font-family: "Poppins", sans-serif;
+  min-height: calc(100vh - 170px);
+}
+
+.title {
+  color: #2563eb;
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+}
+
+.form {
+  background: #fff;
+  border-radius: 16px;
+  padding: 2rem 2.5rem;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+  width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  text-align: center;
+}
+
+.row {
+  display: flex;
+  gap: 1rem;
+}
+
+.inputGroup {
+  position: relative;
+  flex: 1;
+}
+
+.inputGroup input,
+.inputGroup textarea {
+  width: 100%;
+  padding: 14px 12px;
+  font-size: 0.95rem;
+  border: 1.5px solid #ccc;
+  border-radius: 8px;
+  outline: none;
+  background: transparent;
+  transition: border 0.3s ease;
+}
+
+.inputGroup textarea {
+  resize: none;
+}
+
+/* Label inicial dentro del input */
+.inputGroup label {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  transform: translateY(-50%);
+  background: #fff;
+  color: #888;
+  font-size: 0.9rem;
+  padding: 0 5px;
+  pointer-events: none;
+  transition: all 0.25s ease;
+}
+
+/* Animación del label flotante */
+.inputGroup input:focus + label,
+.inputGroup input:not(:placeholder-shown) + label,
+.inputGroup textarea:focus + label,
+.inputGroup textarea:not(:placeholder-shown) + label {
+  top: -8px;
+  left: 10px;
+  font-size: 0.75rem;
+  color: #2563eb;
+}
+
+.inputGroup input:focus,
+.inputGroup textarea:focus {
+  border-color: #2563eb;
+}
+
+.submitBtn {
+  padding: 12px;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.submitBtn:hover {
+  background: #1e3a8a;
+}
+
+.textareaGroup label {
+  top: 18px;
+}

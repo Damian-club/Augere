@@ -1,6 +1,5 @@
 import styles from "./App.module.css";
 import Block from "./components/landing/block/Block";
-import { Link } from "react-router-dom";
 
 function LandingPage() {
   return (
