@@ -8,7 +8,7 @@ class UserBase(BaseModel):
     avatar_path: str = Field(...)
 
 class UserCreate(UserBase):
-    password: str
+    password: str = Field(...)
 
 class UserOut(UserBase):
     uuid: UUID = Field(...)

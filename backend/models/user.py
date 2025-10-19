@@ -13,5 +13,4 @@ class User(Base):
     name: Mapped[str] = Column(String, nullable=False)
     email: Mapped[str] = Column(String, nullable=False)
     pwd_hash: Mapped[str] = Column(String, nullable=False)
-    pwd_salt: Mapped[str] = Column(String, nullable=False)
     avatar_path: Mapped[str] = Column(String, nullable=False)
