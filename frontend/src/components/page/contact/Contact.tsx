@@ -1,21 +1,20 @@
 import { useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
+import type { ContactData } from "../../../schemas/contact";
+import { sendContactMessage } from "../../../services/contact";
 import styles from "./Contact.module.css";
 
-interface FormData {
-  name: string;
-  email: string;
-  subject: string;
-  message: string;
-}
+const initialForm: ContactData = {
+  name: "",
+  email: "",
+  subject: "",
+  message: "",
+};
 
 export default function Contact() {
-  const [form, setForm] = useState<FormData>({
-    name: "",
-    email: "",
-    subject: "",
-    message: "",
-  });
+  const [form, setForm] = useState<ContactData>(initialForm);
+  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
 
   const handleChange = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -24,11 +23,21 @@ export default function Contact() {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    console.log("Formulario enviado:", form);
-    alert("Gracias por tu mensaje. Te contactaremos pronto.");
-    setForm({ name: "", email: "", subject: "", message: "" });
+    setLoading(true);
+    setStatus("idle");
+
+    try {
+      await sendContactMessage(form);
+      setStatus("success");
+      setForm(initialForm);
+    } catch (error) {
+      console.log("Error al enviar: ", error)
+      setStatus("error");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -40,26 +49,30 @@ export default function Contact() {
         <div className={styles.row}>
           <div className={styles.inputGroup}>
             <input
+              id="name"
               type="text"
               name="name"
               value={form.name}
               onChange={handleChange}
               required
               placeholder=" "
+              disabled={loading}
             />
-            <label>Nombre</label>
+            <label htmlFor="name">Nombre</label>
           </div>
 
           <div className={styles.inputGroup}>
             <input
+              id="email"
               type="email"
               name="email"
               value={form.email}
               onChange={handleChange}
               required
               placeholder=" "
+              disabled={loading}
             />
-            <label>Correo</label>
+            <label htmlFor="email">Correo</label>
           </div>
         </div>
 
@@ -67,33 +80,51 @@ export default function Contact() {
         <div className={styles.row}>
           <div className={styles.inputGroup}>
             <input
+              id="subject"
               type="text"
               name="subject"
               value={form.subject}
               onChange={handleChange}
               required
               placeholder=" "
+              disabled={loading}
             />
-            <label>Tema</label>
+            <label htmlFor="subject">Tema</label>
           </div>
         </div>
 
         {/* Mensaje */}
         <div className={`${styles.inputGroup} ${styles.textareaGroup}`}>
           <textarea
+            id="message"
             name="message"
             value={form.message}
             onChange={handleChange}
             rows={5}
             required
             placeholder=" "
+            disabled={loading}
           ></textarea>
-          <label>Mensaje</label>
+          <label htmlFor="message">Mensaje</label>
         </div>
 
-        <button type="submit" className={styles.submitBtn}>
-          Enviar
+        <button
+          type="submit"
+          className={`${styles.submitBtn} ${loading ? styles.loading : ""}`}
+          disabled={loading}
+        >
+          {loading ? "Enviando..." : "Enviar"}
         </button>
+
+        {/* Estado del envio */}
+        {status === "success" && (
+          <p className={styles.succesMsg}>Mensaje enviado correctamente.</p>
+        )}
+        {status === "error" && (
+          <p className={styles.errorMsg}>
+            Ocurrio un error al enviar el mensaje.
+          </p>
+        )}
       </form>
     </div>
   );
