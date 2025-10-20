@@ -1,6 +1,6 @@
 // export default App;
 
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import LandingPage from "./LandingPage";
 import NotFound from "./components/general/notFound/NotFound";
 import Auth from "./components/page/auth/Auth";
