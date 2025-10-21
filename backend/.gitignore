@@ -1,0 +1,6 @@
+# PyCache files
+__pycache__/
+*.py[cod]
+
+# DB
+./app.db
