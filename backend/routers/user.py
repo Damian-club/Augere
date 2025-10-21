@@ -4,6 +4,17 @@ from sqlalchemy.orm import Session
 from core.db import get_db
 
 from models.user import User
+from models.course import Course
+from models.ai_chat import AIChat
+from models.progress import Progress
+from models.student import Student
+from models.assignment_dict import AssignmentDict
+from models.progress import Progress
+from models.schema_entry import SchemaEntry
+from models.schema import Schema
+from models.user import User
+from models.schema_category import SchemaCategory
+
 
 user_router = APIRouter(prefix='/users')
 

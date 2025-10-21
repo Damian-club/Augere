@@ -1,21 +1,26 @@
-from sqlalchemy import Column, UUID, String, Enum
-from sqlalchemy.orm import Mapped
+from sqlalchemy import UUID, String, Enum as SqlEnum, ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from core.db import Base
 from uuid import UUID as PyUUID
 from uuid import uuid4
+from enum import Enum
+from typing import List
 
 ## SCHEMA TYPE ENUM ---
-class Type_(Enum):
-    TOPIC = ""
-    ASSIGNMENT = ""
+class EntryType(Enum):
+    TOPIC = "topic"
+    ASSIGNMENT = "assignment"
 ##---------------------
 
 class SchemaEntry(Base):
     __tablename__ = 'schema_entry'
 
-    uuid: Mapped[PyUUID] = Column(UUID(as_uuid=True), primary_key=True, nullable=False, default=uuid4)
-    name: Mapped[str] = Column(String, nullable=False)
-    body: Mapped[str] = Column(String, nullable=False)
-    context: Mapped[str] = Column(String, nullable=False)
-    category_id: Mapped[PyUUID] = Column(UUID(as_uuid=True), nullable=False)
-    type_: Mapped[Type_] = Column(Enum(Type_, name="schema_type_enum"), nullable=False)
+    uuid: Mapped[PyUUID] = mapped_column(UUID(as_uuid=True), primary_key=True, nullable=False, default=uuid4)
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    body: Mapped[str] = mapped_column(String, nullable=False)
+    context: Mapped[str] = mapped_column(String, nullable=True)
+    category_id: Mapped[PyUUID] = mapped_column(UUID(as_uuid=True), ForeignKey('schema_category.uuid'),nullable=False)
+    entry_type: Mapped[EntryType] = mapped_column(SqlEnum(EntryType, native_enum=False), nullable=False)
+
+    category: Mapped["SchemaCategory"] = relationship(back_populates="entries")
+    progress_records: Mapped[List["Progress"]] = relationship(back_populates="entry")

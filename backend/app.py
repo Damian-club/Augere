@@ -8,6 +8,8 @@ from routers.user import user_router
 async def start(instance: FastAPI):
     # Iniciar
     Base.metadata.create_all(bind=engine)
+    print(Base.metadata.tables.keys())
+
     yield
     # Cerrar
 

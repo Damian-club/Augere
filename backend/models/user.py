@@ -1,16 +1,20 @@
-from sqlalchemy import Column, UUID, String, DateTime
-from sqlalchemy.orm import Mapped
+from sqlalchemy import UUID, String, DateTime
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from typing import Optional, List
 from datetime import datetime
 from core.db import Base
 from uuid import UUID as PyUUID
 from uuid import uuid4
 
 class User(Base):
-    __tablename__ = 'users'
+    __tablename__ = 'user'
 
-    uuid: Mapped[PyUUID] = Column(UUID(as_uuid=True), primary_key=True, nullable=False, default=uuid4)
-    creation_date: Mapped[datetime] = Column(DateTime, nullable=False, default=datetime.now)
-    name: Mapped[str] = Column(String, nullable=False)
-    email: Mapped[str] = Column(String, nullable=False)
-    pwd_hash: Mapped[str] = Column(String, nullable=False)
-    avatar_path: Mapped[str] = Column(String, nullable=False)
+    uuid: Mapped[PyUUID] = mapped_column(UUID(as_uuid=True), primary_key=True, nullable=False, default=uuid4)
+    creation_date: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.now)
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    email: Mapped[str] = mapped_column(String, nullable=False)
+    pwd_hash: Mapped[str] = mapped_column(String, nullable=False)
+    avatar_path: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+
+    tutored_courses: Mapped[List["Course"]] = relationship("Course", back_populates="user")
+    student_records: Mapped[List["Student"]] = relationship("Student", back_populates="user")

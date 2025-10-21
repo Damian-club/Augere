@@ -1,18 +1,23 @@
-from sqlalchemy import Column, UUID, String, DateTime, JSON
-from sqlalchemy.orm import Mapped
+from sqlalchemy import UUID, String, DateTime, ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from datetime import datetime
+from typing import Optional
 from core.db import Base
 from uuid import UUID as PyUUID
 from uuid import uuid4
 
 class Course(Base):
-    __tablename__ = 'courses'
+    __tablename__ = 'course'
 
-    uuid: Mapped[PyUUID] = Column(UUID(as_uuid=True), primary_key=True, nullable=False, default=uuid4)
-    creation_date: Mapped[datetime] = Column(DateTime, nullable=False, default=datetime.now)
-    title: Mapped[str] = Column(String, nullable=False)
-    description: Mapped[str] = Column(String, nullable=False)
-    tutor_id: Mapped[str] = Column(String, nullable=False)
-    logo_path: Mapped[str] = Column(String, nullable=False)
-    invitation_code: Mapped[str] = Column(String, nullable=False)
-    schema: Mapped[dict] = Column(JSON, nullable=False)
+    uuid: Mapped[PyUUID] = mapped_column(UUID(as_uuid=True), primary_key=True, nullable=False, default=uuid4)
+    creation_date: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.now)
+    title: Mapped[str] = mapped_column(String, nullable=False)
+    description: Mapped[str] = mapped_column(String, nullable=False)
+    logo_path: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    invitation_code: Mapped[str] = mapped_column(String, nullable=False, unique=True)
+    tutor_id: Mapped[PyUUID] = mapped_column(UUID(as_uuid=True), ForeignKey('user.uuid'), nullable=False)
+    schema_id: Mapped[PyUUID] = mapped_column(UUID(as_uuid=True), ForeignKey("schema.uuid"),nullable=False)
+
+    tutor: Mapped["User"] = relationship("User", back_populates="tutored_courses")
+    students: Mapped[list["Student"]] = relationship("Student", back_populates="course")
+    schema: Mapped["Schema"] = relationship("Schema", back_populates="course", uselist=False)

@@ -22,3 +22,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Cachefiles
+__pycache__/
+*.py[cod]
+
+# Temp db
+./app.db
