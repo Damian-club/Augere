@@ -1,12 +1,21 @@
+import { useEffect, useState } from "react";
 import styles from "./DashboardHome.module.css";
+import { getCurrentUser } from "../../../api/auth";
 
 export default function DashboardHome() {
+  const [user, setUser] = useState<{ name: string } | null>(null);
   const progress = 40;
+
+  useEffect(() => {
+    getCurrentUser()
+      .then((data) => setUser(data))
+      .catch((err) => console.log(err));
+  }, []);
 
   return (
     <div className={styles.dashboardHome}>
       <h1>Inicio</h1>
-      <h2>Bienvenido de vuelta, Diego</h2>
+      <h2>Bienvenido de vuelta, {user ? user.name : "Cargando..."}</h2>
 
       <div className={styles.content}>
         {/* Progreso Circular */}

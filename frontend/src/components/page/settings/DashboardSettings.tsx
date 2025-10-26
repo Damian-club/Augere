@@ -1,8 +1,36 @@
+import { useNavigate } from "react-router-dom";
 import CourseCard from "../../general/course/CourseCard";
 import styles from "./DashboardSettings.module.css";
 import { IoCloudUploadOutline } from "react-icons/io5";
+import { authService } from "../../../services";
+import { useEffect, useState } from "react";
+import { getCurrentUser } from "../../../api/auth";
 
 export default function DashboardSettings() {
+  const navigate = useNavigate();
+  const [message, setMessage] = useState("");
+  const [user, setUser] = useState<{ uuid: string } | null>(null);
+
+  useEffect(() => {
+    getCurrentUser()
+      .then((data) => setUser(data))
+      .catch((err) => console.log(err));
+  }, []);
+
+  const handleDelete = async () => {
+    const confirmDelete = confirm("¿Seguro de que deseas eliminar tu cuenta?");
+
+    if (!confirmDelete) return;
+
+    try {
+      await authService.deleteAccount();
+      setMessage("Cuenta eliminada correctamente.");
+      navigate("/auth");
+    } catch (err: any) {
+      setMessage(err.message || "Error al eliminar cuenta");
+    }
+  };
+
   return (
     <div className={styles.settings}>
       <h1>Configuración</h1>
@@ -15,7 +43,9 @@ export default function DashboardSettings() {
             <IoCloudUploadOutline size={24} />
             <span>Actualiza tu foto de perfil</span>
           </div>
-          <p className={styles.uuid}>UUID: a07-ad02-j17-78e8b73b-ac/ac</p>
+          <p className={styles.uuid}>
+            UUID: {user ? user.uuid : "Cargando UUID..."}
+          </p>
         </div>
 
         <div className={styles.inputs}>
@@ -35,7 +65,6 @@ export default function DashboardSettings() {
       <section className={styles.courses}>
         <h2>Cursos Creados</h2>
         <div className={styles.cards}>
-
           <CourseCard
             title="Computación"
             progress={80}
@@ -48,7 +77,10 @@ export default function DashboardSettings() {
 
       <div className={styles.actions}>
         <button className={styles.update}>Actualizar</button>
-        <button className={styles.delete}>Eliminar Cuenta</button>
+        <button className={styles.delete} onClick={handleDelete}>
+          Eliminar Cuenta
+        </button>
+        {message && <p>{message}</p>}
       </div>
     </div>
   );
