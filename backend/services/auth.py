@@ -1,9 +1,9 @@
 from util.auth import verify_password, get_password_hash, create_access_token
 from schemas.user import UserLogin, UserRegister, UserOut
+from schemas.message import Message
 from models.user import User
-from fastapi import Depends, HTTPException
+from fastapi import  HTTPException
 from datetime import timedelta
-from dependencies.user import get_current_user
 from core.settings import settings
 from sqlalchemy.orm import Session
 from schemas.token import Token
@@ -61,4 +61,4 @@ def delete_account(
     db.delete(user)
     db.commit()
     
-    return {"detail": "Cuenta eliminada exitosamente"}
+    return Message(detail="Cuenta eliminada exitosamente")
