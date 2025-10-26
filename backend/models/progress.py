@@ -10,10 +10,10 @@ class Progress(Base):
 
     uuid: Mapped[PyUUID] = mapped_column(UUID(as_uuid=True), primary_key=True, nullable=False, default=uuid4)
     entry_id: Mapped[PyUUID] = mapped_column(UUID(as_uuid=True), ForeignKey('schema_entry.uuid'), nullable=False)
-    student_id: Mapped[PyUUID] = mapped_column(UUID(as_uuid=True), ForeignKey('user.uuid'), nullable=False)
+    student_id: Mapped[PyUUID] = mapped_column(UUID(as_uuid=True), ForeignKey('student.uuid'), nullable=False)
     finished: Mapped[bool] = mapped_column(Boolean, nullable=False)
 
-    entry: Mapped["SchemaEntry"] = relationship(back_populates="progress_records")
-    student: Mapped["Student"] = relationship(back_populates="progress_records")
+    entry: Mapped["SchemaEntry"] = relationship(back_populates="progress_records", foreign_keys=[entry_id])
+    student: Mapped["Student"] = relationship(back_populates="progress_records", foreign_keys=[student_id])
     ai_chat_records: Mapped[List["AIChat"]] = relationship(back_populates="progress")
-    assignment_dict_record: Mapped["AssignmentDict"] = relationship(back_populates="progress")
+    assignment_dict_record: Mapped["AssignmentDict"] = relationship(back_populates="progress", uselist=False)

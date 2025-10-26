@@ -6,4 +6,5 @@ __pycache__/
 ./app.db
 
 # Environment variables
+.env
 core/.env

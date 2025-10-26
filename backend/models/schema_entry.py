@@ -12,6 +12,7 @@ class EntryType(Enum):
     ASSIGNMENT = "assignment"
 ##---------------------
 
+
 class SchemaEntry(Base):
     __tablename__ = 'schema_entry'
 
@@ -19,7 +20,7 @@ class SchemaEntry(Base):
     name: Mapped[str] = mapped_column(String, nullable=False)
     body: Mapped[str] = mapped_column(String, nullable=False)
     context: Mapped[str] = mapped_column(String, nullable=True)
-    category_id: Mapped[PyUUID] = mapped_column(UUID(as_uuid=True), ForeignKey('schema_category.uuid'),nullable=False)
+    category_id: Mapped[PyUUID] = mapped_column(UUID(as_uuid=True), ForeignKey('schema_category.uuid'), nullable=False)
     entry_type: Mapped[EntryType] = mapped_column(SqlEnum(EntryType, native_enum=False), nullable=False)
 
     category: Mapped["SchemaCategory"] = relationship(back_populates="entries")

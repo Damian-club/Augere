@@ -14,7 +14,6 @@ class Student(Base):
     student_id: Mapped[PyUUID] = mapped_column(UUID(as_uuid=True), ForeignKey('user.uuid'), nullable=False)
     course_id: Mapped[PyUUID] = mapped_column(UUID(as_uuid=True), ForeignKey('course.uuid'), nullable=False)
 
-    student: Mapped["User"] = relationship("User", back_populates="student_records")
-    course: Mapped["Course"] = relationship("Course", back_populates="students")
-    progress_records: Mapped[List["Progress"]] = relationship(back_populates="entry")
-
+    student: Mapped["User"] = relationship("User", back_populates="student_records", foreign_keys=[student_id])
+    course: Mapped["Course"] = relationship("Course", back_populates="students", foreign_keys=[course_id])
+    progress_records: Mapped[List["Progress"]] = relationship(back_populates="student")

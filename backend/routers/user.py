@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends
-from schemas.user import UserCreate, UserOut
+from schemas.user import UserRegister, UserOut
 from sqlalchemy.orm import Session
 from core.db import get_db
 
@@ -15,35 +15,35 @@ from models.schema import Schema
 from models.user import User
 from models.schema_category import SchemaCategory
 
+from dependencies.user import get_current_user
 
-user_router = APIRouter(prefix='/users')
+user_router = APIRouter(prefix='/users', tags=['Users'])
 
-@user_router.post('/', response_model=UserOut)
-def create_user(user_create: UserCreate, db: Session = Depends(get_db)):
-    user = User(
-        name=user_create.name,
-        email=user_create.email,
-        pwd_hash='asd',
-        pwd_salt='af',
-        avatar_path='a'
-    )
+# @user_router.post('/', response_model=UserOut)
+# def create_user(user_create: UserRegister, db: Session = Depends(get_db)):
+#     user = User(
+#         name=user_create.name,
+#         email=user_create.email,
+#         pwd_hash='asd',
+#         pwd_salt='af',
+#         avatar_path='a'
+#     )
 
-    db.add(user)
-    db.commit()
+#     db.add(user)
+#     db.commit()
 
-    return UserOut(
-        name=user.name,
-        email=user.email,
-        avatar_path=user.avatar_path,
-        uuid=user.uuid,
-        creation_date=user.creation_date
-    )
+#     return UserOut(
+#         name=user.name,
+#         email=user.email,
+#         avatar_path=user.avatar_path,
+#         uuid=user.uuid,
+#         creation_date=user.creation_date
+#     )
 
-@user_router.get('/')
-def read_user(db: Session = Depends(get_db)):
-    list_user = db.query(User).all()
+# @user_router.get('/')
+# def read_user(db: Session = Depends(get_db)):
+#     list_user = db.query(User).all()
 
-    print([user.name for user in list_user])
+#     print([user.name for user in list_user])
 
-    return []
-
+#     return []

@@ -4,11 +4,10 @@ from functools import lru_cache
 class Settings(BaseSettings):
     DB_CONN: str
     SECRET_KEY: str
-    JWT_SECRET: str
     OPENAI_KEY: str
 
-    ACCESS_TOKEN_EXPIRE_MINUTES = 525600
-    ALGORITHM = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 525600
+    ALGORITHM: str = "HS256"
 
     class Config:
         env_file: str = '.env'

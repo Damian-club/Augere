@@ -11,5 +11,5 @@ class Schema(Base):
     uuid: Mapped[PyUUID] = mapped_column(UUID(as_uuid=True), primary_key=True, nullable=False, default=uuid4)
     course_id: Mapped[PyUUID] = mapped_column(UUID(as_uuid=True), ForeignKey('course.uuid'), nullable=False, unique=True)
 
-    course: Mapped["Course"] = relationship(back_populates="schema")
-    categories: Mapped[List["SchemaCategory"]] = relationship(back_populates="schema")
+    course: Mapped["Course"] = relationship("Course", back_populates="schema")
+    categories: Mapped[List["SchemaCategory"]] = relationship("SchemaCategory", back_populates="schema")
