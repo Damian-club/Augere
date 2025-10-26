@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
 import type { ContactData } from "../../../schemas/contact";
-import { sendContactMessage } from "../../../services/contact";
+import { contactService } from "../../../services";
 import styles from "./Contact.module.css";
 
 const initialForm: ContactData = {
@@ -29,7 +29,7 @@ export default function Contact() {
     setStatus("idle");
 
     try {
-      await sendContactMessage(form);
+      await contactService.sendContactMessage(form);
       setStatus("success");
       setForm(initialForm);
     } catch (error) {
