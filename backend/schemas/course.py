@@ -8,12 +8,17 @@ class CourseBase(BaseModel):
     description: str = Field(...)
     logo_path: Optional[str] = Field(None)
     invitation_code: str = Field(...)
-    tutor_id: UUID = Field(...)
-    schema_id: UUID = Field(...)
 
 class CourseCreate(CourseBase):
-    pass
+    tutor_id: UUID = Field(...)
 
-class CourseOut(CourseBase):
+class CourseUpdate(BaseModel):
+    uuid: UUID = Field(...)
+    title: Optional[str] = None
+    description: Optional[str] = None
+    logo_path: Optional[str] = None
+    invitation_code: Optional[str] = None
+
+class CourseOut(CourseCreate):
     uuid: UUID = Field(...)
     creation_date: datetime = Field(...)

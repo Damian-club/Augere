@@ -50,14 +50,19 @@ def create_token(user: User):
     )
     return Token(access_token=access_token, token_type="bearer")
 
+def me(user: User) -> UserOut:
+    return UserOut(
+        name=user.name,
+        email=user.email,
+        avatar_path=user.avatar_path,
+        uuid=user.uuid,
+        creation_date=user.creation_date
+    )
+
 def delete_account(
-    db: Session,
-    current_user: UserOut
-):
-    user: User = db.query(User).filter(User.uuid == current_user.uuid).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    
+    user: User,
+    db: Session
+):    
     db.delete(user)
     db.commit()
     
