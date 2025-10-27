@@ -102,7 +102,7 @@ export default function DashboardSettings() {
             />
           </label>
           <label>
-            Contraseña (opcional)
+            Contraseña
             <input
               type="password"
               name="password"
@@ -112,7 +112,7 @@ export default function DashboardSettings() {
             />
           </label>
           <label>
-            Avatar (URL)
+            Avatar
             <input
               type="text"
               name="avatar_path"
