@@ -98,6 +98,15 @@
   gap: 0.7rem;
 }
 
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 8px;
+  border: 2px solid #ddd;
+}
+
 .logout {
   display: flex;
   align-items: center;

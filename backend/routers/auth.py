@@ -52,7 +52,7 @@ def update_account(
     current_user: User = Depends(get_current_user),
     db = Depends(get_db),
 ):
-    return s_update_account(data, current_user, db)
+    return s_update_account(current_user, data, db)
 
 @router.delete("/delete", summary="Eliminar cuenta", response_model=Message)
 def delete_account(

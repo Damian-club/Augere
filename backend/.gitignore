@@ -3,7 +3,8 @@ __pycache__/
 *.py[cod]
 
 # DB
-./app.db
+app.db
+test.DB
 
 # Environment variables
 .env
