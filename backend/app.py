@@ -2,10 +2,11 @@ from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from core.db import Base, engine
 
-from routers.user import router as user_router
 from routers.auth import router as auth_router
 from routers.course import router as course_router
 from routers.student import router as student_router
+from routers.schema import router as schema_router
+from routers.schema_category import router as schema_category_router
 
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -29,7 +30,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(user_router)
 app.include_router(auth_router)
 app.include_router(course_router)
 app.include_router(student_router)
+app.include_router(schema_router)
+app.include_router(schema_category_router)
