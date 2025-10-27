@@ -9,12 +9,11 @@
   flex: 1;
   padding: 2rem;
   overflow-y: auto;
-  /* background-color: #f9fafc;
-  background-image: radial-gradient(#dfe3ebc9 1px, transparent 1px);
-  background-size: 20px 20px; */
   background: linear-gradient(135deg, #f9fafc 0%, #f0f4f8 100%);
   position: relative;
   overflow: hidden; /* para que las burbujas no se salgan */
+  height: 100vh;
+  overflow-y: auto;
 }
 
 /* contenedor de burbujas */

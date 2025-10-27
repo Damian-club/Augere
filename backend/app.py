@@ -6,6 +6,10 @@ from routers.user import user_router
 from routers.auth import router as auth_router
 from routers.course import router as course_router
 
+from fastapi.middleware.cors import CORSMiddleware
+
+
+
 @asynccontextmanager
 async def start(instance: FastAPI):
     # Iniciar
@@ -16,6 +20,13 @@ async def start(instance: FastAPI):
 
 app = FastAPI(lifespan=start)
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(user_router)
 app.include_router(auth_router)

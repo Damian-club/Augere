@@ -12,18 +12,22 @@ export class AuthService {
     this.baseUrl = `${apiUrl}/auth`;
   }
 
-  async register(data: RegisterData): Promise<User> {
+  async register(data: RegisterData): Promise<LoginResponse> {
     const response = await fetch(`${this.baseUrl}/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
 
+    const result = await response.json();
+
     if (!response.ok) {
-      throw new Error("Error al registrar usuario");
+      throw new Error(result.detail || "Error al registrar usuario");
     }
 
-    return response.json();
+    localStorage.setItem("token", result.access_token);
+
+    return result;
   }
 
   async login(data: LoginData): Promise<LoginResponse> {
@@ -33,17 +37,22 @@ export class AuthService {
       body: JSON.stringify(data),
     });
 
+    const result = await response.json();
+
     if (!response.ok) {
-      throw new Error("Credenciales incorrectas");
+      throw new Error(result.detail || "Credenciales incorrectas");
     }
 
-    const result = (await response.json()) as LoginResponse;
-    localStorage.setItem("token", result.token); // Guarda el token automáticamente
+    localStorage.setItem("token", result.access_token);
+    const user = await this.getCurrentUser();
+    localStorage.setItem("user", JSON.stringify(user));
+
     return result;
   }
 
   logout() {
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
   }
 
   getToken(): string | null {
@@ -58,10 +67,40 @@ export class AuthService {
       headers: { Authorization: `Bearer ${token}` },
     });
 
+    const result = await response.json();
+
     if (!response.ok) {
-      throw new Error("Error al obtener el usuario actual");
+      throw new Error(result.detail || "Error al obtener el usuario actual");
     }
 
-    return response.json();
+    return result;
+  }
+
+  async deleteAccount(): Promise<void> {
+    const token = this.getToken();
+    if (!token) throw new Error("No hay token disponible");
+
+    const response = await fetch(`${this.baseUrl}/delete`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`Error al eliminar cuenta: ${text}`);
+    }
+
+    // Limpia sesión local
+    this.logout();
+  }
+
+  getUser() {
+    const userData = localStorage.getItem("user");
+    if (!userData) return null;
+    try {
+      return JSON.parse(userData);
+    } catch {
+      return null;
+    }
   }
 }

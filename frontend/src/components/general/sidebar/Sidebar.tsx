@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import Logo from "../../../assets/logo.svg";
 import styles from "./Sidebar.module.css";
 import {
@@ -9,8 +9,31 @@ import {
   IoSearchOutline,
   IoLogOutOutline,
 } from "react-icons/io5";
+import { useEffect, useState } from "react";
+import { authService } from "../../../services";
 
 export default function Sidebar() {
+  const [userName, setUserName] = useState<String>("");
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const user = await authService.getCurrentUser();
+        setUserName(user.name);
+      } catch {
+        setUserName("Usuario");
+      }
+    };
+    fetchUser();
+  }, []);
+
+  const handleLogout = () => {
+    authService.logout();
+    navigate("/auth");
+  };
+
   return (
     <aside className={styles.sidebar}>
       {/* Logo */}
@@ -52,9 +75,9 @@ export default function Sidebar() {
       {/* Usuario */}
       <div className={styles.user}>
         <div className={styles.userContainer}>
-          <IoPersonOutline size={18} /> Usuario
+          <IoPersonOutline size={18} /> {userName || "Cargando..."}
         </div>
-        <button className={styles.logout}>
+        <button className={styles.logout} onClick={handleLogout}>
           <IoLogOutOutline size={18} />
         </button>
       </div>

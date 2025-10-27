@@ -1,6 +1,6 @@
 import { environment } from "../config/environment";
-import { ContactService } from "./contactService";
-import { AuthService } from "./authService";
+import { ContactService } from "./ContactService";
+import { AuthService } from "./AuthService";
 
 const API_URL = environment.api;
 

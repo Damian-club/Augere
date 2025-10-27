@@ -10,7 +10,7 @@ class CourseBase(BaseModel):
     invitation_code: str = Field(...)
 
 class CourseCreate(CourseBase):
-    tutor_id: UUID = Field(...)
+    pass
 
 class CourseUpdate(BaseModel):
     uuid: UUID = Field(...)
@@ -22,3 +22,4 @@ class CourseUpdate(BaseModel):
 class CourseOut(CourseCreate):
     uuid: UUID = Field(...)
     creation_date: datetime = Field(...)
+    tutor_id: UUID = Field(...)

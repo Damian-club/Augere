@@ -11,6 +11,7 @@ import DashboardLayout from "./components/layout/dashboardLayout/DashboardLayout
 import DashboardHome from "./components/page/dashboard/DashboardHome";
 import DashboardSettings from "./components/page/settings/DashboardSettings";
 import Contact from "./components/page/contact/Contact";
+import ProtectedRoute from "./routes/ProtectedRoute";
 
 function App() {
   return (
@@ -37,27 +38,33 @@ function App() {
       <Route
         path="/courses"
         element={
-          <DashboardLayout>
-            <CoursesPage />
-          </DashboardLayout>
+          <ProtectedRoute>
+            <DashboardLayout>
+              <CoursesPage />
+            </DashboardLayout>
+          </ProtectedRoute>
         }
       />
       {/* DASHBOARD INICIO */}
       <Route
         path="/dashboard"
         element={
-          <DashboardLayout>
-            <DashboardHome />
-          </DashboardLayout>
+          <ProtectedRoute>
+            <DashboardLayout>
+              <DashboardHome />
+            </DashboardLayout>
+          </ProtectedRoute>
         }
       />
       {/* DASHBOARD CONFIGURACIÓN */}
       <Route
         path="/settings"
         element={
-          <DashboardLayout>
-            <DashboardSettings />
-          </DashboardLayout>
+          <ProtectedRoute>
+            <DashboardLayout>
+              <DashboardSettings />
+            </DashboardLayout>
+          </ProtectedRoute>
         }
       />
       {/* CONTACT FORM */}

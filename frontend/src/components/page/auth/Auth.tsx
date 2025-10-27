@@ -1,13 +1,16 @@
 import { useState } from "react";
 import styles from "./Auth.module.css";
-import { authService } from "../../../services"; // Ajusta la ruta según tu estructura
+import { authService } from "../../../services"; 
 import type { RegisterData, LoginData } from "../../../schemas/auth";
+import { useNavigate } from "react-router-dom";
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
   const [message, setMessage] = useState<string>("");
+
+  const navigate = useNavigate();
 
   const [loginForm, setLoginForm] = useState<LoginData>({
     email: "",
@@ -38,13 +41,14 @@ export default function Auth() {
     setMessage("");
 
     try {
-      const result = await authService.login(loginForm);
+      await authService.login(loginForm);
+      const user = await authService.getCurrentUser();
       setStatus("success");
-      setMessage(`Bienvenido ${result.user.name}`);
-      console.log("Usuario logueado:", result);
+      setMessage(`Bienvenido ${user.name}`);
+      console.log("Usuario logueado:", user);
 
       // Guardar el token y redirigir
-      // Usar lo dle navigate("/dashboard");
+      navigate("/dashboard");
     } catch (err: any) {
       setStatus("error");
       setMessage(err.message || "Error al iniciar sesión");
@@ -63,7 +67,7 @@ export default function Auth() {
     try {
       const result = await authService.register(registerForm);
       setStatus("success");
-      setMessage(`Usuario ${result.name} registrado correctamente`);
+      setMessage(`Usuario ${registerForm.name} registrado correctamente`);
       console.log("Usuario registrado:", result);
 
       // Cambiar a login automáticamente
@@ -167,7 +171,7 @@ export default function Auth() {
         </div>
       </div>
 
-      
+      {/* Boton cambio */}
       <button
         className={`${styles.authBtnAuth} ${styles.toggleBtn}`}
         onClick={() => setIsLogin(!isLogin)}
