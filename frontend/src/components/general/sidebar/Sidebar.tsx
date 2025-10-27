@@ -5,25 +5,29 @@ import {
   IoHomeOutline,
   IoBookOutline,
   IoSettingsOutline,
-  IoPersonOutline,
   IoSearchOutline,
   IoLogOutOutline,
 } from "react-icons/io5";
 import { useEffect, useState } from "react";
 import { authService } from "../../../services";
 
-export default function Sidebar() {
-  const [userName, setUserName] = useState<String>("");
+interface User {
+  name: string;
+  email: string;
+  avatar_path?: string | null;
+}
 
+export default function Sidebar() {
+  const [user, setUser] = useState<User | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const user = await authService.getCurrentUser();
-        setUserName(user.name);
+        const userData = await authService.getCurrentUser();
+        setUser(userData);
       } catch {
-        setUserName("Usuario");
+        setUser(null);
       }
     };
     fetchUser();
@@ -75,7 +79,24 @@ export default function Sidebar() {
       {/* Usuario */}
       <div className={styles.user}>
         <div className={styles.userContainer}>
-          <IoPersonOutline size={18} /> {userName || "Cargando..."}
+          {user ? (
+            <>
+              <img
+                src={
+                  user.avatar_path
+                    ? user.avatar_path
+                    : `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                        user.name || "Usuario"
+                      )}&background=random`
+                }
+                alt={user.name}
+                className={styles.avatar}
+              />
+              <span>{user.name}</span>
+            </>
+          ) : (
+            <span>Cargando...</span>
+          )}
         </div>
         <button className={styles.logout} onClick={handleLogout}>
           <IoLogOutOutline size={18} />

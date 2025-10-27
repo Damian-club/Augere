@@ -3,6 +3,7 @@ import type {
   LoginData,
   User,
   LoginResponse,
+  UpdateUserData,
 } from "../schemas/auth";
 
 export class AuthService {
@@ -102,5 +103,28 @@ export class AuthService {
     } catch {
       return null;
     }
+  }
+
+  async updateUser(data: UpdateUserData): Promise<User> {
+    const token = this.getToken();
+    if (!token) throw new Error("No hay token disponible");
+
+    const response = await fetch(`${this.baseUrl}/update`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.detail || "Error al actualizar usuario");
+    }
+
+    localStorage.setItem("user", JSON.stringify(result));
+    return result;
   }
 }
