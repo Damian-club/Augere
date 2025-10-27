@@ -4,7 +4,7 @@ from models.course import Course
 from models.user import User
 from fastapi import  HTTPException
 from sqlalchemy.orm import Session
-from uuid import UUID
+from uuid import UUID, uuid4
 from typing import List
 
 def create_course(
@@ -12,28 +12,32 @@ def create_course(
     user: User,
     db: Session
 ) -> CourseOut:
+    if data.invitation_code is None:
+        data.invitation_code = uuid4().hex[:8]
+
+    course = Course(
+        title=data.title,
+        description=data.description,
+        logo_path=data.logo_path,
+        invitation_code=data.invitation_code,
+        tutor_id=user.uuid
+    )
     try:
-        course = Course(
-            title=data.title,
-            description=data.description,
-            logo_path=data.logo_path,
-            invitation_code=data.invitation_code,
-            tutor_id=user.uuid
-        )
         db.add(course)
         db.commit()
         db.refresh(course)
-        return CourseOut(
-            uuid=course.uuid,
-            title=course.title,
-            description=course.description,
-            logo_path=course.logo_path,
-            invitation_code=course.invitation_code,
-            tutor_id=course.tutor_id,
-            creation_date=course.creation_date
-        )
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=f"Error al crear el curso: {e}")
+    
+    return CourseOut(
+        uuid=course.uuid,
+        title=course.title,
+        description=course.description,
+        logo_path=course.logo_path,
+        invitation_code=course.invitation_code,
+        tutor_id=course.tutor_id,
+        creation_date=course.creation_date
+    )
     
 def update_course(
     data: CourseUpdate,
@@ -57,8 +61,11 @@ def update_course(
     if data.invitation_code is not None:
         course.invitation_code = data.invitation_code
     
-    db.commit()
-    db.refresh(course)
+    try:
+        db.commit()
+        db.refresh(course)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error al actualizar el curso: {e}")
     
     return CourseOut(
         uuid=course.uuid,
@@ -81,8 +88,11 @@ def delete_course(
     if course.tutor_id != user.uuid:
         raise HTTPException(status_code=403, detail="No tienes permiso para eliminar este curso")
     
-    db.delete(course)
-    db.commit()
+    try:
+        db.delete(course)
+        db.commit()
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error al eliminar el curso: {e}")
     
     return Message(message="Curso eliminado exitosamente")
 
@@ -91,7 +101,10 @@ def get_course(
     user: User,
     db: Session
 ) -> CourseOut:
-    course: Course = db.query(Course).filter(Course.uuid == course_uuid).first()
+    try:
+        course: Course = db.query(Course).filter(Course.uuid == course_uuid).first()
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error al obtener el curso: {e}")
     if not course:
         raise HTTPException(status_code=404, detail="Curso no encontrado")
     if course.tutor_id != user.uuid:

@@ -17,7 +17,7 @@ from models.schema_category import SchemaCategory
 
 from dependencies.user import get_current_user
 
-user_router = APIRouter(prefix='/users', tags=['Users'])
+router = APIRouter(prefix='/users', tags=['Users'])
 
 # @user_router.post('/', response_model=UserOut)
 # def create_user(user_create: UserRegister, db: Session = Depends(get_db)):
