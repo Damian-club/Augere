@@ -40,7 +40,11 @@ def join_course(
     user: User,
     db: Session
 ) -> StudentOut:
-    course: Course = db.query(Course).filter(Course.invitation_code == invitation_code).first()
+    try:
+        course: Course = db.query(Course).filter(Course.invitation_code == invitation_code).first()
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error al buscar el curso: {e}")
+    
     if not course:
         raise HTTPException(status_code=404, detail="Código de invitación inválido")
     
@@ -51,15 +55,35 @@ def join_course(
 
     return create_student(student_create, user, db)
 
+def get_student(
+    uuid: UUID,
+    db: Session
+) -> StudentOut:
+    try:
+        student: Student = db.query(Student).filter(Student.uuid == uuid).first()
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error al buscar el estudiante: {e}")
+    if not student:
+        raise HTTPException(status_code=404, detail="Estudiante no encontrado")
+    return StudentOut(
+        uuid=student.uuid,
+        inscription_date=student.inscription_date,
+        student_id=student.student_id,
+        course_id=student.course_id
+    )
+
 def delete_student(
     data: StudentDelete,
     user: User,
     db: Session
 ) -> Message:
-    student: Student = db.query(Student).filter(
-        Student.student_id == data.student_id,
-        Student.course_id == data.course_id
-    ).first()
+    try:
+        student: Student = db.query(Student).filter(
+            Student.student_id == data.student_id,
+            Student.course_id == data.course_id
+        ).first()
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error al buscar el estudiante: {e}")
 
     if not student:
         raise HTTPException(status_code=404, detail="Estudiante no encontrado")
