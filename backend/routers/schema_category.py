@@ -33,8 +33,7 @@ def delete_schema_category(
 
 @router.put("/{uuid}", summary="Actualizar una categoría de esquema por UUID", response_model=SchemaCategoryOut)
 def update_schema_category(
-    uuid: str,
     data: SchemaCategoryUpdate,
     db = Depends(get_db)
 ):
-    return s_update_schema_category(uuid, data, db)
+    return s_update_schema_category(data, db)
