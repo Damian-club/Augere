@@ -120,10 +120,31 @@ def get_course(
         creation_date=course.creation_date
     )
 
-def list_user_courses(
+def list_user_tutored_courses(
     user: User
 ) -> List[CourseOut]:
     courses = user.tutored_courses if user else []
+    
+    return [
+        CourseOut(
+            uuid=course.uuid,
+            title=course.title,
+            description=course.description,
+            logo_path=course.logo_path,
+            invitation_code=course.invitation_code,
+            tutor_id=course.tutor_id,
+            creation_date=course.creation_date
+        )
+        for course in courses
+    ]
+
+def list_user_enrolled_courses(
+    user: User,
+    db: Session
+) -> List[CourseOut]:
+    student_records = user.student_records if user else []
+    student_uuids = [record.course_id for record in student_records]
+    courses = db.query(Course).filter(Course.uuid.in_(student_uuids)).all()
     
     return [
         CourseOut(

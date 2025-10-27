@@ -4,10 +4,10 @@ import { useState } from "react";
 import CourseModal from "./CourseModal";
 
 export default function AddCourseCard() {
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
   return (
     <>
-      <div className={styles.card}>
+      <div className={styles.card} onClick={() => setIsOpen(true)}>
         <IoAdd className={styles.icon} size={32} />
         <p className={styles.text}>¿No encuentras lo que buscas?</p>
         <span className={styles.subtext}>Unirse a un curso nuevo</span>

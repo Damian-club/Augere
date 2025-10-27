@@ -1,16 +1,16 @@
 import { useState } from "react";
+import { IoClose, IoRefresh } from "react-icons/io5";
 import styles from "./CourseModal.module.css";
 
 export default function CourseModal({ onClose }: { onClose: () => void }) {
   const [mode, setMode] = useState<"create" | "join">("create");
   const [form, setForm] = useState({
-    uuid: crypto.randomUUID(),
     title: "",
     description: "",
     logo_path: "",
     invitation_code: "",
   });
-
+  
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -32,9 +32,10 @@ export default function CourseModal({ onClose }: { onClose: () => void }) {
     <div className={styles.overlay}>
       <div className={styles.modal}>
         <button className={styles.close} onClick={onClose}>
-          ✕
+          <IoClose size={22} />
         </button>
 
+        {/* Tabs */}
         <div className={styles.tabs}>
           <button
             className={mode === "create" ? styles.active : ""}
@@ -50,11 +51,9 @@ export default function CourseModal({ onClose }: { onClose: () => void }) {
           </button>
         </div>
 
+        {/* Formulario */}
         {mode === "create" ? (
           <form className={styles.form} onSubmit={handleSubmit}>
-            <label>UUID</label>
-            <input type="text" name="uuid" value={form.uuid} readOnly />
-
             <label>Título</label>
             <input
               type="text"
@@ -72,7 +71,7 @@ export default function CourseModal({ onClose }: { onClose: () => void }) {
               required
             />
 
-            <label>Logo (URL o ruta)</label>
+            <label>Logo</label>
             <input
               type="text"
               name="logo_path"
@@ -81,7 +80,7 @@ export default function CourseModal({ onClose }: { onClose: () => void }) {
               placeholder="/assets/logo.png"
             />
 
-            <label>Código de invitación (opcional)</label>
+            <label>Código de invitación</label>
             <div className={styles.invitation}>
               <input
                 type="text"
@@ -90,8 +89,13 @@ export default function CourseModal({ onClose }: { onClose: () => void }) {
                 onChange={handleChange}
                 placeholder="auto-generado si se deja vacío"
               />
-              <button type="button" onClick={generateInvitation}>
-                Generar
+              <button
+                type="button"
+                onClick={generateInvitation}
+                className={styles.iconButton}
+                title="Generar código"
+              >
+                <IoRefresh size={20} />
               </button>
             </div>
 

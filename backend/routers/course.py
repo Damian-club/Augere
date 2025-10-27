@@ -10,7 +10,8 @@ from typing import List
 
 from services.course import create_course as s_create_course
 from services.course import update_course as s_update_course
-from services.course import list_user_courses as s_list_user_courses
+from services.course import list_user_tutored_courses as s_list_user_tutored_courses
+from services.course import list_user_enrolled_courses as s_list_user_enrolled_courses
 from services.course import delete_course as s_delete_course
 from services.course import get_course as s_get_course
 
@@ -22,10 +23,7 @@ def create_course(
     user: User = Depends(get_current_user),
     db = Depends(get_db)
 ):
-    try:
-        return s_create_course(data, user, db)
-    except Exception as e:
-        raise HTTPException(400, f"Error al crear curso: {e}")
+    return s_create_course(data, user, db)
     
 @router.put("/update", summary="Actualizar un curso", response_model=CourseOut)
 def update_course(
@@ -33,10 +31,7 @@ def update_course(
     user: User = Depends(get_current_user),
     db = Depends(get_db)
 ):
-    try:
-        return s_update_course(data, user, db)
-    except Exception as e:
-        raise HTTPException(400, f"Error al actualizar curso: {e}")
+    return s_update_course(data, user, db)
 
 @router.get("/get", summary="Obtener un curso por UUID", response_model=CourseOut)
 def get_course(
@@ -44,27 +39,25 @@ def get_course(
     user: User = Depends(get_current_user),
     db = Depends(get_db)
 ):
-    try:
-        return s_get_course(course_uuid, user, db)
-    except Exception as e:
-        raise HTTPException(400, f"Error al obtener curso: {e}")
-
+    return s_get_course(course_uuid, user, db)
+    
 @router.delete("/delete", summary="Eliminar un curso", response_model=Message)
 def delete_course(
     course_uuid: UUID,
     user: User = Depends(get_current_user),
     db = Depends(get_db)
 ):
-    try:
-        return s_delete_course(course_uuid, user, db)
-    except Exception as e:
-        raise HTTPException(400, f"Error al eliminar curso: {e}")
-
-@router.get("/my-courses", summary="Listar mis cursos", response_model=List[CourseOut])
+    return s_delete_course(course_uuid, user, db)
+    
+@router.get("/enrolled-courses", summary="Listar mis cursos", response_model=List[CourseOut])
 def list_my_courses(
+    user: User = Depends(get_current_user),
+    db = Depends(get_db)
+):
+    return s_list_user_enrolled_courses(user, db)
+
+@router.get("/tutored-courses", summary="Listar cursos que tutoreo", response_model=List[CourseOut])
+def list_tutored_courses(
     user: User = Depends(get_current_user)
 ):
-    try:
-        return s_list_user_courses(user)
-    except Exception as e:
-        raise HTTPException(400, f"Error al listar cursos: {e}")
+    return s_list_user_tutored_courses(user)
