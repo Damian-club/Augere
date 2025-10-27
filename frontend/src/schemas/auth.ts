@@ -10,14 +10,18 @@ export interface LoginData {
 }
 
 export interface User {
-  id: string;
+  uuid: string;
   name: string;
   email: string;
-  photo?: string;
-  created_at: Date;
+  avatar_path?: string;
+  creation_date: string;
 }
 
 export interface LoginResponse {
   access_token: string;
   token_type: string;
 }
+
+export type UpdateUserData = Omit<Partial<RegisterData>, "password"> & {
+  avatar_path?: string;
+};
