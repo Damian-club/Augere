@@ -12,7 +12,7 @@ export class AuthService {
   constructor(apiUrl: string) {
     this.baseUrl = `${apiUrl}/auth`;
   }
-
+  // REGISTRAR
   async register(data: RegisterData): Promise<LoginResponse> {
     const response = await fetch(`${this.baseUrl}/register`, {
       method: "POST",
@@ -30,7 +30,7 @@ export class AuthService {
 
     return result;
   }
-
+  // LOGIN
   async login(data: LoginData): Promise<LoginResponse> {
     const response = await fetch(`${this.baseUrl}/login`, {
       method: "POST",
@@ -45,9 +45,6 @@ export class AuthService {
     }
 
     localStorage.setItem("token", result.access_token);
-    const user = await this.getCurrentUser();
-    localStorage.setItem("user", JSON.stringify(user));
-
     return result;
   }
 
@@ -65,7 +62,10 @@ export class AuthService {
     if (!token) throw new Error("No hay token disponible");
 
     const response = await fetch(`${this.baseUrl}/me`, {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
     });
 
     const result = await response.json();
@@ -74,6 +74,7 @@ export class AuthService {
       throw new Error(result.detail || "Error al obtener el usuario actual");
     }
 
+    localStorage.setItem("user", JSON.stringify(result));
     return result;
   }
 

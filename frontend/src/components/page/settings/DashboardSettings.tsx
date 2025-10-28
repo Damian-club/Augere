@@ -4,7 +4,6 @@ import styles from "./DashboardSettings.module.css";
 import { IoCloudUploadOutline } from "react-icons/io5";
 import { authService } from "../../../services";
 import { useEffect, useState } from "react";
-import { getCurrentUser } from "../../../api/auth";
 
 export default function DashboardSettings() {
   const navigate = useNavigate();
@@ -19,8 +18,9 @@ export default function DashboardSettings() {
 
   // Cargar usuario actual
   useEffect(() => {
-    getCurrentUser()
-      .then((data) => {
+    const fetchUser = async () => {
+      try {
+        const data = await authService.getCurrentUser();
         setUser(data);
         setFormData({
           name: data.name || "",
@@ -28,8 +28,11 @@ export default function DashboardSettings() {
           password: "",
           avatar_path: data.avatar_path || "",
         });
-      })
-      .catch((err) => console.log(err));
+      } catch (err) {
+        console.error("Error al obtener usuario:", err);
+      }
+    };
+    fetchUser();
   }, []);
 
   // Manejar Inputs

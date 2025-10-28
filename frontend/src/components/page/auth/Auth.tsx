@@ -1,6 +1,6 @@
 import { useState } from "react";
 import styles from "./Auth.module.css";
-import { authService } from "../../../services"; 
+import { authService } from "../../../services";
 import type { RegisterData, LoginData } from "../../../schemas/auth";
 import { useNavigate } from "react-router-dom";
 
@@ -41,15 +41,24 @@ export default function Auth() {
     setMessage("");
 
     try {
-      await authService.login(loginForm);
-      const user = await authService.getCurrentUser();
-      setStatus("success");
-      setMessage(`Bienvenido ${user.name}`);
-      console.log("Usuario logueado:", user);
+      if (!loginForm.email || !loginForm.password) {
+        throw new Error("Por favor, completa todos los campos");
+      }
 
-      // Guardar el token y redirigir
-      navigate("/dashboard");
+      await authService.login({
+        email: loginForm.email.trim(),
+        password: loginForm.password,
+      });
+
+      setTimeout(async () => {
+        const user = await authService.getCurrentUser();
+        setStatus("success");
+        setMessage(`Bienvenido ${user.name || "usuario"}`);
+        console.log("Usuario logueado:", user);
+        navigate("/dashboard");
+      }, 150);
     } catch (err: any) {
+      console.error("Error al iniciar sesión:", err);
       setStatus("error");
       setMessage(err.message || "Error al iniciar sesión");
     } finally {
