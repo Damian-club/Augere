@@ -11,7 +11,6 @@ from routers.schema_category import router as schema_category_router
 from fastapi.middleware.cors import CORSMiddleware
 
 
-
 @asynccontextmanager
 async def start(instance: FastAPI):
     # Iniciar

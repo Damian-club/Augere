@@ -12,12 +12,13 @@ from core.settings import settings
 
 def login(data: UserLogin, db: Session):
     user: User = db.query(User).filter(User.email == data.email).first()
-
+    
     if not user or not verify_password(data.password, user.pwd_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Correo o contraseña incorrectos",
         )
+
 
     return create_token(user)
 
