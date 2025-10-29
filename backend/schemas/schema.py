@@ -17,5 +17,5 @@ class FullSchemaCategory(SchemaCategoryOut):
     entry_list: List[SchemaEntryOut] = Field(default_factory=list)
 
 class FullSchemaOut(SchemaOut):
-    category_list: List[SchemaCategoryOut] = Field(default_factory=list)
+    category_list: List[FullSchemaCategory] = Field(default_factory=list)
 
