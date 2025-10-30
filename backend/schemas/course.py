@@ -24,6 +24,7 @@ class CourseOut(CourseBase):
     creation_date: datetime = Field(...)
     tutor_id: UUID = Field(...)
     invitation_code: str = Field(...)
+    tutor_name: Optional[str] = Field(None)
 
 class CourseOutUser(CourseOut):
     tutor_name: str = Field(...)

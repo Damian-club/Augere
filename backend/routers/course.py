@@ -60,9 +60,10 @@ def delete_course(
     
 @router.get("/enrolled-courses", summary="Listar mis cursos", response_model=List[CourseOut])
 def list_my_courses(
-    user: User = Depends(get_current_user)
+    user: User = Depends(get_current_user),
+    db = Depends(get_db)
 ):
-    return s_list_user_enrolled_courses(user)
+    return s_list_user_enrolled_courses(user, db)
 
 @router.get("/tutored-courses", summary="Listar cursos que tutoreo", response_model=List[CourseOut])
 def list_tutored_courses(

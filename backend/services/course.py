@@ -156,27 +156,55 @@ def list_user_tutored_courses(
             logo_path=course.logo_path,
             invitation_code=course.invitation_code,
             tutor_id=course.tutor_id,
+            tutor_name=user.name,
             creation_date=course.creation_date
         )
         for course in courses
     ]
 
+
+# def list_user_enrolled_courses(
+#     user: User
+# ) -> List[CourseOut]:
+#     student_records: List[Student] = user.student_records if user else []
+#     courses = [student.course for student in student_records]
+    
+#     return [
+#         CourseOut(
+#             uuid=course.uuid,
+#             title=course.title,
+#             description=course.description,
+#             logo_path=course.logo_path,
+#             invitation_code=course.invitation_code,
+#             tutor_id=course.tutor_id,
+#             creation_date=course.creation_date
+#         )
+#         for course in courses
+#     ]
 
 def list_user_enrolled_courses(
-    user: User
+    user: User,
+    db: Session
 ) -> List[CourseOut]:
     student_records: List[Student] = user.student_records if user else []
-    courses = [student.course for student in student_records]
     
-    return [
-        CourseOut(
-            uuid=course.uuid,
-            title=course.title,
-            description=course.description,
-            logo_path=course.logo_path,
-            invitation_code=course.invitation_code,
-            tutor_id=course.tutor_id,
-            creation_date=course.creation_date
+    result = []
+    for student in student_records:
+        course = student.course
+        
+        tutor = db.query(User).filter(User.uuid == course.tutor_id).first()
+        
+        result.append(
+            CourseOut(
+                uuid=course.uuid,
+                title=course.title,
+                description=course.description,
+                logo_path=course.logo_path,
+                invitation_code=course.invitation_code,
+                tutor_id=course.tutor_id,
+                tutor_name=tutor.name if tutor else "Desconocido",
+                creation_date=course.creation_date
+            )
         )
-        for course in courses
-    ]
+    
+    return result

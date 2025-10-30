@@ -1,3 +1,4 @@
+import { environment } from "../config/environment";
 import type { Course } from "../schemas/course";
 
 export class CourseService {
@@ -35,7 +36,6 @@ export class CourseService {
       headers: this.getHeaders(),
       body: JSON.stringify(data),
     });
-
     if (!res.ok)
       throw new Error(
         (await this.handleResp(res)).detail || "Error al crear curso"
@@ -63,7 +63,7 @@ export class CourseService {
   }
 
   async getCourse(uuid: string): Promise<Course> {
-    const res = await fetch(`${this.baseUrl}/get/${uuid}`, {
+    const res = await fetch(`${this.baseUrl}/get?course_uuid=${uuid}`, {
       headers: this.getHeaders(),
     });
     if (!res.ok) throw new Error("Curso no encontrado");
@@ -71,7 +71,7 @@ export class CourseService {
   }
 
   async deleteCourse(uuid: string): Promise<void> {
-    const res = await fetch(`${this.baseUrl}/delete/${uuid}`, {
+    const res = await fetch(`${this.baseUrl}/delete?course_uuid=${uuid}`, {
       method: "DELETE",
       headers: this.getHeaders(),
     });
@@ -94,12 +94,11 @@ export class CourseService {
     return res.json();
   }
 
-  async getUserInfo(uuid: string): Promise<{ tutor_name: string }> {
-    const res = await fetch(`${this.baseUrl}/get/user/${uuid}`, {
+  async getCourseWithTutor(uuid: string): Promise<Course> {
+    const res = await fetch(`${this.baseUrl}/get?course_uuid=${uuid}`, {
       headers: this.getHeaders(),
     });
-    if (!res.ok) throw new Error("Error al obtener información del usuario");
+    if (!res.ok) throw new Error("Error al obtener detalles del curso");
     return res.json();
   }
 }
-

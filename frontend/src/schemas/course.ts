@@ -2,7 +2,9 @@ export interface Course {
   uuid: string;
   title: string;
   description?: string;
-  logo_path?: string | null;
-  invitation_code?: string | null;
-  tutor_id: string
+  logo_path?: string;
+  invitation_code?: string;
+  tutor_id: string;
+  tutor_name?: string;
+  creation_date?: string;
 }
