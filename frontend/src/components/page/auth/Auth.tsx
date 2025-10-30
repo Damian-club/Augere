@@ -41,24 +41,32 @@ export default function Auth() {
     setMessage("");
 
     try {
+      console.log("🔄 Iniciando proceso de login...");
+
       if (!loginForm.email || !loginForm.password) {
         throw new Error("Por favor, completa todos los campos");
       }
 
+      // 1. Hacer login
       await authService.login({
         email: loginForm.email.trim(),
         password: loginForm.password,
       });
 
-      setTimeout(async () => {
-        const user = await authService.getCurrentUser();
-        setStatus("success");
-        setMessage(`Bienvenido ${user.name || "usuario"}`);
-        console.log("Usuario logueado:", user);
-        navigate("/dashboard");
-      }, 150);
+      console.log("✅ Login exitoso, obteniendo usuario...");
+
+      // 2. Obtener usuario inmediatamente
+      const user = await authService.getCurrentUser();
+
+      console.log("✅ Usuario obtenido, redirigiendo...");
+
+      setStatus("success");
+      setMessage(`Bienvenido ${user.name || "usuario"}`);
+
+      // 3. Redirigir
+      navigate("/dashboard");
     } catch (err: any) {
-      console.error("Error al iniciar sesión:", err);
+      console.error("❌ Error completo en login:", err);
       setStatus("error");
       setMessage(err.message || "Error al iniciar sesión");
     } finally {
