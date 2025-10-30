@@ -6,11 +6,13 @@ import { useEffect, useState } from "react";
 import { courseService } from "../../../services";
 import { pastelGradientFromString } from "../../../utils/colors";
 import { authService } from "../../../services";
+import CourseConfigPanel from "../../general/courseConfig/CourseConfigPanel";
 
 export default function CoursePage() {
   const [created, setCreated] = useState<Course[]>([]);
   const [enrolled, setEnrolled] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
+  const [configCourseId, setConfigCourseId] = useState<string | null>(null);
 
   const fetchLists = async () => {
     try {
@@ -60,6 +62,7 @@ export default function CoursePage() {
               color={pastelGradientFromString(c.title)}
               logo_path={c.logo_path}
               icon="settings"
+              onIconClick={() => setConfigCourseId(c.uuid)}
             />
           ))}
         </div>
@@ -91,6 +94,12 @@ export default function CoursePage() {
         </div>
       </section>
       {loading && <p className={styles.loader}>Cargando cursos...</p>}
+      {configCourseId && (
+        <CourseConfigPanel
+          courseId={configCourseId}
+          onClose={() => setConfigCourseId(null)}
+        />
+      )}
     </div>
   );
 }

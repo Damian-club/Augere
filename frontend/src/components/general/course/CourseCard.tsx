@@ -13,6 +13,7 @@ type Props = {
   logo_path?: string;
   onDelete?: () => void;
   canDelete?: boolean;
+  onIconClick?: () => void;
 };
 
 export default function CourseCard({
@@ -26,6 +27,7 @@ export default function CourseCard({
   logo_path,
   onDelete,
   canDelete = true,
+  onIconClick,
 }: Props) {
   const isCompact = variant === "compact";
 
@@ -43,7 +45,11 @@ export default function CourseCard({
         toast.success("Te has desinscrito del curso");
       }
     } else if (icon === "settings") {
-      toast("Abriendo configuración...");
+      if (onIconClick) {
+        onIconClick();
+      } else {
+        toast("Abriendo configuración...");
+      }
     }
   };
 
