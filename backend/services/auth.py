@@ -55,15 +55,16 @@ def register(data: UserRegister, db: Session):
 
 def create_token(user: User):
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    
+    # SOLO incluye el UUID en el token (lo mínimo necesario)
     access_token = create_access_token(
         data={
-            "name": user.name,
-            "email": user.email,
-            "uuid": str(user.uuid),
-            "avatar_path": user.avatar_path,
+            "sub": str(user.uuid),  # Usa "sub" que es el estándar JWT
+            # "uuid": str(user.uuid),  # También lo dejamos por compatibilidad
         },
         expires_delta=access_token_expires,
     )
+    
     return Token(access_token=access_token, token_type="bearer")
 
 
