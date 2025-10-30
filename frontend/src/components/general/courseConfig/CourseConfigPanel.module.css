@@ -83,6 +83,17 @@
   color: #0077ff;
 }
 
+.formRowTwo {
+  display: grid;
+  grid-template-columns: 2fr 1.5fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.formRowTwo input {
+  width: 100%;
+}
+
 .content {
   flex: 1;
   display: flex;

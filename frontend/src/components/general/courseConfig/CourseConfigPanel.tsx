@@ -163,24 +163,30 @@ export default function CourseConfigPanel({
       <div className={styles.content}>
         {activeTab === "general" && (
           <>
-            <label>Nombre del curso</label>
-            <input
-              type="text"
-              name="title"
-              value={form.title}
-              onChange={handleChange}
-            />
+            <div className={styles.formRowTwo}>
+              <div>
+                <label>Nombre del curso</label>
+                <input
+                  type="text"
+                  name="title"
+                  value={form.title}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div>
+                <label>Logo</label>
+                <input
+                  type="text"
+                  name="logo_path"
+                  value={form.logo_path}
+                  onChange={handleChange}
+                />
+              </div>
+            </div>
 
             <label>Color primario</label>
             <input type="color" name="color" value={form.color} disabled />
-
-            <label>Logo</label>
-            <input
-              type="text"
-              name="logo_path"
-              value={form.logo_path}
-              onChange={handleChange}
-            />
 
             <label>Descripción</label>
             <textarea
@@ -205,6 +211,7 @@ export default function CourseConfigPanel({
                 <span className={styles.infoValue}>{"0%"}</span>
               </div>
             </div>
+
             <div className={styles.buttonsContainer}>
               <button className={styles.saveBtn} onClick={handleSave}>
                 Guardar
