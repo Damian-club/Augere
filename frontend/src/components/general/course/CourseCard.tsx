@@ -1,5 +1,7 @@
+import { useState } from "react";
 import styles from "./CourseCard.module.css";
-import { IoClose, IoSettingsSharp } from "react-icons/io5";
+import { IoClose, IoSettingsSharp, IoBookOutline } from "react-icons/io5";
+import toast from "react-hot-toast";
 
 type Props = {
   title: string;
@@ -9,6 +11,9 @@ type Props = {
   color?: string;
   icon?: "close" | "settings";
   variant?: "default" | "compact";
+  logo_path?: string;
+  onDelete?: () => void;
+  canDelete?: boolean;
 };
 
 export default function CourseCard({
@@ -19,21 +24,59 @@ export default function CourseCard({
   color = "linear-gradient(135deg, #f1f5f9, #e2e8f0)",
   icon = "close",
   variant = "default",
+  logo_path,
+  onDelete,
+  canDelete = true,
 }: Props) {
   const isCompact = variant === "compact";
+  const [warning, setWarning] = useState("");
+
+  const handleIconClick = () => {
+    if (icon === "close") {
+      if (!canDelete) {
+        toast.error("Solo el tutor del curso puede eliminar estudiantes");
+        return;
+      }
+      if (
+        onDelete &&
+        confirm(`¿Estás seguro de que quieres desinscribirte de "${title}"?`)
+      ) {
+        onDelete();
+        toast.success("Te has desinscrito del curso");
+      }
+    } else if (icon === "settings") {
+      toast("Abriendo configuración...");
+    }
+  };
 
   return (
     <div
       className={`${styles.card} ${isCompact ? styles.compact : ""}`}
       style={{ background: color }}
     >
-      <button className={styles.iconBtn}>
+      {/* Botón superior */}
+      <button className={styles.iconBtn} onClick={handleIconClick}>
         {icon === "close" ? (
-          <IoClose size={18} />
+          <IoClose size={20} />
         ) : (
-          <IoSettingsSharp size={18} />
+          <IoSettingsSharp size={20} />
         )}
       </button>
+      {/* {warning && <p className={styles.warning}>{warning}</p>} */}
+
+      {/* Logo o icono */}
+      <div className={styles.logoContainer}>
+        {logo_path ? (
+          <img
+            src={logo_path}
+            alt={title}
+            className={styles.logo}
+            loading="lazy"
+          />
+        ) : (
+          <IoBookOutline className={styles.logoIcon} />
+        )}
+      </div>
 
       <h3 className={styles.title}>{title}</h3>
 
@@ -45,7 +88,7 @@ export default function CourseCard({
       <div className={styles.progressBar}>
         <div style={{ width: `${progress}%` }} />
       </div>
-      <span className={styles.progressText}>{progress}%</span>
+      <p className={styles.progressText}>{progress}%</p>
     </div>
   );
 }

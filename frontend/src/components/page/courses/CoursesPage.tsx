@@ -5,6 +5,7 @@ import type { Course } from "../../../schemas/course";
 import { useEffect, useState } from "react";
 import { courseService } from "../../../services";
 import { pastelGradientFromString } from "../../../utils/colors";
+import { authService } from "../../../services";
 
 export default function CoursePage() {
   const [created, setCreated] = useState<Course[]>([]);
@@ -57,6 +58,7 @@ export default function CoursePage() {
               description={c.description}
               progress={30}
               color={pastelGradientFromString(c.title)}
+              logo_path={c.logo_path}
               icon="settings"
             />
           ))}
@@ -68,17 +70,24 @@ export default function CoursePage() {
           <h2>Inscritos</h2>
         </div>
         <div className={styles.grid}>
-          {enrolled.map((c) => (
-            <CourseCard
-              key={c.uuid}
-              title={c.title}
-              author={`Por: ${c.tutor_name || "Tutor"}`}
-              description={c.description}
-              progress={0}
-              color={pastelGradientFromString(c.title)}
-              icon="close"
-            />
-          ))}
+          {enrolled.map((c) => {
+            const currentUser = authService.getUser();
+            const isTutor = currentUser && c.tutor_id === currentUser.uuid;
+            return (
+              <CourseCard
+                key={c.uuid}
+                title={c.title}
+                author={`Por: ${c.tutor_name || "Tutor"}`}
+                description={c.description}
+                progress={0}
+                color={pastelGradientFromString(c.title)}
+                logo_path={c.logo_path}
+                icon="close"
+                canDelete={isTutor}
+                onDelete={undefined}
+              />
+            );
+          })}
         </div>
       </section>
       {loading && <p className={styles.loader}>Cargando cursos...</p>}

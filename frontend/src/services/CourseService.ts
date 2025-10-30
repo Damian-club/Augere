@@ -1,4 +1,3 @@
-import { environment } from "../config/environment";
 import type { Course } from "../schemas/course";
 
 export class CourseService {

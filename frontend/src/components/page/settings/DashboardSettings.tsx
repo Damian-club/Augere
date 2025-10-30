@@ -6,10 +6,10 @@ import { authService, courseService } from "../../../services";
 import { useEffect, useState } from "react";
 import { pastelGradientFromString } from "../../../utils/colors";
 import type { Course } from "../../../schemas/course";
+import toast from "react-hot-toast";
 
 export default function DashboardSettings() {
   const navigate = useNavigate();
-  const [message, setMessage] = useState("");
   const [user, setUser] = useState<{ uuid: string } | null>(null);
   const [formData, setFormData] = useState({
     name: "",
@@ -66,25 +66,41 @@ export default function DashboardSettings() {
   const handleUpdate = async () => {
     try {
       await authService.updateUser(formData);
-      setMessage("Cuenta actualizada correctamente");
+      toast.success("Cuenta actualizada correctamente");
     } catch (err: any) {
-      setMessage(err.message || "Error al actualizar la cuenta");
+      toast.error(err.message || "Error al actualizar la cuenta");
     }
   };
 
-  // Manejar Delete
   const handleDelete = async () => {
-    const confirmDelete = confirm("¿Seguro de que deseas eliminar tu cuenta?");
-
-    if (!confirmDelete) return;
-
-    try {
-      await authService.deleteAccount();
-      setMessage("Cuenta eliminada correctamente.");
-      navigate("/auth");
-    } catch (err: any) {
-      setMessage(err.message || "Error al eliminar cuenta");
-    }
+    toast(
+      (t) => (
+        <div className={styles.toastConfirm}>
+          <p>¿Seguro de que deseas eliminar tu cuenta?</p>
+          <div className={styles.toastButtons}>
+            <button className={styles.btnCancel} onClick={() => toast.dismiss(t.id)}>
+              Cancelar
+            </button>
+            <button
+              className={styles.btnDelete}
+              onClick={async () => {
+                toast.dismiss(t.id);
+                try {
+                  await authService.deleteAccount();
+                  toast.success("Cuenta eliminada correctamente.");
+                  navigate("/auth");
+                } catch (err: any) {
+                  toast.error(err.message || "Error al eliminar cuenta");
+                }
+              }}
+            >
+              Eliminar
+            </button>
+          </div>
+        </div>
+      ),
+      { duration: 8000 }
+    );
   };
 
   return (
@@ -163,6 +179,7 @@ export default function DashboardSettings() {
                 color={pastelGradientFromString(course.title)}
                 progress={0}
                 icon="settings"
+                logo_path={course.logo_path}
                 variant="compact"
               />
             ))}
@@ -179,7 +196,6 @@ export default function DashboardSettings() {
         <button className={styles.delete} onClick={handleDelete}>
           Eliminar Cuenta
         </button>
-        {message && <p>{message}</p>}
       </div>
     </div>
   );

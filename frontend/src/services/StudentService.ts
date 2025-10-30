@@ -5,6 +5,7 @@ export class StudentService {
     this.baseUrl = `${apiUrl}/student`;
   }
 
+  // Obtener headers
   private getHeaders(): HeadersInit {
     const token = localStorage.getItem("token");
     return {
@@ -13,6 +14,7 @@ export class StudentService {
     };
   }
 
+  // Inscribirse a un curso
   async joinCourse(invitationCode: string) {
     try {
       const res = await fetch(
@@ -39,6 +41,32 @@ export class StudentService {
     } catch (err) {
       console.error("Error en StudentService.joinCourse:", err);
       throw err;
+    }
+  }
+
+  // Desincribirse de un curso
+  async unenrollFromCourse(courseId: string): Promise<void> {
+    // Obtener student_id
+    const userData = localStorage.getItem("user");
+    if (!userData) {
+      throw new Error("No hay sesión activa");
+    }
+
+    const user = JSON.parse(userData);
+    const studentId = user.uuid;
+
+    const res = await fetch(`${this.baseUrl}/`, {
+      method: "DELETE",
+      headers: this.getHeaders(),
+      body: JSON.stringify({
+        student_id: studentId,
+        course_id: courseId,
+      }),
+    });
+
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.detail || "Error al desinscribirse del curso");
     }
   }
 }
