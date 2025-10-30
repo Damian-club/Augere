@@ -18,7 +18,7 @@ class AIChat(Base):
     uuid: Mapped[PyUUID] = mapped_column(UUID(as_uuid=True), primary_key=True, nullable=False, default=uuid4)
     creation_date: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.now)
     progress_id: Mapped[PyUUID] = mapped_column(UUID(as_uuid=True), ForeignKey('progress.uuid'), nullable=False)
-    author: Mapped[Author] = mapped_column(SqlEnum(Author, native_enum=False), nullable=False)
+    author: Mapped[Author] = mapped_column(SqlEnum(Author, native_enum=False, values_callable=lambda x: [e.value for e in x]), nullable=False)
     content: Mapped[str] = mapped_column(String, nullable=False)
 
     progress: Mapped["Progress"] = relationship(back_populates="ai_chat_records")
