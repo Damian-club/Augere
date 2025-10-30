@@ -5,6 +5,7 @@ import { IoCloudUploadOutline } from "react-icons/io5";
 import { authService, courseService } from "../../../services";
 import { useEffect, useState } from "react";
 import { pastelGradientFromString } from "../../../utils/colors";
+import type { Course } from "../../../schemas/course";
 
 export default function DashboardSettings() {
   const navigate = useNavigate();
