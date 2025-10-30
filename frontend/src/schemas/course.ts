@@ -8,3 +8,7 @@ export interface Course {
   tutor_name?: string;
   creation_date?: string;
 }
+
+export interface DeleteCourseResponse {
+  detail: string;
+}

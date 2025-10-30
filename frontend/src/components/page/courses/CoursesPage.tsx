@@ -98,6 +98,7 @@ export default function CoursePage() {
         <CourseConfigPanel
           courseId={configCourseId}
           onClose={() => setConfigCourseId(null)}
+          onUpdated={fetchLists}
         />
       )}
     </div>

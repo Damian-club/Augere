@@ -1,4 +1,4 @@
-import type { Course } from "../schemas/course";
+import type { Course, DeleteCourseResponse } from "../schemas/course";
 
 export class CourseService {
   private readonly baseUrl: string;
@@ -69,12 +69,15 @@ export class CourseService {
     return res.json();
   }
 
-  async deleteCourse(uuid: string): Promise<void> {
+  async deleteCourse(uuid: string): Promise<DeleteCourseResponse> {
     const res = await fetch(`${this.baseUrl}/delete?course_uuid=${uuid}`, {
       method: "DELETE",
       headers: this.getHeaders(),
     });
-    if (!res.ok) throw new Error("Error al eliminar curso");
+
+    const data = await this.handleResp(res);
+    if (!res.ok) throw new Error(data?.detail || "Error al eliminar curso");
+    return data as DeleteCourseResponse;
   }
 
   async getEnrolledCourses(): Promise<Course[]> {

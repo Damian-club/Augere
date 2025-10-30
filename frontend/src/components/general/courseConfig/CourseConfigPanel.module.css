@@ -1,37 +1,35 @@
 .panel {
-  position: fixed; /* fijo sobre todo el dashboard */
+  position: fixed;
   top: 0;
   right: 0;
   width: 100%;
-  max-width: 800px; /* se puede ajustar */
+  max-width: 800px;
   height: 100%;
   background: #ffffff;
   z-index: 200;
-  padding: 2rem;
+  padding: 3rem 2rem 2rem 2rem;
   display: flex;
   flex-direction: column;
   overflow-y: auto;
   box-shadow: -5px 0 25px rgba(0, 0, 0, 0.1);
-  transform: translateX(100%); /* fuera de la pantalla por defecto */
+  transform: translateX(100%);
   transition: transform 0.3s ease;
   font-family: "Segoe UI", sans-serif;
 }
 
 .panel.open {
-  transform: translateX(0); /* desliza hacia dentro */
+  transform: translateX(0);
 }
 
 .closeBtn {
-  align-self: flex-end;
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  font-weight: bold;
-  cursor: pointer;
-  color: #333;
   position: absolute;
   top: 20px;
   right: 20px;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #333;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -43,22 +41,37 @@
   transform: rotate(90deg);
 }
 
+.header {
+  margin-bottom: 1rem;
+}
+
+.header h2 {
+  margin: 0;
+}
+
+.header small {
+  color: #888;
+}
+
 .tabs {
   display: flex;
   gap: 1rem;
   margin: 1rem 0;
   border-bottom: 1px solid #eee;
+  font-size: 1.1rem;
 }
 
 .tabs button {
-  padding: 0.5rem 1rem;
+  padding: 0.6rem 1.2rem;
   background: none;
   border: none;
   cursor: pointer;
-  font-weight: 500;
-  border-bottom: 2px solid transparent;
+  font-weight: 600;
+  border-bottom: 3px solid transparent;
   transition: all 0.2s;
   color: #555;
+  display: flex;
+  align-items: center;
 }
 
 .tabs button:hover {
@@ -66,8 +79,7 @@
 }
 
 .tabs button.active {
-  border-bottom: 2px solid #0077ff;
-  font-weight: 600;
+  border-bottom: 3px solid #0077ff;
   color: #0077ff;
 }
 
@@ -94,7 +106,7 @@
   font-size: 0.95rem;
   outline: none;
   background: #f9f9f9;
-  transition: border 0.2s;
+  transition: border 0.2s, background 0.2s;
 }
 
 .content input:focus,
@@ -103,18 +115,107 @@
   background: #fff;
 }
 
-.content button {
+.buttonsContainer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.saveBtn {
   align-self: flex-start;
   padding: 0.6rem 1.4rem;
   border: none;
   border-radius: 8px;
-  background-color: #0077ff;
+  background-color: #4f46e5;
   color: #fff;
   font-weight: 600;
   cursor: pointer;
   transition: background 0.2s;
 }
 
-.content button:hover {
-  background-color: #005fcc;
+.saveBtn:hover {
+  background-color: #423bca;
+}
+
+.deleteBtn {
+  background: #dc2626;
+  color: white;
+  border: none;
+  padding: 0.6rem 1.4rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.deleteBtn:hover {
+  background: #bb1c1c;
+}
+
+/* Infor adicional (codigo, alumnos, progreso) */
+.infoContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+
+.infoRow {
+  display: flex;
+  justify-content: space-between;
+  background: #f5f5f5;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+}
+
+.infoLabel {
+  font-weight: 500;
+  color: #555;
+}
+
+.infoValue {
+  font-weight: 600;
+  color: #4f46e5;
+}
+
+/* ESTILOS TOAST PARA EL DELETE */
+.toastConfirm {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: #333;
+}
+
+.toastButtons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.btnCancel {
+  background-color: #e0e0e0;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.btnCancel:hover {
+  background-color: #ccc;
+}
+
+.btnDelete {
+  background-color: #e53935;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.btnDelete:hover {
+  background-color: #c62828;
 }

@@ -102,7 +102,7 @@ def delete_course(
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error al eliminar el curso: {e}")
     
-    return Message(message="Curso eliminado exitosamente")
+    return Message(detail="Curso eliminado exitosamente")
 
 def get_course(
     course_uuid: UUID,
