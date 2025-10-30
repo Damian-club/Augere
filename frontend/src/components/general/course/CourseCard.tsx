@@ -1,4 +1,3 @@
-import { useState } from "react";
 import styles from "./CourseCard.module.css";
 import { IoClose, IoSettingsSharp, IoBookOutline } from "react-icons/io5";
 import toast from "react-hot-toast";
@@ -29,7 +28,6 @@ export default function CourseCard({
   canDelete = true,
 }: Props) {
   const isCompact = variant === "compact";
-  const [warning, setWarning] = useState("");
 
   const handleIconClick = () => {
     if (icon === "close") {
@@ -62,7 +60,6 @@ export default function CourseCard({
           <IoSettingsSharp size={20} />
         )}
       </button>
-      {/* {warning && <p className={styles.warning}>{warning}</p>} */}
 
       {/* Logo o icono */}
       <div className={styles.logoContainer}>
