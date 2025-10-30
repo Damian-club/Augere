@@ -6,4 +6,4 @@ from .schema import Schema
 from .schema_entry import SchemaEntry
 from .schema_category import SchemaCategory
 from .ai_chat import AIChat
-from .assignment_dict import AssignmentDict
+from .assignment_data import AssignmentData

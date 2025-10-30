@@ -7,6 +7,16 @@ from sqlalchemy.orm import Session
 from uuid import UUID, uuid4
 from typing import List
 
+# Util
+def _get_course_by_uuid(course_uuid, db):
+    try:
+        course: Course = db.query(Course).filter(Course.uuid == course_uuid).first()
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error al obtener el curso: {e}")
+    if not course:
+        raise HTTPException(status_code=404, detail="Curso no encontrado")
+    return course
+
 def create_course(
     data: CourseCreate,
     user: User,
@@ -44,10 +54,7 @@ def update_course(
     user: User,
     db: Session
 ) -> CourseOut:
-    
-    course: Course = db.query(Course).filter(Course.uuid == data.uuid).first()
-    if not course:
-        raise HTTPException(status_code=404, detail="Curso no encontrado")
+    course: Course = _get_course_by_uuid(course_uuid=data.uuid, db=db)
     
     if course.tutor_id != user.uuid:
         raise HTTPException(status_code=403, detail="No tienes permiso para actualizar este curso")
@@ -82,9 +89,8 @@ def delete_course(
     user: User,
     db: Session
 ) -> Message:
-    course: Course = db.query(Course).filter(Course.uuid == course_uuid).first()
-    if not course:
-        raise HTTPException(status_code=404, detail="Curso no encontrado")
+    course: Course = _get_course_by_uuid(course_uuid=course_uuid, db=db)
+
     if course.tutor_id != user.uuid:
         raise HTTPException(status_code=403, detail="No tienes permiso para eliminar este curso")
     
@@ -101,12 +107,7 @@ def get_course(
     user: User,
     db: Session
 ) -> CourseOut:
-    try:
-        course: Course = db.query(Course).filter(Course.uuid == course_uuid).first()
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Error al obtener el curso: {e}")
-    if not course:
-        raise HTTPException(status_code=404, detail="Curso no encontrado")
+    course = _get_course_by_uuid(course_uuid, db)
     if course.tutor_id != user.uuid:
         raise HTTPException(status_code=403, detail="No tienes permiso para ver este curso")
     
@@ -140,12 +141,9 @@ def list_user_tutored_courses(
 
 
 def list_user_enrolled_courses(
-    user: User,
-    db: Session
+    user: User
 ) -> List[CourseOut]:
-    student_records = user.student_records if user else []
-    student_uuids = [record.course_id for record in student_records]
-    courses = db.query(Course).filter(Course.uuid.in_(student_uuids)).all()
+    courses = user.student_records if user else []
     
     return [
         CourseOut(

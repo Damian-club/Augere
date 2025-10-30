@@ -49,7 +49,7 @@ def create_full_schema(
 ):
     return s_create_schema_full(data, db)
 
-@router.delete("/full/{uuid}", summary="Eliminar un esquema completo por UUID", response_class=Message)
+@router.delete("/full/{uuid}", summary="Eliminar un esquema completo por UUID", response_model=Message)
 def delete_full_schema(
     uuid: UUID,
     db = Depends(get_db)

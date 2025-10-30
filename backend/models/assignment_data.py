@@ -5,7 +5,7 @@ from uuid import UUID as PyUUID
 from uuid import uuid4
 from datetime import datetime
 
-class AssignmentDict(Base):
+class AssignmentData(Base):
     __tablename__ = 'assignment_data'
 
     uuid: Mapped[PyUUID] = mapped_column(UUID(as_uuid=True), primary_key=True, nullable=False, default=uuid4)
@@ -15,4 +15,4 @@ class AssignmentDict(Base):
     feedback: Mapped[str] = mapped_column(String, nullable=False)
     success: Mapped[bool] = mapped_column(Boolean, nullable=False)
 
-    progress: Mapped["Progress"] = relationship(back_populates="assignment_dict_record")
+    progress: Mapped["Progress"] = relationship(back_populates="assignment_data_record")

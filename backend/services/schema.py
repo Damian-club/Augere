@@ -1,4 +1,4 @@
-from schemas.schema import SchemaCreate, SchemaOut, FullSchemaOut, FullSchemaCategoryOut, FullSchemaCreate, FullSchemaCategoryCreate
+from schemas.schema import SchemaCreate, SchemaOut, FullSchemaOut, FullSchemaCategoryOut, FullSchemaCreate
 from schemas.message import Message
 from schemas.schema_category import SchemaCategoryOut
 from schemas.schema_entry import SchemaEntryOut
@@ -23,6 +23,7 @@ def _map_schema_to_full_schema_out(schema: Schema) -> FullSchemaOut:
                     context=entry.context,
                     category_id=entry.category_id,
                     entry_type=entry.entry_type,
+                    position=entry.position
                 )
                 for entry in schema_category.entries
             ]
@@ -48,6 +49,7 @@ def _map_schema_to_full_schema_out(schema: Schema) -> FullSchemaOut:
 
 def _get_schema_by_uuid(uuid: UUID, db: Session):
     try:
+        print("schem")
         schema = db.query(Schema).filter(Schema.uuid == uuid).first()
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error al mapear el esquema: {e}")
@@ -90,12 +92,7 @@ def delete_schema(
     uuid: UUID,
     db: Session
 ) -> Message:
-    try:
-        schema = db.query(Schema).filter(Schema.uuid == uuid).first()
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Error al buscar el esquema: {e}")
-    if not schema:
-        raise HTTPException(status_code=404, detail="Esquema no encontrado")
+    schema: Schema = _get_schema_by_uuid(uuid, db)
     try:
         db.delete(schema)
         db.commit()
@@ -131,7 +128,8 @@ def create_schema_full(
                     body=entry.body,
                     context=entry.context,
                     category_id=schema_category.uuid,
-                    entry_type=entry.entry_type
+                    entry_type=entry.entry_type,
+                    position=entry.position
                 )
 
                 db.add(schema_entry)
@@ -151,22 +149,18 @@ def get_schema_full(
 
     return _map_schema_to_full_schema_out(schema)
 
-def delete_schema_full(
-    uuid: UUID,
-    db: Session
-) -> Message:
+def delete_schema_full(uuid: UUID, db: Session) -> Message:
     schema = _get_schema_by_uuid(uuid, db)
-
     try:
         for category in schema.categories:
             for entry in category.entries:
                 db.delete(entry)
             db.delete(category)
-        
+
         db.delete(schema)
         db.commit()
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=400, detail=f"Error al eliminar esquema")
+        raise HTTPException(status_code=400, detail=f"Error al eliminar esquema: {e}")
 
     return Message(detail="Esquema eliminado exitosamente")

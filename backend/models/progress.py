@@ -16,4 +16,4 @@ class Progress(Base):
     entry: Mapped["SchemaEntry"] = relationship(back_populates="progress_records", foreign_keys=[entry_id])
     student: Mapped["Student"] = relationship(back_populates="progress_records", foreign_keys=[student_id])
     ai_chat_records: Mapped[List["AIChat"]] = relationship(back_populates="progress")
-    assignment_dict_record: Mapped["AssignmentDict"] = relationship(back_populates="progress", uselist=False)
+    assignment_data_record: Mapped["AssignmentData"] = relationship(back_populates="progress", uselist=False)
