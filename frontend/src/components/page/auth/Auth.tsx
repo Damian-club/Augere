@@ -55,6 +55,7 @@ export default function Auth() {
 
       console.log("✅ Login exitoso, obteniendo usuario...");
 
+      await new Promise((resolve) => setTimeout(resolve, 100));
       // 2. Obtener usuario inmediatamente
       const user = await authService.getCurrentUser();
 

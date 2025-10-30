@@ -83,6 +83,12 @@ export class AuthService {
       throw new Error("No hay token disponible");
     }
 
+    if (token.length < 20) {
+      console.error("❌ Token parece inválido (muy corto)");
+      this.logout();
+      throw new Error("Token inválido");
+    }
+
     try {
       console.log("🌐 Haciendo request a /auth/me...");
       const response = await fetch(`${this.baseUrl}/me`, {
