@@ -42,8 +42,8 @@ def get_course(
 ):
     return s_get_course(course_uuid, user, db)
 
-@router.get("/get", summary="Obtener un curso de usuario por UUID", response_model=CourseOutUser)
-def get_course(
+@router.get("/get/user", summary="Obtener un curso de usuario por UUID", response_model=CourseOutUser)
+def get_course_user(
     course_uuid: UUID,
     user: User = Depends(get_current_user),
     db = Depends(get_db)
