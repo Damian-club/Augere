@@ -4,5 +4,5 @@ export interface Course {
   description?: string;
   logo_path?: string | null;
   invitation_code?: string | null;
-  tutor_id?: string
+  tutor_id: string
 }

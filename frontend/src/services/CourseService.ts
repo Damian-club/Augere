@@ -1,13 +1,10 @@
-import { environment } from "../config/environment";
 import type { Course } from "../schemas/course";
 
-const BASE = `${environment.api}/course`;
-
 export class CourseService {
-  private baseUrl: string;
+  private readonly baseUrl: string;
 
-  constructor() {
-    this.baseUrl = BASE;
+  constructor(apiUrl: string) {
+    this.baseUrl = `${apiUrl}/course`;
   }
 
   private getHeaders(): HeadersInit {
@@ -96,6 +93,13 @@ export class CourseService {
     if (!res.ok) throw new Error("Error al obtener cursos creados");
     return res.json();
   }
+
+  async getUserInfo(uuid: string): Promise<{ tutor_name: string }> {
+    const res = await fetch(`${this.baseUrl}/get/user/${uuid}`, {
+      headers: this.getHeaders(),
+    });
+    if (!res.ok) throw new Error("Error al obtener información del usuario");
+    return res.json();
+  }
 }
 
-export const courseService = new CourseService();

@@ -2,8 +2,9 @@ import { useNavigate } from "react-router-dom";
 import CourseCard from "../../general/course/CourseCard";
 import styles from "./DashboardSettings.module.css";
 import { IoCloudUploadOutline } from "react-icons/io5";
-import { authService } from "../../../services";
+import { authService, courseService } from "../../../services";
 import { useEffect, useState } from "react";
+import { pastelGradientFromString } from "../../../utils/colors";
 
 export default function DashboardSettings() {
   const navigate = useNavigate();
@@ -15,6 +16,8 @@ export default function DashboardSettings() {
     password: "",
     avatar_path: "",
   });
+  const [createdCourses, setCreatedCourses] = useState<Course[]>([]);
+  const [loadingCourses, setLoadingCourses] = useState(true);
 
   // Cargar usuario actual
   useEffect(() => {
@@ -33,6 +36,23 @@ export default function DashboardSettings() {
       }
     };
     fetchUser();
+  }, []);
+
+  // Cargar cursos creados
+  useEffect(() => {
+    const fetchCreatedCourses = async () => {
+      try {
+        setLoadingCourses(true);
+        const courses = await courseService.getCreatedCourses();
+        setCreatedCourses(courses || []);
+      } catch (err) {
+        console.error("Error al obtener cursos creados:", err);
+      } finally {
+        setLoadingCourses(false);
+      }
+    };
+
+    fetchCreatedCourses();
   }, []);
 
   // Manejar Inputs
@@ -131,15 +151,24 @@ export default function DashboardSettings() {
 
       <section className={styles.courses}>
         <h2>Cursos Creados</h2>
-        <div className={styles.cards}>
-          <CourseCard
-            title="Computación"
-            progress={80}
-            color="linear-gradient(135deg, #f9a8d4, #ec4899)"
-            icon="settings"
-            variant="compact"
-          />
-        </div>
+        {loadingCourses ? (
+          <p>Cargando cursos...</p>
+        ) : createdCourses.length > 0 ? (
+          <div className={styles.cards}>
+            {createdCourses.map((course) => (
+              <CourseCard
+                key={course.uuid}
+                title={course.title}
+                color={pastelGradientFromString(course.title)}
+                progress={0}
+                icon="settings"
+                variant="compact"
+              />
+            ))}
+          </div>
+        ) : (
+          <p>No has creado cursos todavía.</p>
+        )}
       </section>
 
       <div className={styles.actions}>
