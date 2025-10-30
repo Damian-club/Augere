@@ -21,7 +21,7 @@ class SchemaEntry(Base):
     body: Mapped[str] = mapped_column(String, nullable=False)
     context: Mapped[str] = mapped_column(String, nullable=True)
     category_id: Mapped[PyUUID] = mapped_column(UUID(as_uuid=True), ForeignKey('schema_category.uuid'), nullable=False)
-    entry_type: Mapped[EntryType] = mapped_column(SqlEnum(EntryType, native_enum=False), nullable=False)
+    entry_type: Mapped[EntryType] = mapped_column(SqlEnum(EntryType, native_enum=False, values_callable=lambda x: [e.value for e in x]), nullable=False)
 
     category: Mapped["SchemaCategory"] = relationship(back_populates="entries")
     progress_records: Mapped[List["Progress"]] = relationship(back_populates="entry")

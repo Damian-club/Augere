@@ -2,12 +2,17 @@ from pydantic import BaseModel, Field
 from uuid import UUID
 from typing import Optional
 
-class SchemaCategoryBase(BaseModel):
-    schema_id: UUID = Field(...)
+class SchemaCategoryPreBase(BaseModel):
     name: str = Field(...)
     position: int = Field(...)
 
+class SchemaCategoryBase(SchemaCategoryPreBase):
+    schema_id: UUID = Field(...)
+
 class SchemaCategoryCreate(SchemaCategoryBase):
+    pass
+
+class SchemaCategoryCreateFull(SchemaCategoryPreBase):
     pass
 
 class SchemaCategoryUpdate(BaseModel):

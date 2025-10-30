@@ -7,14 +7,19 @@ class EntryType(str, Enum):
     TOPIC = "topic"
     ASSIGNMENT = "assignment"
 
-class SchemaEntryBase(BaseModel):
+class SchemaEntryPreBase(BaseModel):
     name: str = Field(...)
     body: str = Field(...)
     context: Optional[str] = Field(None)
-    category_id: UUID = Field(...)
     entry_type: EntryType = Field(...)
 
+class SchemaEntryBase(SchemaEntryPreBase):
+    category_id: UUID = Field(...)
+
 class SchemaEntryCreate(SchemaEntryBase):
+    pass
+
+class SchemaEntryCreateFull(SchemaEntryPreBase):
     pass
 
 class SchemaEntryOut(SchemaEntryBase):
