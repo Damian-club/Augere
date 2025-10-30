@@ -2,10 +2,12 @@ from schemas.course import CourseCreate, CourseOut, CourseUpdate, CourseOutUser
 from schemas.message import Message
 from models.course import Course
 from models.user import User
+from models.student import Student
 from fastapi import  HTTPException
 from sqlalchemy.orm import Session
 from uuid import UUID, uuid4
 from typing import List
+
 
 # Util
 def _get_course_by_uuid(course_uuid, db):
@@ -163,7 +165,8 @@ def list_user_tutored_courses(
 def list_user_enrolled_courses(
     user: User
 ) -> List[CourseOut]:
-    courses = user.student_records if user else []
+    student_records: List[Student] = user.student_records if user else []
+    courses = [student.course for student in student_records]
     
     return [
         CourseOut(
