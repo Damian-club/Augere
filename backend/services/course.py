@@ -1,4 +1,4 @@
-from schemas.course import CourseCreate, CourseOut, CourseUpdate
+from schemas.course import CourseCreate, CourseOut, CourseUpdate, CourseOutUser
 from schemas.message import Message
 from models.course import Course
 from models.user import User
@@ -119,6 +119,26 @@ def get_course(
         invitation_code=course.invitation_code,
         tutor_id=course.tutor_id,
         creation_date=course.creation_date
+    )
+
+def get_course_user(
+    course_uuid: UUID,
+    user: User,
+    db: Session
+) -> CourseOut:
+    course = _get_course_by_uuid(course_uuid, db)
+    if course.tutor_id != user.uuid:
+        raise HTTPException(status_code=403, detail="No tienes permiso para ver este curso")
+    
+    return CourseOutUser(
+        uuid=course.uuid,
+        title=course.title,
+        description=course.description,
+        logo_path=course.logo_path,
+        invitation_code=course.invitation_code,
+        tutor_id=course.tutor_id,
+        creation_date=course.creation_date,
+        tutor_name=course.tutor.name
     )
 
 def list_user_tutored_courses(
