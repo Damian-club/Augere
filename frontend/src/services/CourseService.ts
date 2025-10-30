@@ -90,7 +90,7 @@ export class CourseService {
   }
 
   async getCreatedCourses(): Promise<Course[]> {
-    const res = await fetch(`${this.baseUrl}/created-courses`, {
+    const res = await fetch(`${this.baseUrl}/tutored-courses`, {
       headers: this.getHeaders(),
     });
     if (!res.ok) throw new Error("Error al obtener cursos creados");

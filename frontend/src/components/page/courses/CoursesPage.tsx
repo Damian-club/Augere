@@ -4,6 +4,7 @@ import styles from "./CoursesPage.module.css";
 import type { Course } from "../../../schemas/course";
 import { useEffect, useState } from "react";
 import { courseService } from "../../../services/CourseService";
+import { pastelGradientFromString } from "../../../utils/colors";
 
 export default function CoursePage() {
   const [created, setCreated] = useState<Course[]>([]);
@@ -47,7 +48,7 @@ export default function CoursePage() {
               author={c.tutor_id}
               description={c.description}
               progress={0}
-              color={`linear-gradient(135deg, #f9a8d4, #ec4899)`}
+              color={pastelGradientFromString(c.title)}
               icon="settings"
             />
           ))}
