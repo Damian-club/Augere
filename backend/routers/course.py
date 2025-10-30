@@ -58,6 +58,6 @@ def list_my_courses(
 
 @router.get("/tutored-courses", summary="Listar cursos que tutoreo", response_model=List[CourseOut])
 def list_tutored_courses(
-    user: User = Depends(get_current_user)
+    user: User = Depends(get_current_user),
 ):
     return s_list_user_tutored_courses(user)

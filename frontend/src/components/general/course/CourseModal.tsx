@@ -1,8 +1,16 @@
 import { useState } from "react";
 import { IoClose, IoRefresh } from "react-icons/io5";
 import styles from "./CourseModal.module.css";
+import type { Course } from "../../../schemas/course";
+import { courseService } from "../../../services/CourseService";
 
-export default function CourseModal({ onClose }: { onClose: () => void }) {
+export default function CourseModal({
+  onClose,
+  onCreated,
+}: {
+  onClose: () => void;
+  onCreated?: (c: Course) => void;
+}) {
   const [mode, setMode] = useState<"create" | "join">("create");
   const [form, setForm] = useState({
     title: "",
@@ -10,7 +18,9 @@ export default function CourseModal({ onClose }: { onClose: () => void }) {
     logo_path: "",
     invitation_code: "",
   });
-  
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -22,9 +32,30 @@ export default function CourseModal({ onClose }: { onClose: () => void }) {
     setForm({ ...form, invitation_code: code });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Formulario enviado:", form);
+    setErr(null);
+    setLoading(true);
+    try {
+      const created = await courseService.createCourse({
+        title: form.title,
+        description: form.description,
+        logo_path: form.logo_path,
+        invitation_code: form.invitation_code || undefined,
+      });
+      if (onCreated) onCreated(created);
+      onClose();
+    } catch (error: any) {
+      console.error(error);
+      setErr(error.message || "Error al crear curso");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleJoin = (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log("Unirse con codigo:", form.invitation_code);
     onClose();
   };
 
@@ -53,7 +84,7 @@ export default function CourseModal({ onClose }: { onClose: () => void }) {
 
         {/* Formulario */}
         {mode === "create" ? (
-          <form className={styles.form} onSubmit={handleSubmit}>
+          <form className={styles.form} onSubmit={handleCreate}>
             <label>Título</label>
             <input
               type="text"
@@ -99,12 +130,13 @@ export default function CourseModal({ onClose }: { onClose: () => void }) {
               </button>
             </div>
 
-            <button type="submit" className={styles.submit}>
-              Crear curso
+            <button type="submit" className={styles.submit} disabled={loading}>
+              {loading ? "Creando..." : "Crear curso"}
             </button>
+            {err && <p style={{ color: "red" }}>{err}</p>}
           </form>
         ) : (
-          <form className={styles.form} onSubmit={handleSubmit}>
+          <form className={styles.form} onSubmit={handleJoin}>
             <label>Código de invitación</label>
             <input
               type="text"

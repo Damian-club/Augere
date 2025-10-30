@@ -138,6 +138,7 @@ def list_user_tutored_courses(
         for course in courses
     ]
 
+
 def list_user_enrolled_courses(
     user: User,
     db: Session
