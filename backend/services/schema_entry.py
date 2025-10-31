@@ -95,7 +95,7 @@ def delete_schema_entry(
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error al eliminar la entrada: {e}")
     
-    return Message(message="Entrada eliminada exitosamente")
+    return Message(detail="Entrada eliminada exitosamente")
 
 def get_schema_entry(
     entry_uuid: UUID,

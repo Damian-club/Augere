@@ -99,7 +99,7 @@ def delete_schema(
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error al eliminar el esquema: {e}")
     
-    return Message(message="Esquema eliminado correctamente")
+    return Message(detail="Esquema eliminado correctamente")
 
 def create_schema_full(
     data: FullSchemaCreate,

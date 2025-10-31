@@ -87,4 +87,4 @@ def delete_schema_category(
         db.rollback()
         raise HTTPException(status_code=400, detail=f"Error al eliminar la categoría del esquema: {e}")
     
-    return Message(message="Categoría del esquema eliminada correctamente")
+    return Message(detail="Categoría del esquema eliminada correctamente")
