@@ -77,9 +77,14 @@ def delete_schema_category(
     if not schema_category:
         raise HTTPException(status_code=404, detail="Categoría del esquema no encontrada")
     try:
+        for entry in schema_category.entries:
+            db.delete(entry)
+            db.flush()
+
         db.delete(schema_category)
         db.commit()
     except Exception as e:
+        db.rollback()
         raise HTTPException(status_code=400, detail=f"Error al eliminar la categoría del esquema: {e}")
     
     return Message(message="Categoría del esquema eliminada correctamente")
