@@ -7,6 +7,7 @@ export default function DashboardHome() {
   const progress = 40;
 
   useEffect(() => {
+
     getCurrentUser()
       .then((data) => setUser(data))
       .catch((err) => console.log(err));

@@ -30,7 +30,7 @@ export class CourseService {
     logo_path?: string;
     invitation_code?: string;
   }): Promise<Course> {
-    const res = await fetch(`${this.baseUrl}/create`, {
+    const res = await fetch(`${this.baseUrl}`, {
       method: "POST",
       headers: this.getHeaders(),
       body: JSON.stringify(data),
@@ -49,7 +49,7 @@ export class CourseService {
     logo_path?: string;
     invitation_code?: string;
   }): Promise<Course> {
-    const res = await fetch(`${this.baseUrl}/update`, {
+    const res = await fetch(`${this.baseUrl}`, {
       method: "PUT",
       headers: this.getHeaders(),
       body: JSON.stringify(data),
@@ -62,7 +62,7 @@ export class CourseService {
   }
 
   async getCourse(uuid: string): Promise<Course> {
-    const res = await fetch(`${this.baseUrl}/get?course_uuid=${uuid}`, {
+    const res = await fetch(`${this.baseUrl}/${uuid}`, {
       headers: this.getHeaders(),
     });
     if (!res.ok) throw new Error("Curso no encontrado");
@@ -70,7 +70,7 @@ export class CourseService {
   }
 
   async deleteCourse(uuid: string): Promise<DeleteCourseResponse> {
-    const res = await fetch(`${this.baseUrl}/delete?course_uuid=${uuid}`, {
+    const res = await fetch(`${this.baseUrl}/${uuid}`, {
       method: "DELETE",
       headers: this.getHeaders(),
     });
@@ -97,7 +97,7 @@ export class CourseService {
   }
 
   async getCourseWithTutor(uuid: string): Promise<Course> {
-    const res = await fetch(`${this.baseUrl}/get?course_uuid=${uuid}`, {
+    const res = await fetch(`${this.baseUrl}/user/${uuid}`, {
       headers: this.getHeaders(),
     });
     if (!res.ok) throw new Error("Error al obtener detalles del curso");

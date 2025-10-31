@@ -34,29 +34,6 @@ def update_course(
 ):
     return s_update_course(data, user, db)
 
-@router.get("/{uuid}", summary="Obtener un curso por UUID", response_model=CourseOut)
-def get_course(
-    uuid: UUID,
-    user: User = Depends(get_current_user),
-    db = Depends(get_db)
-):
-    return s_get_course(uuid, user, db)
-
-@router.get("/user/{uuid}", summary="Obtener un curso de usuario por UUID", response_model=CourseOutUser)
-def get_course_user(
-    uuid: UUID,
-    user: User = Depends(get_current_user),
-    db = Depends(get_db)
-):
-    return s_get_course_user(uuid, user, db)
-
-@router.delete("/{uuid}", summary="Eliminar un curso", response_model=Message)
-def delete_course(
-    uuid: UUID,
-    user: User = Depends(get_current_user),
-    db = Depends(get_db)
-):
-    return s_delete_course(uuid, user, db)
     
 @router.get("/enrolled-courses", summary="Listar mis cursos", response_model=List[CourseOut])
 def list_my_courses(
@@ -70,3 +47,28 @@ def list_tutored_courses(
     user: User = Depends(get_current_user),
 ):
     return s_list_user_tutored_courses(user)
+
+@router.get("/user/{uuid}", summary="Obtener un curso de usuario por UUID", response_model=CourseOutUser)
+def get_course_user(
+    uuid: UUID,
+    user: User = Depends(get_current_user),
+    db = Depends(get_db)
+):
+    return s_get_course_user(uuid, user, db)
+
+@router.get("/{uuid}", summary="Obtener un curso por UUID", response_model=CourseOut)
+def get_course(
+    uuid: UUID,
+    user: User = Depends(get_current_user),
+    db = Depends(get_db)
+):
+    return s_get_course(uuid, user, db)
+
+
+@router.delete("/{uuid}", summary="Eliminar un curso", response_model=Message)
+def delete_course(
+    uuid: UUID,
+    user: User = Depends(get_current_user),
+    db = Depends(get_db)
+):
+    return s_delete_course(uuid, user, db)
