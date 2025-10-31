@@ -9,12 +9,14 @@ export default function CourseModal({
   onClose,
   onCreated,
   onJoined,
+  mode: initialMode,
 }: {
   onClose: () => void;
   onCreated?: (c: Course) => void;
   onJoined?: () => void;
+  mode?: "create" | "join";
 }) {
-  const [mode, setMode] = useState<"create" | "join">("create");
+  const [mode, setMode] = useState<"create" | "join">(initialMode || "create");
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -25,9 +27,7 @@ export default function CourseModal({
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
+  ) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const generateInvitation = () => {
     const code = Math.random().toString(36).substring(2, 10);
@@ -35,31 +35,15 @@ export default function CourseModal({
     toast.success("Código de invitación generado");
   };
 
-  const validateInvitationCode = (code: string): boolean => {
-    const regex = /^[a-z0-9]{8}$/;
-    return regex.test(code);
-  };
-
-  const validateCreateForm = (): string | null => {
-    if (form.title.trim().length < 3)
-      return "El título debe tener al menos 3 caracteres.";
-    if (form.description.trim().length < 10)
-      return "La descripción debe tener al menos 10 caracteres.";
-    if (form.invitation_code && !validateInvitationCode(form.invitation_code))
-      return "El código debe tener 8 caracteres alfanuméricos en minúscula.";
-    return null;
-  };
-
-  const validateJoinForm = (): string | null => {
-    if (!validateInvitationCode(form.invitation_code))
-      return "Debes ingresar un código de invitación válido (8 caracteres alfanuméricos en minúscula).";
-    return null;
-  };
+  const validateInvitationCode = (code: string): boolean =>
+    /^[a-z0-9]{8}$/.test(code);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    const validationError = validateCreateForm();
-    if (validationError) return toast.error(validationError);
+    if (form.title.length < 3)
+      return toast.error("El título debe tener al menos 3 caracteres");
+    if (form.description.length < 10)
+      return toast.error("La descripción debe tener al menos 10 caracteres");
 
     setLoading(true);
     try {
@@ -70,10 +54,10 @@ export default function CourseModal({
         invitation_code: form.invitation_code || undefined,
       });
       toast.success("Curso creado correctamente 🎉");
-      if (onCreated) onCreated(created);
+      onCreated?.(created);
       onClose();
-    } catch (error: any) {
-      toast.error(error.message || "Error al crear el curso");
+    } catch (err: any) {
+      toast.error(err.message || "Error al crear el curso");
     } finally {
       setLoading(false);
     }
@@ -81,29 +65,17 @@ export default function CourseModal({
 
   const handleJoin = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    const validationError = validateJoinForm();
-    if (validationError) return toast.error(validationError);
+    if (!validateInvitationCode(form.invitation_code))
+      return toast.error("Código inválido (8 caracteres alfanuméricos)");
 
     setLoading(true);
     try {
-      const enrolledCourses = await courseService.getEnrolledCourses();
-      const alreadyEnrolled = enrolledCourses.some(
-        (course) => course.invitation_code === form.invitation_code
-      );
-
-      if (alreadyEnrolled) {
-        toast("Ya estás inscrito en este curso", { icon: "⚠️" });
-        setLoading(false);
-        return;
-      }
-
       await studentService.joinCourse(form.invitation_code);
-      toast.success("Te uniste al curso correctamente ✅");
-      if (onJoined) onJoined();
+      toast.success("Te uniste al curso correctamente 🎉");
+      onJoined?.();
       onClose();
-    } catch (error: any) {
-      toast.error(error.message || "Error al unirse al curso.");
+    } catch (err: any) {
+      toast.error(err.message || "Error al unirse al curso");
     } finally {
       setLoading(false);
     }
@@ -116,23 +88,24 @@ export default function CourseModal({
           <IoClose size={22} />
         </button>
 
-        {/* Tabs */}
-        <div className={styles.tabs}>
-          <button
-            className={mode === "create" ? styles.active : ""}
-            onClick={() => setMode("create")}
-          >
-            Crear curso
-          </button>
-          <button
-            className={mode === "join" ? styles.active : ""}
-            onClick={() => setMode("join")}
-          >
-            Unirse a curso
-          </button>
-        </div>
+        {/* Tabs solo si no se fijó el modo */}
+        {!initialMode && (
+          <div className={styles.tabs}>
+            <button
+              className={mode === "create" ? styles.active : ""}
+              onClick={() => setMode("create")}
+            >
+              Crear curso
+            </button>
+            <button
+              className={mode === "join" ? styles.active : ""}
+              onClick={() => setMode("join")}
+            >
+              Unirse a curso
+            </button>
+          </div>
+        )}
 
-        {/* Formulario */}
         {mode === "create" ? (
           <form className={styles.form} onSubmit={handleCreate}>
             <label>Título</label>
@@ -141,7 +114,6 @@ export default function CourseModal({
               name="title"
               value={form.title}
               onChange={handleChange}
-              placeholder="Introducción a React"
               required
             />
 
@@ -150,7 +122,6 @@ export default function CourseModal({
               name="description"
               value={form.description}
               onChange={handleChange}
-              placeholder="Describe brevemente el propósito del curso..."
               required
             />
 
@@ -176,7 +147,6 @@ export default function CourseModal({
                 type="button"
                 onClick={generateInvitation}
                 className={styles.iconButton}
-                title="Generar código"
               >
                 <IoRefresh size={20} />
               </button>

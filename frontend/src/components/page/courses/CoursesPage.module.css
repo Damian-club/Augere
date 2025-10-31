@@ -66,3 +66,45 @@ hr {
     opacity: 1;
   }
 }
+
+/* ESTILOS TOAST PARA EL DELETE */
+.toastConfirm {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: #333;
+}
+
+.toastButtons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.btnCancel {
+  background-color: #e0e0e0;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.btnCancel:hover {
+  background-color: #ccc;
+}
+
+.btnDelete {
+  background-color: #e53935;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.btnDelete:hover {
+  background-color: #c62828;
+}

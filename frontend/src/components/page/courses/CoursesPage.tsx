@@ -1,12 +1,12 @@
+import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import CourseCard from "../../general/course/CourseCard";
 import AddCourseCard from "../../general/course/AddCourseCard";
-import styles from "./CoursesPage.module.css";
-import type { Course } from "../../../schemas/course";
-import { useEffect, useState } from "react";
-import { courseService } from "../../../services";
-import { pastelGradientFromString } from "../../../utils/colors";
-import { authService } from "../../../services";
 import CourseConfigPanel from "../../general/courseConfig/CourseConfigPanel";
+import { courseService, studentService } from "../../../services";
+import { pastelGradientFromString } from "../../../utils/colors";
+import type { Course } from "../../../schemas/course";
+import styles from "./CoursesPage.module.css";
 
 export default function CoursePage() {
   const [created, setCreated] = useState<Course[]>([]);
@@ -17,12 +17,10 @@ export default function CoursePage() {
   const fetchLists = async () => {
     try {
       setLoading(true);
-
       const [c1, c2] = await Promise.all([
         courseService.getCreatedCourses(),
         courseService.getEnrolledCourses(),
       ]);
-
       setCreated(c1 || []);
       setEnrolled(c2 || []);
     } catch (err) {
@@ -40,15 +38,57 @@ export default function CoursePage() {
     setCreated((prev) => [newCourse, ...prev]);
   };
 
+  const handleUnenroll = (course: Course) => {
+    toast(
+      (t) => (
+        <div className={styles.toastConfirm}>
+          <p>
+            ¿Seguro que deseas desinscribirte de <strong>{course.title}</strong>
+            ?
+          </p>
+          <div className={styles.toastButtons}>
+            <button
+              className={styles.btnCancel}
+              onClick={() => toast.dismiss(t.id)}
+            >
+              Cancelar
+            </button>
+            <button
+              className={styles.btnDelete}
+              onClick={async () => {
+                toast.dismiss(t.id);
+                try {
+                  await studentService.unenrollFromCourse(course.uuid);
+                  setEnrolled((prev) =>
+                    prev.filter((c) => c.uuid !== course.uuid)
+                  );
+                  toast.success("Te has desinscrito correctamente");
+                } catch (err: any) {
+                  toast.error(err.message || "Error al desinscribirse");
+                }
+              }}
+            >
+              Desinscribirse
+            </button>
+          </div>
+        </div>
+      ),
+      { duration: 8000 }
+    );
+  };
+
   return (
     <div className={styles.page}>
       <h1>Mis cursos</h1>
+
+      {/* Cursos Creados */}
       <section className={styles.section}>
         <div className={styles["section-header"]}>
           <h2>Creados</h2>
         </div>
         <div className={styles.grid}>
           <AddCourseCard
+            mode="create"
             onCreated={handleCourseCreated}
             onJoined={fetchLists}
           />
@@ -56,7 +96,7 @@ export default function CoursePage() {
             <CourseCard
               key={c.uuid}
               title={c.title}
-              author={`Por: ${c.tutor_name || "Tú"} (Tú)`}
+              author={`Por: ${c.tutor_name || "Tú"}`}
               description={c.description}
               progress={30}
               color={pastelGradientFromString(c.title)}
@@ -67,33 +107,34 @@ export default function CoursePage() {
           ))}
         </div>
       </section>
+
       <hr />
+
+      {/* Cursos Inscritos */}
       <section className={styles.section}>
         <div className={styles["section-header"]}>
           <h2>Inscritos</h2>
         </div>
         <div className={styles.grid}>
-          {enrolled.map((c) => {
-            const currentUser = authService.getUser();
-            const isTutor = currentUser && c.tutor_id === currentUser.uuid;
-            return (
-              <CourseCard
-                key={c.uuid}
-                title={c.title}
-                author={`Por: ${c.tutor_name || "Tutor"}`}
-                description={c.description}
-                progress={0}
-                color={pastelGradientFromString(c.title)}
-                logo_path={c.logo_path}
-                icon="close"
-                canDelete={isTutor}
-                onDelete={undefined}
-              />
-            );
-          })}
+          <AddCourseCard mode="join" onJoined={fetchLists} />
+          {enrolled.map((c) => (
+            <CourseCard
+              key={c.uuid}
+              title={c.title}
+              author={`Por: ${c.tutor_name || "Tutor"}`}
+              description={c.description}
+              progress={0}
+              color={pastelGradientFromString(c.title)}
+              logo_path={c.logo_path}
+              icon="close"
+              onDelete={() => handleUnenroll(c)}
+            />
+          ))}
         </div>
       </section>
+
       {loading && <p className={styles.loader}>Cargando cursos...</p>}
+
       {configCourseId && (
         <CourseConfigPanel
           courseId={configCourseId}
