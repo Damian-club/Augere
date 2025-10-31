@@ -38,6 +38,7 @@ def create_student(
     try:
         db.add(student)
         db.flush()
+        db.refresh(student)
 
         course: Course = student.course
         schema: Schema = course.schema
