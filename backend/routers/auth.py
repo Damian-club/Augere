@@ -3,7 +3,6 @@ from schemas.user import UserLogin, UserRegister, UserOut, UserUpdate
 from schemas.token import Token
 from schemas.message import Message
 from fastapi.security import OAuth2PasswordRequestForm
-from fastapi import HTTPException
 from core.db import get_db
 from models.user import User
 from dependencies.user import get_current_user

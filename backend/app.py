@@ -4,12 +4,16 @@ from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from contextlib import asynccontextmanager
 from core.db import Base, engine
+
 from routers.auth import router as auth_router
 from routers.course import router as course_router
 from routers.student import router as student_router
 from routers.schema import router as schema_router
 from routers.schema_category import router as schema_category_router
 from routers.schema_entry import router as schema_entry_router
+from routers.ai_chat import router as ai_chat_router
+from routers.assignment_data import router as assignment_data_router
+from routers.progress import router as progress_router
 
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -39,68 +43,6 @@ app.add_middleware(
 )
 
 
-@app.exception_handler(StarletteHTTPException)
-async def http_exception_handler(request: Request, exc: StarletteHTTPException):
-    origin = request.headers.get("origin", "*")
-    
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={"detail": str(exc.detail)},
-        headers={
-            "Access-Control-Allow-Origin": origin,
-            "Access-Control-Allow-Credentials": "true",
-            "Access-Control-Allow-Methods": "*",
-            "Access-Control-Allow-Headers": "*",
-        }
-    )
-
-@app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    origin = request.headers.get("origin", "*")
-    
-    return JSONResponse(
-        status_code=400,
-        content={"detail": "Error de validación", "errors": exc.errors()},
-        headers={
-            "Access-Control-Allow-Origin": origin,
-            "Access-Control-Allow-Credentials": "true",
-            "Access-Control-Allow-Methods": "*",
-            "Access-Control-Allow-Headers": "*",
-        }
-    )
-
-@app.exception_handler(Exception)
-async def general_exception_handler(request: Request, exc: Exception):
-    origin = request.headers.get("origin", "*")
-    
-    print(f"Excepción no manejada: {type(exc).__name__}: {str(exc)}")
-    
-    return JSONResponse(
-        status_code=500,
-        content={"detail": "Error interno del servidor"},
-        headers={
-            "Access-Control-Allow-Origin": origin,
-            "Access-Control-Allow-Credentials": "true",
-            "Access-Control-Allow-Methods": "*",
-            "Access-Control-Allow-Headers": "*",
-        }
-    )
-
-# ===== FIN DE LOS MANEJADORES =====
-
-@app.middleware("http")
-async def debug_middleware(request, call_next):
-    print(f"Request: {request.method} {request.url}")
-    print(f"Origin: {request.headers.get('origin')}")
-    print(f"Authorization: {request.headers.get('authorization')}")
-    
-    response = await call_next(request)
-    
-    print(f"Response: {response.status_code}")
-    print(f"CORS Headers: {dict(response.headers)}")
-    
-    return response
-
 # Routers
 app.include_router(auth_router)
 app.include_router(course_router)
@@ -108,3 +50,6 @@ app.include_router(student_router)
 app.include_router(schema_router)
 app.include_router(schema_category_router)
 app.include_router(schema_entry_router)
+app.include_router(ai_chat_router)
+app.include_router(progress_router)
+app.include_router(assignment_data_router)

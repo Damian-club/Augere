@@ -12,4 +12,4 @@ class Schema(Base):
     course_id: Mapped[PyUUID] = mapped_column(UUID(as_uuid=True), ForeignKey('course.uuid'), nullable=False, unique=True)
 
     course: Mapped["Course"] = relationship("Course", back_populates="schema")
-    categories: Mapped[List["SchemaCategory"]] = relationship("SchemaCategory", back_populates="schema")
+    categories: Mapped[List["SchemaCategory"]] = relationship("SchemaCategory", back_populates="schema", cascade="all, delete-orphan")

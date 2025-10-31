@@ -10,7 +10,6 @@ from services.schema import get_schema as s_get_schema
 from services.schema import delete_schema as s_delete_schema
 from services.schema import get_schema_full as s_get_schema_full
 from services.schema import create_schema_full as s_create_schema_full
-from services.schema import delete_schema_full as s_delete_schema_full
 
 router = APIRouter(prefix='/schema', tags=['Schema'])
 
@@ -48,10 +47,3 @@ def create_full_schema(
     db = Depends(get_db)
 ):
     return s_create_schema_full(data, db)
-
-@router.delete("/full/{uuid}", summary="Eliminar un esquema completo por UUID", response_model=Message)
-def delete_full_schema(
-    uuid: UUID,
-    db = Depends(get_db)
-):
-    return s_delete_schema_full(uuid, db)

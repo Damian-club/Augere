@@ -3,9 +3,24 @@ from schemas.message import Message
 from models.student import Student
 from models.course import Course
 from models.user import User
+from models.course import Course
+from models.schema_category import SchemaCategory
+from models.schema import Schema
+from models.schema_entry import SchemaEntry
+from models.progress import Progress
 from fastapi import  HTTPException
 from sqlalchemy.orm import Session
 from uuid import UUID
+from typing import List
+
+def map_model_to_schema(student):
+    return StudentOut(
+        uuid=student.uuid,
+        inscription_date=student.inscription_date,
+        student_id=student.student_id,
+        course_id=student.course_id
+    )
+
 
 def create_student(
     data: StudentCreate,
@@ -15,24 +30,35 @@ def create_student(
     if user.uuid != data.student_id:
         raise HTTPException(status_code=403, detail="No tienes permiso para inscribir a este estudiante")
 
-    course = Student(
+    student = Student(
         student_id=data.student_id,
         course_id=data.course_id
     )
 
     try:
-        db.add(course)
+        db.add(student)
+        db.flush()
+
+        course: Course = student.course
+        schema: Schema = course.schema
+        schema_categories: List[SchemaCategory] = schema.categories
+
+        for category in schema_categories:
+            schema_entries: List[SchemaEntry] = category.entries
+            for entry in schema_entries:
+                progress: Progress = Progress(
+                    entry_id=entry.uuid,
+                    student_id=student.uuid,
+                    finished=False
+                )
+                db.add(progress)
+
         db.commit()
-        db.refresh(course)
     except Exception as e:
+        db.rollback()
         raise HTTPException(status_code=400, detail=f"Error al crear el curso: {e}")
     
-    return StudentOut(
-        uuid=course.uuid,
-        inscription_date=course.inscription_date,
-        student_id=course.student_id,
-        course_id=course.course_id
-    )
+    return map_model_to_schema(student)
 
 def join_course(
     invitation_code: str,
@@ -64,12 +90,7 @@ def get_student(
         raise HTTPException(status_code=400, detail=f"Error al buscar el estudiante: {e}")
     if not student:
         raise HTTPException(status_code=404, detail="Estudiante no encontrado")
-    return StudentOut(
-        uuid=student.uuid,
-        inscription_date=student.inscription_date,
-        student_id=student.student_id,
-        course_id=student.course_id
-    )
+    return map_model_to_schema(student)
 
 def delete_student(
     data: StudentDelete,

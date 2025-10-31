@@ -16,4 +16,4 @@ class Student(Base):
 
     student: Mapped["User"] = relationship("User", back_populates="student_records", foreign_keys=[student_id])
     course: Mapped["Course"] = relationship("Course", back_populates="students", foreign_keys=[course_id])
-    progress_records: Mapped[List["Progress"]] = relationship(back_populates="student")
+    progress_records: Mapped[List["Progress"]] = relationship(back_populates="student", cascade="all, delete-orphan")

@@ -2,6 +2,7 @@ from pydantic import BaseModel, Field
 from uuid import UUID
 from datetime import datetime
 from typing import Optional
+from schemas.user import UserOut
 
 class CourseBase(BaseModel):
     title: str = Field(...)
@@ -24,7 +25,6 @@ class CourseOut(CourseBase):
     creation_date: datetime = Field(...)
     tutor_id: UUID = Field(...)
     invitation_code: str = Field(...)
-    tutor_name: Optional[str] = Field(None)
 
 class CourseOutUser(CourseOut):
-    tutor_name: str = Field(...)
+    tutor: UserOut = Field(...)

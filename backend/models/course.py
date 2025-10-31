@@ -18,5 +18,5 @@ class Course(Base):
     tutor_id: Mapped[PyUUID] = mapped_column(UUID(as_uuid=True), ForeignKey('user.uuid'), nullable=False)
 
     tutor: Mapped["User"] = relationship("User", back_populates="tutored_courses")
-    students: Mapped[List["Student"]] = relationship("Student", back_populates="course")
-    schema: Mapped["Schema"] = relationship("Schema", back_populates="course", uselist=False)
+    students: Mapped[List["Student"]] = relationship("Student", back_populates="course", cascade="all, delete-orphan")
+    schema: Mapped["Schema"] = relationship("Schema", back_populates="course", uselist=False, cascade="all, delete-orphan")

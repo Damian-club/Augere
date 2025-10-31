@@ -14,4 +14,4 @@ class SchemaCategory(Base):
     position: Mapped[int] = mapped_column(Integer, nullable=False)
 
     schema: Mapped["Schema"] = relationship(back_populates="categories", foreign_keys=[schema_id])
-    entries: Mapped[List["SchemaEntry"]] = relationship(back_populates="category")
+    entries: Mapped[List["SchemaEntry"]] = relationship(back_populates="category", cascade="all, delete-orphan")

@@ -16,5 +16,5 @@ class User(Base):
     pwd_hash: Mapped[str] = mapped_column(String, nullable=False)
     avatar_path: Mapped[Optional[str]] = mapped_column(String, nullable=True)
 
-    tutored_courses: Mapped[List["Course"]] = relationship("Course", back_populates="tutor")
-    student_records: Mapped[List["Student"]] = relationship("Student", back_populates="student")
+    tutored_courses: Mapped[List["Course"]] = relationship("Course", back_populates="tutor", cascade="all, delete-orphan")
+    student_records: Mapped[List["Student"]] = relationship("Student", back_populates="student", cascade="all, delete-orphan")

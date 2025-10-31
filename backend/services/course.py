@@ -8,8 +8,6 @@ from sqlalchemy.orm import Session
 from uuid import UUID, uuid4
 from typing import List
 
-
-
 # Util
 def _get_course_by_uuid(course_uuid, db):
     try:
@@ -19,6 +17,17 @@ def _get_course_by_uuid(course_uuid, db):
     if not course:
         raise HTTPException(status_code=404, detail="Curso no encontrado")
     return course
+
+def map_model_to_schema(course):
+    return CourseOut(
+        uuid=course.uuid,
+        title=course.title,
+        description=course.description,
+        logo_path=course.logo_path,
+        invitation_code=course.invitation_code,
+        tutor_id=course.tutor_id,
+        creation_date=course.creation_date
+    )
 
 def create_course(
     data: CourseCreate,
@@ -35,6 +44,7 @@ def create_course(
         invitation_code=data.invitation_code,
         tutor_id=user.uuid
     )
+    
     try:
         db.add(course)
         db.commit()
@@ -42,15 +52,7 @@ def create_course(
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error al crear el curso: {e}")
     
-    return CourseOut(
-        uuid=course.uuid,
-        title=course.title,
-        description=course.description,
-        logo_path=course.logo_path,
-        invitation_code=course.invitation_code,
-        tutor_id=course.tutor_id,
-        creation_date=course.creation_date
-    )
+    return map_model_to_schema(course)
     
 def update_course(
     data: CourseUpdate,
@@ -77,15 +79,7 @@ def update_course(
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error al actualizar el curso: {e}")
     
-    return CourseOut(
-        uuid=course.uuid,
-        title=course.title,
-        description=course.description,
-        logo_path=course.logo_path,
-        invitation_code=course.invitation_code,
-        tutor_id=course.tutor_id,
-        creation_date=course.creation_date
-    )
+    return map_model_to_schema(course)
 
 def delete_course(
     course_uuid: UUID,
@@ -97,21 +91,6 @@ def delete_course(
     if course.tutor_id != user.uuid:
         raise HTTPException(status_code=403, detail="No tienes permiso para eliminar este curso")
     
-    if course.schema:
-        from services.schema import delete_schema_full
-        delete_schema_full(
-            uuid=course.schema.uuid,
-            db=db
-        )
-
-    try:
-        for student in course.students:
-            db.delete(student)
-            db.flush()
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=400, detail=f"Error al eliminar estudiante: {e}")
-
     try:
         db.delete(course)
         db.commit()
@@ -129,15 +108,7 @@ def get_course(
     if course.tutor_id != user.uuid:
         raise HTTPException(status_code=403, detail="No tienes permiso para ver este curso")
     
-    return CourseOut(
-        uuid=course.uuid,
-        title=course.title,
-        description=course.description,
-        logo_path=course.logo_path,
-        invitation_code=course.invitation_code,
-        tutor_id=course.tutor_id,
-        creation_date=course.creation_date
-    )
+    return map_model_to_schema(course)
 
 def get_course_user(
     course_uuid: UUID,
@@ -148,6 +119,13 @@ def get_course_user(
     if course.tutor_id != user.uuid:
         raise HTTPException(status_code=403, detail="No tienes permiso para ver este curso")
     
+    tutor = course.tutor
+    if not tutor:
+        raise HTTPException(status_code=404, detail="ID del tutor no encontrado")
+    
+    from services.auth import map_model_to_schema as user_map_model_to_schema
+    tutor_schema = user_map_model_to_schema(tutor)
+
     return CourseOutUser(
         uuid=course.uuid,
         title=course.title,
@@ -156,7 +134,7 @@ def get_course_user(
         invitation_code=course.invitation_code,
         tutor_id=course.tutor_id,
         creation_date=course.creation_date,
-        tutor_name=course.tutor.name
+        tutor=tutor_schema
     )
 
 def list_user_tutored_courses(
@@ -165,38 +143,10 @@ def list_user_tutored_courses(
     courses = user.tutored_courses if user else []
     
     return [
-        CourseOut(
-            uuid=course.uuid,
-            title=course.title,
-            description=course.description,
-            logo_path=course.logo_path,
-            invitation_code=course.invitation_code,
-            tutor_id=course.tutor_id,
-            tutor_name=user.name,
-            creation_date=course.creation_date
-        )
+        map_model_to_schema(course)
         for course in courses
     ]
 
-
-# def list_user_enrolled_courses(
-#     user: User
-# ) -> List[CourseOut]:
-#     student_records: List[Student] = user.student_records if user else []
-#     courses = [student.course for student in student_records]
-    
-#     return [
-#         CourseOut(
-#             uuid=course.uuid,
-#             title=course.title,
-#             description=course.description,
-#             logo_path=course.logo_path,
-#             invitation_code=course.invitation_code,
-#             tutor_id=course.tutor_id,
-#             creation_date=course.creation_date
-#         )
-#         for course in courses
-#     ]
 
 def list_user_enrolled_courses(
     user: User,

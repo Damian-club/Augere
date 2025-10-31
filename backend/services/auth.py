@@ -9,6 +9,14 @@ from schemas.token import Token
 from models.user import User
 from core.settings import settings
 
+def map_model_to_schema(user):
+    return UserOut(
+        name=user.name,
+        email=user.email,
+        avatar_path=user.avatar_path,
+        uuid=user.uuid,
+        creation_date=user.creation_date,
+    )
 
 def login(data: UserLogin, db: Session):
     user: User = db.query(User).filter(User.email == data.email).first()
@@ -69,13 +77,7 @@ def create_token(user: User):
 
 
 def me(user: User) -> UserOut:
-    return UserOut(
-        name=user.name,
-        email=user.email,
-        avatar_path=user.avatar_path,
-        uuid=user.uuid,
-        creation_date=user.creation_date,
-    )
+    return map_model_to_schema(user)
 
 
 def update_account(user: User, data: UserUpdate, db: Session) -> UserOut:
@@ -96,13 +98,7 @@ def update_account(user: User, data: UserUpdate, db: Session) -> UserOut:
             detail=f"Error al actualizar la cuenta: {e}",
         )
 
-    return UserOut(
-        name=user.name,
-        email=user.email,
-        avatar_path=user.avatar_path,
-        uuid=user.uuid,
-        creation_date=user.creation_date,
-    )
+    return map_model_to_schema(user)
 
 
 def delete_account(user: User, db: Session):

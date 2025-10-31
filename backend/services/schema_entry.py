@@ -18,6 +18,17 @@ def _get_entry_by_uuid(entry_uuid: UUID, db: Session) -> SchemaEntry:
         raise HTTPException(status_code=404, detail="Entrada no encontrada")
     return entry
 
+def map_model_to_schema(entry):
+    return SchemaEntryOut(
+        uuid=entry.uuid,
+        name=entry.name,
+        body=entry.body,
+        position=entry.position,
+        context=entry.context,
+        category_id=entry.category_id,
+        entry_type=entry.entry_type
+    )
+
 def create_schema_entry(
     data: SchemaEntryCreate,
     db: Session
@@ -38,15 +49,7 @@ def create_schema_entry(
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error al crear la entrada: {e}")
     
-    return SchemaEntryOut(
-        uuid=entry.uuid,
-        name=entry.name,
-        body=entry.body,
-        position=entry.position,
-        context=entry.context,
-        category_id=entry.category_id,
-        entry_type=entry.entry_type
-    )
+    return map_model_to_schema(entry)
 
 def update_schema_entry(
     data: SchemaEntryUpdate,
@@ -73,15 +76,7 @@ def update_schema_entry(
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error al actualizar la entrada: {e}")
     
-    return SchemaEntryOut(
-        uuid=entry.uuid,
-        name=entry.name,
-        body=entry.body,
-        position=entry.position,
-        context=entry.context,
-        category_id=entry.category_id,
-        entry_type=entry.entry_type
-    )
+    return map_model_to_schema(entry)
 
 def delete_schema_entry(
     entry_uuid: UUID,
@@ -103,12 +98,4 @@ def get_schema_entry(
 ) -> SchemaEntryOut:
     entry = _get_entry_by_uuid(entry_uuid, db)
     
-    return SchemaEntryOut(
-        uuid=entry.uuid,
-        name=entry.name,
-        body=entry.body,
-        position=entry.position,
-        context=entry.context,
-        category_id=entry.category_id,
-        entry_type=entry.entry_type
-    )
+    return map_model_to_schema(entry)

@@ -5,6 +5,10 @@ from schemas.schema_entry import SchemaEntryOut
 from models.schema import Schema
 from models.schema_category import SchemaCategory
 from models.schema_entry import SchemaEntry
+from models.course import Course
+from models.user import User
+from models.student import Student
+from models.progress import Progress
 from fastapi import  HTTPException
 from sqlalchemy.orm import Session
 from uuid import UUID
@@ -47,9 +51,15 @@ def _map_schema_to_full_schema_out(schema: Schema) -> FullSchemaOut:
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error al mapear el esquema: {e}")
 
+def map_model_to_schema(schema):
+    return SchemaOut(
+        uuid=schema.uuid,
+        course_id=schema
+    )
+
+
 def _get_schema_by_uuid(uuid: UUID, db: Session):
     try:
-        print("schem")
         schema = db.query(Schema).filter(Schema.uuid == uuid).first()
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error al mapear el esquema: {e}")
@@ -72,10 +82,8 @@ def create_schema(
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error al crear el esquema: {e}")
     
-    return SchemaOut(
-        uuid=schema.uuid,
-        course_id=schema
-    )
+    return map_model_to_schema(schema)
+
 
 def get_schema(
     uuid: UUID,
@@ -83,10 +91,7 @@ def get_schema(
 ) -> SchemaOut:
     schema = _get_schema_by_uuid(uuid, db)
 
-    return SchemaOut(
-        uuid=schema.uuid,
-        course_id=schema.course_id
-    )
+    return map_model_to_schema(schema)
 
 def delete_schema(
     uuid: UUID,
@@ -108,6 +113,11 @@ def create_schema_full(
     schema = Schema(
         course_id=data.course_id
     )
+
+    course: Course = schema.course
+    student_list: List[Student] = course.students
+    user_list: List[User] = [student.student for student in student_list]
+
     try:
         db.add(schema)
         db.flush()
@@ -131,8 +141,17 @@ def create_schema_full(
                     entry_type=entry.entry_type,
                     position=entry.position
                 )
-
                 db.add(schema_entry)
+                db.flush()
+
+                for student in student_list:
+                    progress = Progress(
+                        entry_id=schema_entry.uuid,
+                        student_id=student.uuid,
+                        finished=False
+                    )
+                    db.add(progress)
+
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error al crear el esquema: {e}")
     
@@ -148,19 +167,3 @@ def get_schema_full(
     schema = _get_schema_by_uuid(uuid, db)
 
     return _map_schema_to_full_schema_out(schema)
-
-def delete_schema_full(uuid: UUID, db: Session) -> Message:
-    schema = _get_schema_by_uuid(uuid, db)
-    try:
-        for category in schema.categories:
-            for entry in category.entries:
-                db.delete(entry)
-            db.delete(category)
-
-        db.delete(schema)
-        db.commit()
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=400, detail=f"Error al eliminar esquema: {e}")
-
-    return Message(detail="Esquema eliminado exitosamente")

@@ -25,4 +25,4 @@ class SchemaEntry(Base):
     entry_type: Mapped[EntryType] = mapped_column(SqlEnum(EntryType, native_enum=False, values_callable=lambda x: [e.value for e in x]), nullable=False)
 
     category: Mapped["SchemaCategory"] = relationship(back_populates="entries")
-    progress_records: Mapped[List["Progress"]] = relationship(back_populates="entry")
+    progress_records: Mapped[List["Progress"]] = relationship(back_populates="entry", cascade="all, delete-orphan")
