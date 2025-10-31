@@ -116,7 +116,6 @@ def create_schema_full(
 
     course: Course = schema.course
     student_list: List[Student] = course.students
-    user_list: List[User] = [student.student for student in student_list]
 
     try:
         db.add(schema)

@@ -42,17 +42,18 @@ def create_student(
 
         course: Course = student.course
         schema: Schema = course.schema
-        schema_categories: List[SchemaCategory] = schema.categories
+        if schema:
+            schema_categories: List[SchemaCategory] = schema.categories
 
-        for category in schema_categories:
-            schema_entries: List[SchemaEntry] = category.entries
-            for entry in schema_entries:
-                progress: Progress = Progress(
-                    entry_id=entry.uuid,
-                    student_id=student.uuid,
-                    finished=False
-                )
-                db.add(progress)
+            for category in schema_categories:
+                schema_entries: List[SchemaEntry] = category.entries
+                for entry in schema_entries:
+                    progress: Progress = Progress(
+                        entry_id=entry.uuid,
+                        student_id=student.uuid,
+                        finished=False
+                    )
+                    db.add(progress)
 
         db.commit()
     except Exception as e:
