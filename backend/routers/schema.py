@@ -47,3 +47,12 @@ def create_full_schema(
     db = Depends(get_db)
 ):
     return s_create_schema_full(data, db)
+
+
+# CAMBIOS
+@router.get("/by_course/{course_id}", response_model=SchemaOut)
+def get_schema_by_course(course_id: UUID, db = Depends(get_db)):
+    schema = db.query(Schema).filter(Schema.course_id == course_id).first()
+    if not schema:
+        raise HTTPException(status_code=404, detail="Esquema no encontrado para este curso")
+    return SchemaOut(uuid=schema.uuid, course_id=schema.course_id)

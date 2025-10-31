@@ -54,7 +54,7 @@ def _map_schema_to_full_schema_out(schema: Schema) -> FullSchemaOut:
 def map_model_to_schema(schema):
     return SchemaOut(
         uuid=schema.uuid,
-        course_id=schema
+        course_id=schema.course_id
     )
 
 
@@ -83,7 +83,6 @@ def create_schema(
         raise HTTPException(status_code=400, detail=f"Error al crear el esquema: {e}")
     
     return map_model_to_schema(schema)
-
 
 def get_schema(
     uuid: UUID,
