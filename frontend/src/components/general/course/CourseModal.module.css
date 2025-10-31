@@ -97,7 +97,6 @@
 
 .tabs .active:hover {
   background: linear-gradient(135deg, #4f46e5, #494bb6);
-
 }
 
 /* Formulario */
@@ -204,4 +203,15 @@
     min-width: 40px;
     height: 40px;
   }
+}
+
+/* Error */
+.error {
+  color: #e74c3c;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+  text-align: center;
+  background-color: #ffecec;
+  padding: 0.5rem;
+  border-radius: 8px;
 }

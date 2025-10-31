@@ -6,8 +6,10 @@ import type { Course } from "../../../schemas/course";
 
 export default function AddCourseCard({
   onCreated,
+  onJoined,
 }: {
   onCreated?: (c: Course) => void;
+  onJoined?: () => void;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   return (
@@ -19,7 +21,11 @@ export default function AddCourseCard({
       </div>
 
       {isOpen && (
-        <CourseModal onClose={() => setIsOpen(false)} onCreated={onCreated} />
+        <CourseModal
+          onClose={() => setIsOpen(false)}
+          onCreated={onCreated}
+          onJoined={onJoined}
+        />
       )}
     </>
   );

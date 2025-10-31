@@ -1,13 +1,10 @@
-import { environment } from "../config/environment";
-import type { Course } from "../schemas/course";
-
-const BASE = `${environment.api}/course`;
+import type { Course, DeleteCourseResponse } from "../schemas/course";
 
 export class CourseService {
-  private baseUrl: string;
+  private readonly baseUrl: string;
 
-  constructor() {
-    this.baseUrl = BASE;
+  constructor(apiUrl: string) {
+    this.baseUrl = `${apiUrl}/course`;
   }
 
   private getHeaders(): HeadersInit {
@@ -38,7 +35,6 @@ export class CourseService {
       headers: this.getHeaders(),
       body: JSON.stringify(data),
     });
-
     if (!res.ok)
       throw new Error(
         (await this.handleResp(res)).detail || "Error al crear curso"
@@ -66,19 +62,22 @@ export class CourseService {
   }
 
   async getCourse(uuid: string): Promise<Course> {
-    const res = await fetch(`${this.baseUrl}/get/${uuid}`, {
+    const res = await fetch(`${this.baseUrl}/get?course_uuid=${uuid}`, {
       headers: this.getHeaders(),
     });
     if (!res.ok) throw new Error("Curso no encontrado");
     return res.json();
   }
 
-  async deleteCourse(uuid: string): Promise<void> {
-    const res = await fetch(`${this.baseUrl}/delete/${uuid}`, {
+  async deleteCourse(uuid: string): Promise<DeleteCourseResponse> {
+    const res = await fetch(`${this.baseUrl}/delete?course_uuid=${uuid}`, {
       method: "DELETE",
       headers: this.getHeaders(),
     });
-    if (!res.ok) throw new Error("Error al eliminar curso");
+
+    const data = await this.handleResp(res);
+    if (!res.ok) throw new Error(data?.detail || "Error al eliminar curso");
+    return data as DeleteCourseResponse;
   }
 
   async getEnrolledCourses(): Promise<Course[]> {
@@ -96,6 +95,12 @@ export class CourseService {
     if (!res.ok) throw new Error("Error al obtener cursos creados");
     return res.json();
   }
-}
 
-export const courseService = new CourseService();
+  async getCourseWithTutor(uuid: string): Promise<Course> {
+    const res = await fetch(`${this.baseUrl}/get?course_uuid=${uuid}`, {
+      headers: this.getHeaders(),
+    });
+    if (!res.ok) throw new Error("Error al obtener detalles del curso");
+    return res.json();
+  }
+}

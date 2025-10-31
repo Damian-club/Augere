@@ -1,15 +1,18 @@
 import { useState } from "react";
 import { IoClose, IoRefresh } from "react-icons/io5";
+import toast from "react-hot-toast";
 import styles from "./CourseModal.module.css";
 import type { Course } from "../../../schemas/course";
-import { courseService } from "../../../services/CourseService";
+import { courseService, studentService } from "../../../services";
 
 export default function CourseModal({
   onClose,
   onCreated,
+  onJoined,
 }: {
   onClose: () => void;
   onCreated?: (c: Course) => void;
+  onJoined?: () => void;
 }) {
   const [mode, setMode] = useState<"create" | "join">("create");
   const [form, setForm] = useState({
@@ -19,7 +22,6 @@ export default function CourseModal({
     invitation_code: "",
   });
   const [loading, setLoading] = useState(false);
-  const [err, setErr] = useState<string | null>(null);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -30,11 +32,35 @@ export default function CourseModal({
   const generateInvitation = () => {
     const code = Math.random().toString(36).substring(2, 10);
     setForm({ ...form, invitation_code: code });
+    toast.success("Código de invitación generado");
+  };
+
+  const validateInvitationCode = (code: string): boolean => {
+    const regex = /^[a-z0-9]{8}$/;
+    return regex.test(code);
+  };
+
+  const validateCreateForm = (): string | null => {
+    if (form.title.trim().length < 3)
+      return "El título debe tener al menos 3 caracteres.";
+    if (form.description.trim().length < 10)
+      return "La descripción debe tener al menos 10 caracteres.";
+    if (form.invitation_code && !validateInvitationCode(form.invitation_code))
+      return "El código debe tener 8 caracteres alfanuméricos en minúscula.";
+    return null;
+  };
+
+  const validateJoinForm = (): string | null => {
+    if (!validateInvitationCode(form.invitation_code))
+      return "Debes ingresar un código de invitación válido (8 caracteres alfanuméricos en minúscula).";
+    return null;
   };
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    setErr(null);
+    const validationError = validateCreateForm();
+    if (validationError) return toast.error(validationError);
+
     setLoading(true);
     try {
       const created = await courseService.createCourse({
@@ -43,20 +69,44 @@ export default function CourseModal({
         logo_path: form.logo_path,
         invitation_code: form.invitation_code || undefined,
       });
+      toast.success("Curso creado correctamente 🎉");
       if (onCreated) onCreated(created);
       onClose();
     } catch (error: any) {
-      console.error(error);
-      setErr(error.message || "Error al crear curso");
+      toast.error(error.message || "Error al crear el curso");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleJoin = (e: React.FormEvent) => {
+  const handleJoin = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Unirse con codigo:", form.invitation_code);
-    onClose();
+
+    const validationError = validateJoinForm();
+    if (validationError) return toast.error(validationError);
+
+    setLoading(true);
+    try {
+      const enrolledCourses = await courseService.getEnrolledCourses();
+      const alreadyEnrolled = enrolledCourses.some(
+        (course) => course.invitation_code === form.invitation_code
+      );
+
+      if (alreadyEnrolled) {
+        toast("Ya estás inscrito en este curso", { icon: "⚠️" });
+        setLoading(false);
+        return;
+      }
+
+      await studentService.joinCourse(form.invitation_code);
+      toast.success("Te uniste al curso correctamente ✅");
+      if (onJoined) onJoined();
+      onClose();
+    } catch (error: any) {
+      toast.error(error.message || "Error al unirse al curso.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -91,6 +141,7 @@ export default function CourseModal({
               name="title"
               value={form.title}
               onChange={handleChange}
+              placeholder="Introducción a React"
               required
             />
 
@@ -99,6 +150,7 @@ export default function CourseModal({
               name="description"
               value={form.description}
               onChange={handleChange}
+              placeholder="Describe brevemente el propósito del curso..."
               required
             />
 
@@ -108,7 +160,7 @@ export default function CourseModal({
               name="logo_path"
               value={form.logo_path}
               onChange={handleChange}
-              placeholder="/assets/logo.png"
+              placeholder="https://..."
             />
 
             <label>Código de invitación</label>
@@ -118,7 +170,7 @@ export default function CourseModal({
                 name="invitation_code"
                 value={form.invitation_code}
                 onChange={handleChange}
-                placeholder="auto-generado si se deja vacío"
+                placeholder="8 caracteres alfanuméricos (opcional)"
               />
               <button
                 type="button"
@@ -133,7 +185,6 @@ export default function CourseModal({
             <button type="submit" className={styles.submit} disabled={loading}>
               {loading ? "Creando..." : "Crear curso"}
             </button>
-            {err && <p style={{ color: "red" }}>{err}</p>}
           </form>
         ) : (
           <form className={styles.form} onSubmit={handleJoin}>
@@ -143,11 +194,12 @@ export default function CourseModal({
               name="invitation_code"
               value={form.invitation_code}
               onChange={handleChange}
+              placeholder="Ej: ab12cd34"
               required
             />
 
-            <button type="submit" className={styles.submit}>
-              Unirse
+            <button type="submit" className={styles.submit} disabled={loading}>
+              {loading ? "Uniéndose..." : "Unirse"}
             </button>
           </form>
         )}
