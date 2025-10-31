@@ -9,6 +9,7 @@ from uuid import UUID, uuid4
 from typing import List
 
 
+
 # Util
 def _get_course_by_uuid(course_uuid, db):
     try:
@@ -102,19 +103,14 @@ def delete_course(
             uuid=course.schema.uuid,
             db=db
         )
-        
-    from services.student import delete_student
-    from schemas.student import StudentDelete
 
-    for student in course.students:
-        delete_student(
-            StudentDelete(
-                student_id=student.uuid,
-                course_id=course_uuid
-            ),
-            user=user,
-            db=db
-        )
+    try:
+        for student in course.students:
+            db.delete(student)
+            db.flush()
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=f"Error al eliminar estudiante: {e}")
 
     try:
         db.delete(course)
