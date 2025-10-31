@@ -5,8 +5,7 @@ from models.course import Course
 from models.user import User
 from fastapi import  HTTPException
 from sqlalchemy.orm import Session
-from uuid import UUID, uuid4
-from typing import List
+from uuid import UUID
 
 def create_student(
     data: StudentCreate,

@@ -96,6 +96,24 @@ def delete_course(
     if course.tutor_id != user.uuid:
         raise HTTPException(status_code=403, detail="No tienes permiso para eliminar este curso")
     
+    from services.schema import delete_schema_full
+    delete_schema_full(
+        uuid=course.schema.uuid,
+        db=db
+    )
+    from services.student import delete_student
+    from schemas.student import StudentDelete
+
+    for student in course.students:
+        delete_student(
+            StudentDelete(
+                student_id=student.uuid,
+                course_id=course_uuid
+            ),
+            user=user,
+            db=db
+        )
+
     try:
         db.delete(course)
         db.commit()
