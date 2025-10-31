@@ -17,7 +17,7 @@ router = APIRouter(prefix='/ai_chat', tags=['AI Chat'])
 def create_ai_chat(data: AIChatCreate, db = Depends(get_db)):
     return s_create_ai_chat(data, db)
 
-@router.get('/', response_model=AIChatOut)
+@router.get('/{uuid}', response_model=AIChatOut)
 def get_ai_chat(uuid: UUID, db = Depends(get_db)):
     return s_get_ai_chat(uuid, db)
 
@@ -25,7 +25,7 @@ def get_ai_chat(uuid: UUID, db = Depends(get_db)):
 def update_ai_chat(data: AIChatUpdate, db = Depends(get_db)):
     return s_update_ai_chat(data, db)
 
-@router.delete('/', response_model=Message)
+@router.delete('/{uuid}', response_model=Message)
 def delete_ai_chat(uuid: UUID, db = Depends(get_db)):
     return s_delete_ai_chat(uuid, db)
 

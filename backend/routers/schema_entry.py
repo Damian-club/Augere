@@ -15,7 +15,7 @@ router = APIRouter(prefix='/schema_entry', tags=['Schema Entry'])
 def create_schema_entry(data: SchemaEntryCreate, db = Depends(get_db)):
     return s_create_schema_entry(data, db)
 
-@router.get('/', response_model=SchemaEntryOut)
+@router.get('/{uuid}', response_model=SchemaEntryOut)
 def get_schema_entry(uuid: UUID, db = Depends(get_db)):
     return s_get_schema_entry(uuid, db)
 
@@ -23,6 +23,6 @@ def get_schema_entry(uuid: UUID, db = Depends(get_db)):
 def update_schema_entry(data: SchemaEntryUpdate, db = Depends(get_db)):
     return s_update_schema_entry(data, db)
 
-@router.delete('/', response_model=Message)
+@router.delete('/{uuid}', response_model=Message)
 def delete_schema_entry(uuid: UUID, db = Depends(get_db)):
     return s_delete_schema_entry(uuid, db)

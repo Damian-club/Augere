@@ -17,7 +17,7 @@ router = APIRouter(prefix='/assignment_data', tags=['Assignment Data'])
 def create_assignment_data(data: AssignmentDataCreate, db = Depends(get_db)):
     return s_create_assignment_data(data, db)
 
-@router.get('/', response_model=AssignmentDataOut)
+@router.get('/{uuid}', response_model=AssignmentDataOut)
 def get_assignment_data(uuid: UUID, db = Depends(get_db)):
     return s_get_assignment_data(uuid, db)
 
@@ -25,7 +25,7 @@ def get_assignment_data(uuid: UUID, db = Depends(get_db)):
 def update_assignment_data(data: AssignmentDataUpdate, db = Depends(get_db)):
     return s_update_assignment_data(data, db)
 
-@router.delete('/', response_model=Message)
+@router.delete('/{uuid}', response_model=Message)
 def delete_assignment_data(uuid: UUID, db = Depends(get_db)):
     return s_delete_assignment_data(uuid, db)
 

@@ -15,7 +15,7 @@ router = APIRouter(prefix='/progress', tags=['Progress'])
 def create_progress(data: ProgressCreate, db = Depends(get_db)):
     return s_create_progress(data, db)
 
-@router.get('/', response_model=ProgressOut)
+@router.get('/{uuid}', response_model=ProgressOut)
 def get_progress(uuid: UUID, db = Depends(get_db)):
     return s_get_progress(uuid, db)
 
@@ -23,6 +23,6 @@ def get_progress(uuid: UUID, db = Depends(get_db)):
 def update_progress(data: ProgressUpdate, db = Depends(get_db)):
     return s_update_progress(data, db)
 
-@router.delete('/', response_model=Message)
+@router.delete('/{uuid}', response_model=Message)
 def delete_progress(uuid: UUID, db = Depends(get_db)):
     return s_delete_progress(uuid, db)
