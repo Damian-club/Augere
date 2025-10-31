@@ -1,6 +1,6 @@
-import styles from "./CourseCard.module.css";
+import { useEffect, useState } from "react";
 import { IoClose, IoSettingsSharp, IoBookOutline } from "react-icons/io5";
-import toast from "react-hot-toast";
+import styles from "./CourseCard.module.css";
 
 type Props = {
   title: string;
@@ -12,7 +12,6 @@ type Props = {
   variant?: "default" | "compact";
   logo_path?: string;
   onDelete?: () => void;
-  canDelete?: boolean;
   onIconClick?: () => void;
 };
 
@@ -26,40 +25,25 @@ export default function CourseCard({
   variant = "default",
   logo_path,
   onDelete,
-  canDelete = true,
   onIconClick,
 }: Props) {
+  const [imageError, setImageError] = useState(false);
   const isCompact = variant === "compact";
 
-  const handleIconClick = () => {
-    if (icon === "close") {
-      if (!canDelete) {
-        toast.error("Solo el tutor del curso puede eliminar estudiantes");
-        return;
-      }
-      if (
-        onDelete &&
-        confirm(`¿Estás seguro de que quieres desinscribirte de "${title}"?`)
-      ) {
-        onDelete();
-        toast.success("Te has desinscrito del curso");
-      }
-    } else if (icon === "settings") {
-      if (onIconClick) {
-        onIconClick();
-      } else {
-        toast("Abriendo configuración...");
-      }
-    }
-  };
+  useEffect(() => {
+    setImageError(false);
+  }, [logo_path]);
 
   return (
     <div
       className={`${styles.card} ${isCompact ? styles.compact : ""}`}
       style={{ background: color }}
     >
-      {/* Botón superior */}
-      <button className={styles.iconBtn} onClick={handleIconClick}>
+      {/* Botón de acción */}
+      <button
+        className={styles.iconBtn}
+        onClick={icon === "close" ? onDelete : onIconClick}
+      >
         {icon === "close" ? (
           <IoClose size={20} />
         ) : (
@@ -67,27 +51,30 @@ export default function CourseCard({
         )}
       </button>
 
-      {/* Logo o icono */}
+      {/* Logo */}
       <div className={styles.logoContainer}>
-        {logo_path ? (
+        {logo_path && !imageError ? (
           <img
+            key={logo_path}
             src={logo_path}
             alt={title}
             className={styles.logo}
             loading="lazy"
+            onError={() => setImageError(true)}
           />
         ) : (
           <IoBookOutline className={styles.logoIcon} />
         )}
       </div>
 
+      {/* Contenido */}
       <h3 className={styles.title}>{title}</h3>
-
       {!isCompact && author && <p className={styles.author}>{author}</p>}
       {!isCompact && description && (
         <p className={styles.desc}>{description}</p>
       )}
 
+      {/* Barra de progreso */}
       <div className={styles.progressBar}>
         <div style={{ width: `${progress}%` }} />
       </div>

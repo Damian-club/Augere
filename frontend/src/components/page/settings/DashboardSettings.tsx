@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { pastelGradientFromString } from "../../../utils/colors";
 import type { Course } from "../../../schemas/course";
 import toast from "react-hot-toast";
+import CourseConfigPanel from "../../general/courseConfig/CourseConfigPanel";
 
 export default function DashboardSettings() {
   const navigate = useNavigate();
@@ -19,6 +20,7 @@ export default function DashboardSettings() {
   });
   const [createdCourses, setCreatedCourses] = useState<Course[]>([]);
   const [loadingCourses, setLoadingCourses] = useState(true);
+  const [configCourseId, setConfigCourseId] = useState<string | null>(null);
 
   // Cargar usuario actual
   useEffect(() => {
@@ -78,7 +80,10 @@ export default function DashboardSettings() {
         <div className={styles.toastConfirm}>
           <p>¿Seguro de que deseas eliminar tu cuenta?</p>
           <div className={styles.toastButtons}>
-            <button className={styles.btnCancel} onClick={() => toast.dismiss(t.id)}>
+            <button
+              className={styles.btnCancel}
+              onClick={() => toast.dismiss(t.id)}
+            >
               Cancelar
             </button>
             <button
@@ -181,6 +186,7 @@ export default function DashboardSettings() {
                 icon="settings"
                 logo_path={course.logo_path}
                 variant="compact"
+                onIconClick={() => setConfigCourseId(course.uuid)}
               />
             ))}
           </div>
@@ -197,6 +203,20 @@ export default function DashboardSettings() {
           Eliminar Cuenta
         </button>
       </div>
+      {configCourseId && (
+        <CourseConfigPanel
+          courseId={configCourseId}
+          onClose={() => setConfigCourseId(null)}
+          onUpdated={() => {
+            setConfigCourseId(null);
+            // Refrescar los cursos actualizados
+            (async () => {
+              const courses = await courseService.getCreatedCourses();
+              setCreatedCourses(courses || []);
+            })();
+          }}
+        />
+      )}
     </div>
   );
 }
