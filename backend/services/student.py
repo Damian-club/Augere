@@ -98,4 +98,4 @@ def delete_student(
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error al eliminar el estudiante: {e}")
     
-    return Message(message="Estudiante eliminado exitosamente")
+    return Message(detail="Estudiante eliminado exitosamente")
