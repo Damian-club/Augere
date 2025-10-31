@@ -88,7 +88,8 @@ def delete_student(
         raise HTTPException(status_code=404, detail="Estudiante no encontrado")
     
     course = student.course
-    if course.tutor_id != user.uuid:
+    
+    if user.uuid not in (course.tutor_id, data.student_id):
         raise HTTPException(status_code=403, detail="No tienes permiso para eliminar este estudiante")
     
     try:
