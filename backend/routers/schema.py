@@ -1,15 +1,19 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from schemas.schema import SchemaCreate, SchemaOut, FullSchemaOut, FullSchemaCreate
 from schemas.message import Message
 from models.schema import Schema
 from core.db import get_db
 from uuid import UUID
 
+from sqlalchemy.orm import Session
+
 from services.schema import create_schema as s_create_schema
 from services.schema import get_schema as s_get_schema
 from services.schema import delete_schema as s_delete_schema
 from services.schema import get_schema_full as s_get_schema_full
 from services.schema import create_schema_full as s_create_schema_full
+
+from services import schema as schema_service
 
 router = APIRouter(prefix='/schema', tags=['Schema'])
 
@@ -50,9 +54,20 @@ def create_full_schema(
 
 
 # CAMBIOS
-@router.get("/by_course/{course_id}", response_model=SchemaOut)
-def get_schema_by_course(course_id: UUID, db = Depends(get_db)):
-    schema = db.query(Schema).filter(Schema.course_id == course_id).first()
-    if not schema:
-        raise HTTPException(status_code=404, detail="Esquema no encontrado para este curso")
-    return SchemaOut(uuid=schema.uuid, course_id=schema.course_id)
+@router.get("/full/by-course/{course_id}", response_model=FullSchemaOut, summary="Obtener esquema completo por course_id")
+def get_full_schema_by_course(course_id: UUID, db: Session = Depends(get_db)):
+    """
+    Retorna el esquema completo asociado a un curso buscando por course_id.
+    """
+    try:
+        # Buscar el schema por course_id
+        schema = db.query(Schema).filter(Schema.course_id == course_id).first()
+        if not schema:
+            raise HTTPException(status_code=404, detail="No existe esquema para este curso")
+        # Reutilizar el mapper del servicio para devolver el FullSchemaOut
+        return schema_service._map_schema_to_full_schema_out(schema)
+    except HTTPException:
+        # Propagar 404 u otras HTTPException tal cual
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error al obtener esquema: {e}")
