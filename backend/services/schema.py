@@ -66,11 +66,19 @@ def _get_schema_by_uuid(uuid: UUID, db: Session) -> Schema:
     try:
         schema: Schema = db.query(Schema).filter(Schema.uuid == uuid).first()
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Error al mapear el esquema: {e}")
+        raise HTTPException(status_code=400, detail=f"Error al buscar el esquema: {e}")
     if not schema:
         raise HTTPException(status_code=404, detail="Esquema no encontrado")
     return schema
 
+def _get_schema_by_course_uuid(course_uuid: UUID, db: Session) -> Schema:
+    try:
+        schema: Schema = db.query(Schema).filter(Schema.course_id == course_uuid).first()
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error al buscar el esquema: {e}")
+    if not schema:
+        raise HTTPException(status_code=404, detail="Esquema no encontrado")
+    return schema
 
 # Basic schema CRUD
 def create_schema(schema_create: SchemaCreate, db: Session) -> SchemaOut:
@@ -157,5 +165,13 @@ def create_schema_full(full_schema_create: FullSchemaCreate, db: Session) -> Ful
 
 def get_schema_full(uuid: UUID, db: Session) -> FullSchemaCategoryOut:
     schema: Schema = _get_schema_by_uuid(uuid, db)
+
+    return _map_schema_to_full_schema_out(schema)
+
+
+
+
+def get_schema_by_course(course_uuid: UUID, db: Session) -> FullSchemaCategoryOut:
+    schema: Schema = _get_schema_by_course_uuid(course_uuid, db=db)
 
     return _map_schema_to_full_schema_out(schema)
