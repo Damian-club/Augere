@@ -13,7 +13,7 @@ from uuid import UUID
 def map_model_to_schema(schema_category: SchemaCategory) -> SchemaCategoryOut:
     return SchemaCategoryOut(
         uuid=schema_category.uuid,
-        schema_id=schema_category.schema_uuid,
+        schema_uuid=schema_category.schema_uuid,
         name=schema_category.name,
         position=schema_category.position,
     )
@@ -35,7 +35,7 @@ def create_schema_category(
     schema_category_create: SchemaCategoryCreate, db: Session
 ) -> SchemaCategoryOut:
     schema_category: SchemaCategory = SchemaCategory(
-        schema_id=schema_category_create.schema_id, name=schema_category_create.name, position=schema_category_create.position
+        schema_uuid=schema_category_create.schema_uuid, name=schema_category_create.name, position=schema_category_create.position
     )
     try:
         db.add(schema_category)

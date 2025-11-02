@@ -9,7 +9,7 @@ class SchemaCategoryPreBase(BaseModel):
 
 
 class SchemaCategoryBase(SchemaCategoryPreBase):
-    schema_id: UUID = Field(...)
+    schema_uuid: UUID = Field(...)
 
 
 class SchemaCategoryCreate(SchemaCategoryBase):

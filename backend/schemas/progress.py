@@ -4,8 +4,8 @@ from typing import Optional
 
 
 class ProgressBase(BaseModel):
-    entry_id: UUID = Field(...)
-    student_id: UUID = Field(...)
+    entry_uuid: UUID = Field(...)
+    student_uuid: UUID = Field(...)
     finished: bool = Field(...)
 
 
@@ -18,6 +18,6 @@ class ProgressOut(ProgressBase):
 
 
 class ProgressUpdate(BaseModel):
-    entry_id: Optional[UUID] = None
-    student_id: Optional[UUID] = None
+    entry_uuid: Optional[UUID] = None
+    student_uuid: Optional[UUID] = None
     finished: Optional[bool] = None

@@ -11,7 +11,7 @@ class Author(str, Enum):
 
 
 class AIChatBase(BaseModel):
-    progress_id: UUID = Field(...)
+    progress_uuid: UUID = Field(...)
     author: Author = Field(...)
     content: str = Field(...)
 
@@ -26,6 +26,6 @@ class AIChatOut(AIChatBase):
 
 
 class AIChatUpdate(BaseModel):
-    progress_id: Optional[UUID] = None
+    progress_uuid: Optional[UUID] = None
     author: Optional[Author] = None
     content: Optional[str] = None

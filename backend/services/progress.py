@@ -24,8 +24,8 @@ def _get_progress_by_uuid(uuid: UUID, db: Session) -> Progress:
 def map_model_to_schema(progress: Progress) -> ProgressOut:
     return ProgressOut(
         uuid=progress.uuid,
-        entry_id=progress.entry_uuid,
-        student_id=progress.student_uuid,
+        entry_uuid=progress.entry_uuid,
+        student_uuid=progress.student_uuid,
         finished=progress.finished,
     )
 
@@ -33,7 +33,7 @@ def map_model_to_schema(progress: Progress) -> ProgressOut:
 def create_progress(progress_create: ProgressCreate, db: Session) -> ProgressOut:
 
     progress: Progress = Progress(
-        entry_id=progress_create.entry_id, student_id=progress_create.student_id, finished=progress_create.finished
+        entry_uuid=progress_create.entry_uuid, student_uuid=progress_create.student_uuid, finished=progress_create.finished
     )
 
     try:
@@ -48,10 +48,10 @@ def create_progress(progress_create: ProgressCreate, db: Session) -> ProgressOut
 def update_progress(uuid: UUID, progress_update: ProgressUpdate, db: Session) -> ProgressOut:
     progress: ProgressOut = _get_progress_by_uuid(uuid, db=db)
 
-    if progress_update.entry_id is not None:
-        progress = progress_update.entry_id
-    if progress_update.student_id is not None:
-        progress = progress_update.student_id
+    if progress_update.entry_uuid is not None:
+        progress = progress_update.entry_uuid
+    if progress_update.student_uuid is not None:
+        progress = progress_update.student_uuid
     if progress_update.finished is not None:
         progress = progress_update.finished
 

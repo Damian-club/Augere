@@ -27,7 +27,7 @@ class CourseOutPre(CourseBase):
     invitation_code: str = Field(...)
 
 class CourseOut(CourseOutPre):
-    tutor_id: UUID = Field(...)
+    tutor_uuid: UUID = Field(...)
 
 class CourseOutUser(CourseOutPre):
     tutor: UserOut = Field(...)

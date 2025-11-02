@@ -28,7 +28,7 @@ def map_model_to_schema(schema_entry: SchemaEntry) -> SchemaEntryOut:
         body=schema_entry.body,
         position=schema_entry.position,
         context=schema_entry.context,
-        category_id=schema_entry.category_uuid,
+        category_uuid=schema_entry.category_uuid,
         entry_type=schema_entry.entry_type,
     )
 
@@ -39,7 +39,7 @@ def create_schema_entry(schema_entry_create: SchemaEntryCreate, db: Session) -> 
         body=schema_entry_create.body,
         position=schema_entry_create.position,
         context=schema_entry_create.context,
-        category_id=schema_entry_create.category_id,
+        category_uuid=schema_entry_create.category_uuid,
         entry_type=schema_entry_create.entry_type,
     )
 
@@ -66,8 +66,8 @@ def update_schema_entry(uuid: UUID, schema_entry_update: SchemaEntryUpdate, db: 
         schema_entry.entry_type = schema_entry_update.entry_type
     if schema_entry_update.position is not None:
         schema_entry.position = schema_entry_update.position
-    if schema_entry_update.category_id is not None:
-        schema_entry.category_uuid = schema_entry_update.category_id
+    if schema_entry_update.category_uuid is not None:
+        schema_entry.category_uuid = schema_entry_update.category_uuid
 
     try:
         db.commit()

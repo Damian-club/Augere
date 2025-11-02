@@ -33,7 +33,7 @@ def map_model_to_schema(assignment_data: AssignmentData) -> AssignmentDataOut:
     return AssignmentDataOut(
         uuid=assignment_data.uuid,
         creation_date=assignment_data.creation_date,
-        progress_id=assignment_data.progress_uuid,
+        progress_uuid=assignment_data.progress_uuid,
         answer=assignment_data.answer,
         feedback=assignment_data.feedback,
         success=assignment_data.success,
@@ -45,7 +45,7 @@ def create_assignment_data(
 ) -> AssignmentDataOut:
 
     assignment_data: AssignmentData = AssignmentData(
-        progress_id=assignment_data_create.progress_id,
+        progress_uuid=assignment_data_create.progress_uuid,
         answer=assignment_data_create.answer,
         feedback=assignment_data_create.feedback,
         success=assignment_data_create.success,
@@ -71,8 +71,8 @@ def update_assignment_data(
         uuid, db=db
     )
 
-    if assignment_data_update.progress_id is not None:
-        assignment_data = assignment_data_update.progress_id
+    if assignment_data_update.progress_uuid is not None:
+        assignment_data = assignment_data_update.progress_uuid
     if assignment_data_update.answer is not None:
         assignment_data = assignment_data_update.answer
     if assignment_data_update.feedback is not None:

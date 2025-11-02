@@ -1,9 +1,11 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from schemas.schema import SchemaCreate, SchemaOut, FullSchemaOut, FullSchemaCreate
 from schemas.message import Message
 from models.schema import Schema
 from core.db import get_db
 from uuid import UUID
+
+from sqlalchemy.orm import Session
 
 from services.schema import create_schema as s_create_schema
 from services.schema import get_schema as s_get_schema

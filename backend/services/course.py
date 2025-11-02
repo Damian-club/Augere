@@ -42,7 +42,7 @@ def map_model_to_schema(course: Course) -> CourseOut:
         description=course.description,
         logo_path=course.logo_path,
         invitation_code=course.invitation_code,
-        tutor_id=course.tutor_uuid,
+        tutor_uuid=course.tutor_uuid,
         creation_date=course.creation_date,
     )
 
@@ -56,7 +56,7 @@ def create_course(course_create: CourseCreate, user: User, db: Session) -> Cours
         description=course_create.description,
         logo_path=course_create.logo_path,
         invitation_code=course_create.invitation_code,
-        tutor_id=user.uuid,
+        tutor_uuid=user.uuid,
     )
 
     try:

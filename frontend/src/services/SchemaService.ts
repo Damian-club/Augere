@@ -70,6 +70,15 @@ export class SchemaService {
     return res.json() as Promise<FullSchema>;
   }
 
+  // Obtener esquema completo por course_id
+  async getFullSchemaByCourse(courseId: string): Promise<FullSchema> {
+    const res = await fetch(`${this.baseUrl}/full/by-course/${courseId}`, {
+      headers: this.getHeaders(),
+    });
+    if (!res.ok) throw new Error("Error al obtener esquema completo por curso");
+    return res.json() as Promise<FullSchema>;
+  }
+
   // Crear esquema completo
   async createFullSchema(
     schemaUuid: string,
@@ -100,6 +109,4 @@ export class SchemaService {
       );
     return responseData as FullSchema;
   }
-
 }
-

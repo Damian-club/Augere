@@ -18,7 +18,7 @@ class SchemaEntryPreBase(BaseModel):
 
 
 class SchemaEntryBase(SchemaEntryPreBase):
-    category_id: UUID = Field(...)
+    category_uuid: UUID = Field(...)
 
 
 class SchemaEntryCreate(SchemaEntryBase):
@@ -31,7 +31,7 @@ class SchemaEntryUpdate(BaseModel):
     context: Optional[str] = None
     entry_type: Optional[EntryType] = None
     position: Optional[int] = None
-    category_id: Optional[UUID] = None
+    category_uuid: Optional[UUID] = None
 
 
 class SchemaEntryCreateFull(SchemaEntryPreBase):

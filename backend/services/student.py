@@ -17,18 +17,18 @@ def map_model_to_schema(student: Student) -> StudentOut:
     return StudentOut(
         uuid=student.uuid,
         inscription_date=student.inscription_date,
-        student_id=student.student_uuid,
-        course_id=student.course_uuid,
+        student_uuid=student.student_uuid,
+        course_uuid=student.course_uuid,
     )
 
 
 def create_student(student_create: StudentCreate, user: User, db: Session) -> StudentOut:
-    if user.uuid != student_create.student_id:
+    if user.uuid != student_create.student_uuid:
         raise HTTPException(
             status_code=403, detail="No tienes permiso para inscribir a este estudiante"
         )
 
-    student: Student = Student(student_id=student_create.student_id, course_id=student_create.course_id)
+    student: Student = Student(student_uuid=student_create.student_uuid, course_uuid=student_create.course_uuid)
 
     try:
         db.add(student)
@@ -44,7 +44,7 @@ def create_student(student_create: StudentCreate, user: User, db: Session) -> St
                 schema_entries: list[SchemaEntry] = category.entries
                 for entry in schema_entries:
                     progress: Progress = Progress(
-                        entry_id=entry.uuid, student_id=student.uuid, finished=False
+                        entry_uuid=entry.uuid, student_uuid=student.uuid, finished=False
                     )
                     db.add(progress)
 
@@ -67,7 +67,7 @@ def join_course(invitation_code: str, user: User, db: Session) -> StudentOut:
     if not course:
         raise HTTPException(status_code=404, detail="Código de invitación inválido")
 
-    student_create: StudentCreate = StudentCreate(student_id=user.uuid, course_id=course.uuid)
+    student_create: StudentCreate = StudentCreate(student_uuid=user.uuid, course_uuid=course.uuid)
 
     return create_student(student_create, user, db)
 

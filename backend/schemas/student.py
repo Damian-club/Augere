@@ -4,8 +4,8 @@ from datetime import datetime
 
 
 class StudentBase(BaseModel):
-    student_id: UUID = Field(...)
-    course_id: UUID = Field(...)
+    student_uuid: UUID = Field(...)
+    course_uuid: UUID = Field(...)
 
 
 class StudentCreate(StudentBase):

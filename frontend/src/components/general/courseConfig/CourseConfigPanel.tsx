@@ -9,7 +9,7 @@ import {
   IoPeople,
 } from "react-icons/io5";
 import CourseGeneralTab from "./CourseGeneralTab";
-import CourseSchemaTab from "./CourseSchemaTab";
+import CourseSchemaTab2 from "./CourseSchemaTab2";
 
 type Props = {
   courseId: string;
@@ -93,7 +93,7 @@ export default function CourseConfigPanel({
             onUpdated={onUpdated}
           />
         )}
-        {activeTab === "esquema" && <CourseSchemaTab course={course} />}
+        {activeTab === "esquema" && <CourseSchemaTab2 course={course} />}
         {activeTab === "alumnos" && <div>Lista de alumnos</div>}
       </div>
     </div>

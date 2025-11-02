@@ -24,7 +24,7 @@ def map_model_to_schema(ai_chat: AIChat) -> AIChatOut:
     return AIChatOut(
         uuid=ai_chat.uuid,
         creation_date=ai_chat.creation_date,
-        progress_id=ai_chat.progress_uuid,
+        progress_uuid=ai_chat.progress_uuid,
         author=ai_chat.author,
         content=ai_chat.content,
     )
@@ -33,7 +33,7 @@ def map_model_to_schema(ai_chat: AIChat) -> AIChatOut:
 def create_ai_chat(ai_chat_create: AIChatCreate, db: Session) -> AIChatOut:
 
     ai_chat: AIChat = AIChat(
-        progress_id=ai_chat_create.progress_id,
+        progress_uuid=ai_chat_create.progress_uuid,
         author=ai_chat_create.author,
         content=ai_chat_create.content,
     )
@@ -52,8 +52,8 @@ def create_ai_chat(ai_chat_create: AIChatCreate, db: Session) -> AIChatOut:
 def update_ai_chat(uuid: UUID, ai_chat_update: AIChatUpdate, db: Session) -> AIChatOut:
     ai_chat: AIChatOut = _get_ai_chat_by_uuid(uuid, db=db)
 
-    if ai_chat_update.progress_id is not None:
-        ai_chat = ai_chat_update.progress_id
+    if ai_chat_update.progress_uuid is not None:
+        ai_chat = ai_chat_update.progress_uuid
     if ai_chat_update.author is not None:
         ai_chat = ai_chat_update.author
     if ai_chat_update.content is not None:

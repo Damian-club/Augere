@@ -5,7 +5,7 @@ from typing import Optional
 
 
 class AssignmentDataBase(BaseModel):
-    progress_id: UUID = Field(...)
+    progress_uuid: UUID = Field(...)
     answer: str = Field(...)
     feedback: str = Field(...)
     success: bool = Field(...)
@@ -21,7 +21,7 @@ class AssignmentDataOut(AssignmentDataBase):
 
 
 class AssignmentDataUpdate(BaseModel):
-    progress_id: Optional[UUID] = None
+    progress_uuid: Optional[UUID] = None
     answer: Optional[str] = None
     feedback: Optional[str] = None
     success: Optional[bool] = None

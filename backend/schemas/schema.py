@@ -5,7 +5,7 @@ from uuid import UUID
 
 
 class SchemaBase(BaseModel):
-    course_id: UUID = Field(...)
+    course_uuid: UUID = Field(...)
 
 
 class SchemaCreate(SchemaBase):

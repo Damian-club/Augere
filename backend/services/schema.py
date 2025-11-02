@@ -31,7 +31,7 @@ def _map_schema_to_full_schema_out(schema: Schema) -> FullSchemaOut:
                     name=entry.name,
                     body=entry.body,
                     context=entry.context,
-                    category_id=entry.category_id,
+                    category_uuid=entry.category_uuid,
                     entry_type=entry.entry_type,
                     position=entry.position,
                 )
@@ -40,7 +40,7 @@ def _map_schema_to_full_schema_out(schema: Schema) -> FullSchemaOut:
 
             mapped_category: FullSchemaCategoryOut = FullSchemaCategoryOut(
                 uuid=schema_category.uuid,
-                schema_id=schema_category.schema_id,
+                schema_uuid=schema_category.schema_uuid,
                 name=schema_category.name,
                 position=schema_category.position,
                 entry_list=mapped_entries,
@@ -49,7 +49,7 @@ def _map_schema_to_full_schema_out(schema: Schema) -> FullSchemaOut:
 
         full_schema: FullSchemaOut = FullSchemaOut(
             uuid=schema.uuid,
-            course_id=schema.course_uuid,
+            course_uuid=schema.course_uuid,
             category_list=mapped_categories,
         )
 
@@ -59,7 +59,7 @@ def _map_schema_to_full_schema_out(schema: Schema) -> FullSchemaOut:
 
 
 def map_model_to_schema(schema: Schema) -> SchemaOut:
-    return SchemaOut(uuid=schema.uuid, course_id=schema.course_uuid)
+    return SchemaOut(uuid=schema.uuid, course_uuid=schema.course_uuid)
 
 
 def _get_schema_by_uuid(uuid: UUID, db: Session) -> Schema:
@@ -83,7 +83,7 @@ def _get_schema_by_course_uuid(course_uuid: UUID, db: Session) -> Schema:
 # Basic schema CRUD
 def create_schema(schema_create: SchemaCreate, db: Session) -> SchemaOut:
     schema: Schema = Schema(
-        course_id=schema_create.course_id,
+        course_uuid=schema_create.course_uuid,
     )
     try:
         db.add(schema)
@@ -115,7 +115,7 @@ def delete_schema(uuid: UUID, db: Session) -> Message:
 
 
 def create_schema_full(full_schema_create: FullSchemaCreate, db: Session) -> FullSchemaCategoryOut:
-    schema: Schema = Schema(course_id=full_schema_create.course_id)
+    schema: Schema = Schema(course_uuid=full_schema_create.course_uuid)
 
     course: Course = schema.course
     student_list: list[Student] = course.students
@@ -126,7 +126,7 @@ def create_schema_full(full_schema_create: FullSchemaCreate, db: Session) -> Ful
 
         for category_list in full_schema_create.category_list:
             schema_category: SchemaCategory = SchemaCategory(
-                schema_id=schema.uuid,
+                schema_uuid=schema.uuid,
                 name=category_list.name,
                 position=category_list.position,
             )
@@ -139,7 +139,7 @@ def create_schema_full(full_schema_create: FullSchemaCreate, db: Session) -> Ful
                     name=entry.name,
                     body=entry.body,
                     context=entry.context,
-                    category_id=schema_category.uuid,
+                    category_uuid=schema_category.uuid,
                     entry_type=entry.entry_type,
                     position=entry.position,
                 )
@@ -148,8 +148,8 @@ def create_schema_full(full_schema_create: FullSchemaCreate, db: Session) -> Ful
 
                 for student in student_list:
                     progress: Progress = Progress(
-                        entry_id=schema_entry.uuid,
-                        student_id=student.uuid,
+                        entry_uuid=schema_entry.uuid,
+                        student_uuid=student.uuid,
                         finished=False,
                     )
                     db.add(progress)
