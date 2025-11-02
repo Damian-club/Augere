@@ -9,7 +9,8 @@ from schemas.token import Token
 from models.user import User
 from core.settings import settings
 
-def map_model_to_schema(user):
+
+def map_model_to_schema(user: User) -> UserOut:
     return UserOut(
         name=user.name,
         email=user.email,
@@ -18,34 +19,34 @@ def map_model_to_schema(user):
         creation_date=user.creation_date,
     )
 
-def login(data: UserLogin, db: Session):
-    user: User = db.query(User).filter(User.email == data.email).first()
-    
-    if not user or not verify_password(data.password, user.pwd_hash):
+
+def login(user_login: UserLogin, db: Session) -> Token:
+    user: User = db.query(User).filter(User.email == user_login.email).first()
+
+    if not user or not verify_password(user_login.password, user.pwd_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Correo o contraseña incorrectos",
         )
 
-
     return create_token(user)
 
 
-def register(data: UserRegister, db: Session):
-    existing_user = db.query(User).filter(User.email == data.email).first()
+def register(user_register: UserRegister, db: Session) -> Token:
+    existing_user: User | None = db.query(User).filter(User.email == user_register.email).first()
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Usuario ya existente",
         )
 
-    hashed_password = get_password_hash(data.password)
+    hashed_password: str = get_password_hash(user_register.password)
 
-    user = User(
-        name=data.name,
-        email=data.email,
+    user: User = User(
+        name=user_register.name,
+        email=user_register.email,
         pwd_hash=hashed_password,
-        avatar_path=data.avatar_path,
+        avatar_path=user_register.avatar_path,
     )
 
     try:
@@ -61,18 +62,16 @@ def register(data: UserRegister, db: Session):
     return create_token(user)
 
 
-def create_token(user: User):
-    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    
-    # SOLO incluye el UUID en el token (lo mínimo necesario)
-    access_token = create_access_token(
+def create_token(user: User) -> Token:
+    access_token_expires: timedelta = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+
+    access_token: str = create_access_token(
         data={
-            "sub": str(user.uuid),  # Usa "sub" que es el estándar JWT
-            # "uuid": str(user.uuid),  # También lo dejamos por compatibilidad
+            "sub": str(user.uuid)
         },
         expires_delta=access_token_expires,
     )
-    
+
     return Token(access_token=access_token, token_type="bearer")
 
 
@@ -80,15 +79,15 @@ def me(user: User) -> UserOut:
     return map_model_to_schema(user)
 
 
-def update_account(user: User, data: UserUpdate, db: Session) -> UserOut:
-    if data.name:
-        user.name = data.name
-    if data.email:
-        user.email = data.email
-    if data.password:
-        user.pwd_hash = get_password_hash(data.password)
-    if data.avatar_path:
-        user.avatar_path = data.avatar_path
+def update_account(user: User, user_update: UserUpdate, db: Session) -> UserOut:
+    if user_update.name:
+        user.name = user_update.name
+    if user_update.email:
+        user.email = user_update.email
+    if user_update.password:
+        user.pwd_hash = get_password_hash(user_update.password)
+    if user_update.avatar_path:
+        user.avatar_path = user_update.avatar_path
     try:
         db.commit()
         db.refresh(user)
@@ -101,7 +100,7 @@ def update_account(user: User, data: UserUpdate, db: Session) -> UserOut:
     return map_model_to_schema(user)
 
 
-def delete_account(user: User, db: Session):
+def delete_account(user: User, db: Session) -> Message:
     try:
         db.delete(user)
         db.commit()
@@ -110,5 +109,5 @@ def delete_account(user: User, db: Session):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Error al eliminar la cuenta: {e}",
         )
-    
+
     return Message(detail="Cuenta eliminada exitosamente")

@@ -9,20 +9,24 @@ from services.schema_entry import delete_schema_entry as s_delete_schema_entry
 from services.schema_entry import get_schema_entry as s_get_schema_entry
 from services.schema_entry import update_schema_entry as s_update_schema_entry
 
-router = APIRouter(prefix='/schema_entry', tags=['Schema Entry'])
+router = APIRouter(prefix="/schema_entry", tags=["Schema Entry"])
 
-@router.post('/', response_model=SchemaEntryOut)
-def create_schema_entry(data: SchemaEntryCreate, db = Depends(get_db)):
-    return s_create_schema_entry(data, db)
 
-@router.get('/{uuid}', response_model=SchemaEntryOut)
-def get_schema_entry(uuid: UUID, db = Depends(get_db)):
-    return s_get_schema_entry(uuid, db)
+@router.post("/", response_model=SchemaEntryOut)
+def create_schema_entry(schema_entry_create: SchemaEntryCreate, db=Depends(get_db)) -> SchemaEntryOut:
+    return s_create_schema_entry(schema_entry_create, db=db)
 
-@router.put('/', response_model=SchemaEntryOut)
-def update_schema_entry(data: SchemaEntryUpdate, db = Depends(get_db)):
-    return s_update_schema_entry(data, db)
 
-@router.delete('/{uuid}', response_model=Message)
-def delete_schema_entry(uuid: UUID, db = Depends(get_db)):
-    return s_delete_schema_entry(uuid, db)
+@router.get("/{uuid}", response_model=SchemaEntryOut)
+def get_schema_entry(uuid: UUID, db=Depends(get_db)) -> SchemaEntryOut:
+    return s_get_schema_entry(uuid, db=db)
+
+
+@router.put("/{uuid}", response_model=SchemaEntryOut)
+def update_schema_entry(uuid: UUID, schema_entry_update: SchemaEntryUpdate, db=Depends(get_db)) -> SchemaEntryOut:
+    return s_update_schema_entry(uuid, schema_entry_update=schema_entry_update, db=db)
+
+
+@router.delete("/{uuid}", response_model=Message)
+def delete_schema_entry(uuid: UUID, db=Depends(get_db)) -> Message:
+    return s_delete_schema_entry(uuid, db=db)

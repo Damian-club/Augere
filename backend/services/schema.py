@@ -1,4 +1,10 @@
-from schemas.schema import SchemaCreate, SchemaOut, FullSchemaOut, FullSchemaCategoryOut, FullSchemaCreate
+from schemas.schema import (
+    SchemaCreate,
+    SchemaOut,
+    FullSchemaOut,
+    FullSchemaCategoryOut,
+    FullSchemaCreate,
+)
 from schemas.message import Message
 from schemas.schema_category import SchemaCategoryOut
 from schemas.schema_entry import SchemaEntryOut
@@ -9,17 +15,17 @@ from models.course import Course
 from models.user import User
 from models.student import Student
 from models.progress import Progress
-from fastapi import  HTTPException
+from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from uuid import UUID
-from typing import List
+
 
 # Util
 def _map_schema_to_full_schema_out(schema: Schema) -> FullSchemaOut:
     try:
-        mapped_categories = []
+        mapped_categories: list[FullSchemaCategoryOut] = []
         for schema_category in schema.categories:
-            mapped_entries = [
+            mapped_entries: list[SchemaEntryOut] = [
                 SchemaEntryOut(
                     uuid=entry.uuid,
                     name=entry.name,
@@ -27,12 +33,12 @@ def _map_schema_to_full_schema_out(schema: Schema) -> FullSchemaOut:
                     context=entry.context,
                     category_id=entry.category_id,
                     entry_type=entry.entry_type,
-                    position=entry.position
+                    position=entry.position,
                 )
                 for entry in schema_category.entries
             ]
 
-            mapped_category = FullSchemaCategoryOut(
+            mapped_category: FullSchemaCategoryOut = FullSchemaCategoryOut(
                 uuid=schema_category.uuid,
                 schema_id=schema_category.schema_id,
                 name=schema_category.name,
@@ -41,7 +47,7 @@ def _map_schema_to_full_schema_out(schema: Schema) -> FullSchemaOut:
             )
             mapped_categories.append(mapped_category)
 
-        full_schema = FullSchemaOut(
+        full_schema: FullSchemaOut = FullSchemaOut(
             uuid=schema.uuid,
             course_id=schema.course_id,
             category_list=mapped_categories,
@@ -51,118 +57,105 @@ def _map_schema_to_full_schema_out(schema: Schema) -> FullSchemaOut:
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error al mapear el esquema: {e}")
 
-def map_model_to_schema(schema):
-    return SchemaOut(
-        uuid=schema.uuid,
-        course_id=schema
-    )
+
+def map_model_to_schema(schema: Schema) -> SchemaOut:
+    return SchemaOut(uuid=schema.uuid, course_id=schema.course_id)
 
 
-def _get_schema_by_uuid(uuid: UUID, db: Session):
+def _get_schema_by_uuid(uuid: UUID, db: Session) -> Schema:
     try:
-        schema = db.query(Schema).filter(Schema.uuid == uuid).first()
+        schema: Schema = db.query(Schema).filter(Schema.uuid == uuid).first()
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error al mapear el esquema: {e}")
     if not schema:
         raise HTTPException(status_code=404, detail="Esquema no encontrado")
     return schema
 
+
 # Basic schema CRUD
-def create_schema(
-    data: SchemaCreate,
-    db: Session
-) -> SchemaOut:
-    schema = Schema(
-        course_id=data.course_id,
+def create_schema(schema_create: SchemaCreate, db: Session) -> SchemaOut:
+    schema: Schema = Schema(
+        course_id=schema_create.course_id,
     )
     try:
         db.add(schema)
         db.commit()
-        db.refresh(schema)
     except Exception as e:
+        db.rollback()
         raise HTTPException(status_code=400, detail=f"Error al crear el esquema: {e}")
-    
-    return map_model_to_schema(schema)
-
-
-def get_schema(
-    uuid: UUID,
-    db: Session
-) -> SchemaOut:
-    schema = _get_schema_by_uuid(uuid, db)
 
     return map_model_to_schema(schema)
 
-def delete_schema(
-    uuid: UUID,
-    db: Session
-) -> Message:
+
+def get_schema(uuid: UUID, db: Session) -> SchemaOut:
+    schema: Schema = _get_schema_by_uuid(uuid, db)
+
+    return map_model_to_schema(schema)
+
+
+def delete_schema(uuid: UUID, db: Session) -> Message:
     schema: Schema = _get_schema_by_uuid(uuid, db)
     try:
         db.delete(schema)
         db.commit()
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Error al eliminar el esquema: {e}")
-    
+        raise HTTPException(
+            status_code=400, detail=f"Error al eliminar el esquema: {e}"
+        )
+
     return Message(detail="Esquema eliminado correctamente")
 
-def create_schema_full(
-    data: FullSchemaCreate,
-    db: Session       
-) -> FullSchemaCategoryOut:
-    schema = Schema(
-        course_id=data.course_id
-    )
+
+def create_schema_full(full_schema_create: FullSchemaCreate, db: Session) -> FullSchemaCategoryOut:
+    schema: Schema = Schema(course_id=full_schema_create.course_id)
 
     course: Course = schema.course
-    student_list: List[Student] = course.students
+    student_list: list[Student] = course.students
 
     try:
         db.add(schema)
         db.flush()
 
-        for category_list in data.category_list:
-            schema_category = SchemaCategory(
+        for category_list in full_schema_create.category_list:
+            schema_category: SchemaCategory = SchemaCategory(
                 schema_id=schema.uuid,
                 name=category_list.name,
-                position=category_list.position
+                position=category_list.position,
             )
 
             db.add(schema_category)
             db.flush()
 
             for entry in category_list.entry_list:
-                schema_entry = SchemaEntry(
+                schema_entry: SchemaEntry = SchemaEntry(
                     name=entry.name,
                     body=entry.body,
                     context=entry.context,
                     category_id=schema_category.uuid,
                     entry_type=entry.entry_type,
-                    position=entry.position
+                    position=entry.position,
                 )
                 db.add(schema_entry)
                 db.flush()
 
                 for student in student_list:
-                    progress = Progress(
+                    progress: Progress = Progress(
                         entry_id=schema_entry.uuid,
                         student_id=student.uuid,
-                        finished=False
+                        finished=False,
                     )
                     db.add(progress)
 
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error al crear el esquema: {e}")
-    
+
     db.commit()
     db.refresh(schema)
 
     return _map_schema_to_full_schema_out(schema=schema)
 
-def get_schema_full(
-    uuid: UUID,
-    db: Session
-) -> FullSchemaCategoryOut:
-    schema = _get_schema_by_uuid(uuid, db)
+
+def get_schema_full(uuid: UUID, db: Session) -> FullSchemaCategoryOut:
+    schema: Schema = _get_schema_by_uuid(uuid, db)
 
     return _map_schema_to_full_schema_out(schema)

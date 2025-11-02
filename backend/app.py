@@ -17,16 +17,15 @@ from routers.progress import router as progress_router
 
 from fastapi.middleware.cors import CORSMiddleware
 
+
 @asynccontextmanager
 async def start(instance: FastAPI):
     Base.metadata.create_all(bind=engine)
     print(Base.metadata.tables.keys())
     yield
 
-app = FastAPI(
-    title="Backend de Augere",
-    lifespan=start
-)
+
+app = FastAPI(title="Backend de Augere", lifespan=start)
 
 # CORS Middleware
 app.add_middleware(
@@ -39,7 +38,7 @@ app.add_middleware(
     ],
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"]
+    allow_headers=["*"],
 )
 
 

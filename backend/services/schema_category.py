@@ -1,86 +1,97 @@
-from schemas.schema_category import SchemaCategoryCreate, SchemaCategoryOut, SchemaCategoryUpdate
+from schemas.schema_category import (
+    SchemaCategoryCreate,
+    SchemaCategoryOut,
+    SchemaCategoryUpdate,
+)
 from schemas.message import Message
 from models.schema_category import SchemaCategory
-from fastapi import  HTTPException
+from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from uuid import UUID
 
-def map_model_to_schema(schema_category):
+
+def map_model_to_schema(schema_category: SchemaCategory) -> SchemaCategoryOut:
     return SchemaCategoryOut(
         uuid=schema_category.uuid,
         schema_id=schema_category.schema_id,
         name=schema_category.name,
-        position=schema_category.position
+        position=schema_category.position,
     )
 
-def _get_schema_from_uuid(uuid, db):
+
+def _get_schema_category_from_uuid(uuid: UUID, db: Session) -> SchemaCategory:
     try:
-        schema_category = db.query(SchemaCategory).filter(SchemaCategory.uuid == uuid).first()
+        schema_category: SchemaCategory = (
+            db.query(SchemaCategory).filter(SchemaCategory.uuid == uuid).first()
+        )
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error al obtener el curso: {e}")
     if not schema_category:
         raise HTTPException(status_code=404, detail="Curso no encontrado")
     return schema_category
 
+
 def create_schema_category(
-    data: SchemaCategoryCreate,
-    db: Session
+    schema_category_create: SchemaCategoryCreate, db: Session
 ) -> SchemaCategoryOut:
-    schema_category = SchemaCategory(
-        schema_id=data.schema_id,
-        name=data.name,
-        position=data.position
+    schema_category: SchemaCategory = SchemaCategory(
+        schema_id=schema_category_create.schema_id, name=schema_category_create.name, position=schema_category_create.position
     )
     try:
         db.add(schema_category)
         db.commit()
         db.refresh(schema_category)
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Error al crear la categoría del esquema: {e}")
-    
+        raise HTTPException(
+            status_code=400, detail=f"Error al crear la categoría del esquema: {e}"
+        )
+
     return map_model_to_schema(schema_category)
 
 
 def update_schema_category(
-    data: SchemaCategoryUpdate,
-    db: Session
+    uuid: UUID, schema_category_update: SchemaCategoryUpdate, db: Session
 ) -> SchemaCategoryOut:
-    schema_category = _get_schema_from_uuid(data.uuid, db)
-    
-    if data.name is not None:
-        schema_category.name = data.name
-    if data.position is not None:
-        schema_category.position = data.position
-    
+    schema_category: SchemaCategory = _get_schema_category_from_uuid(uuid, db=db)
+
+    if schema_category_update.name is not None:
+        schema_category.name = schema_category_update.name
+    if schema_category_update.position is not None:
+        schema_category.position = schema_category_update.position
+
     try:
         db.commit()
         db.refresh(schema_category)
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Error al actualizar la categoría del esquema: {e}")
-    
+        raise HTTPException(
+            status_code=400, detail=f"Error al actualizar la categoría del esquema: {e}"
+        )
+
     return map_model_to_schema(schema_category)
 
-def get_schema_category(
-    uuid: UUID,
-    db: Session
-) -> SchemaCategoryOut:
-    schema_category = _get_schema_from_uuid(uuid, db)
+
+def get_schema_category(uuid: UUID, db: Session) -> SchemaCategoryOut:
+    schema_category: SchemaCategory = _get_schema_category_from_uuid(uuid, db)
     if not schema_category:
-        raise HTTPException(status_code=404, detail="Categoría del esquema no encontrada")
-    
+        raise HTTPException(
+            status_code=404, detail="Categoría del esquema no encontrada"
+        )
+
     return map_model_to_schema(schema_category)
 
-def delete_schema_category(
-    uuid: UUID,
-    db: Session
-) -> Message:
-    schema_category = _get_schema_from_uuid(uuid, db)
+
+def delete_schema_category(uuid: UUID, db: Session) -> Message:
+    schema_category: SchemaCategory = _get_schema_category_from_uuid(uuid, db)
     if not schema_category:
-        raise HTTPException(status_code=404, detail="Categoría del esquema no encontrada")
+        raise HTTPException(
+            status_code=404, detail="Categoría del esquema no encontrada"
+        )
     try:
         db.delete(schema_category)
         db.commit()
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Error al eliminar la categoría del esquema: {e}")
-    
+        raise HTTPException(
+            status_code=400, detail=f"Error al eliminar la categoría del esquema: {e}"
+        )
+
     return Message(detail="Categoría del esquema eliminada correctamente")
