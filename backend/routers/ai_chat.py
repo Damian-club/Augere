@@ -28,6 +28,6 @@ def update_ai_chat(uuid: UUID, ai_chat_update: AIChatUpdate, db = Depends(get_db
 def delete_ai_chat(uuid: UUID, db = Depends(get_db)) -> Message:
     return s_delete_ai_chat(uuid, db=db)
 
-@router.get('/list/{progress_uuid}', response_model=List[AIChatOut])
+@router.get('/list/{progress_uuid}', response_model=list[AIChatOut])
 def get_ai_chat_by_progress(uuid: UUID, db = Depends(get_db)) -> list[AIChatOut]:
     return s_get_ai_chat_by_progress(uuid, db=db)

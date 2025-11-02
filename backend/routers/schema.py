@@ -10,6 +10,7 @@ from services.schema import get_schema as s_get_schema
 from services.schema import delete_schema as s_delete_schema
 from services.schema import get_schema_full as s_get_schema_full
 from services.schema import create_schema_full as s_create_schema_full
+from services.schema import get_full_schema_by_course as s_get_full_schema_by_course
 from services.schema import get_schema_by_course as s_get_schema_by_course
 
 router = APIRouter(prefix="/schema", tags=["Schema"])
@@ -31,6 +32,9 @@ def get_schema(uuid: UUID, db=Depends(get_db)) -> SchemaOut:
 def delete_schema(uuid: UUID, db=Depends(get_db)) -> Message:
     return s_delete_schema(uuid, db=db)
 
+@router.get("/by_course/{course_uuid}", summary="Obtener un esquema por curso", response_model=SchemaOut)
+def get_schema_by_course(course_uuid: UUID, db = Depends(get_db)) -> FullSchemaOut:
+    return s_get_schema_by_course(course_uuid, db=db)
 
 @router.get(
     "/full/{uuid}",
@@ -49,6 +53,6 @@ def get_full_schema(uuid: UUID, db=Depends(get_db)) -> FullSchemaOut:
 def create_full_schema(full_schema_create: FullSchemaCreate, db=Depends(get_db)) -> FullSchemaOut:
     return s_create_schema_full(full_schema_create, db=db)
 
-@router.get("/by_course/{course_uuid}", response_model=FullSchemaOut)
+@router.get("/full/by_course/{course_uuid}", summary="Obtener un esquema completo por curso", response_model=FullSchemaOut)
 def get_schema_by_course(course_uuid: UUID, db = Depends(get_db)) -> FullSchemaOut:
-    return s_get_schema_by_course(course_uuid, db=db)
+    return s_get_full_schema_by_course(course_uuid, db=db)

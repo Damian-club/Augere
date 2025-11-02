@@ -169,9 +169,13 @@ def get_schema_full(uuid: UUID, db: Session) -> FullSchemaCategoryOut:
     return _map_schema_to_full_schema_out(schema)
 
 
-
-
-def get_schema_by_course(course_uuid: UUID, db: Session) -> FullSchemaCategoryOut:
+def get_full_schema_by_course(course_uuid: UUID, db: Session) -> FullSchemaCategoryOut:
     schema: Schema = _get_schema_by_course_uuid(course_uuid, db=db)
 
     return _map_schema_to_full_schema_out(schema)
+
+
+def get_schema_by_course(course_uuid: UUID, db: Session) -> SchemaOut:
+    schema: Schema = _get_schema_by_course_uuid(course_uuid, db=db)
+
+    return map_model_to_schema(schema)

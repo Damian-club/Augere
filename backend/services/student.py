@@ -1,4 +1,4 @@
-from schemas.student import StudentCreate, StudentOut, StudentDelete
+from schemas.student import StudentCreate, StudentOut
 from schemas.message import Message
 from models.student import Student
 from models.course import Course
