@@ -21,13 +21,13 @@ class CourseUpdate(BaseModel):
     logo_path: Optional[str] = None
     invitation_code: Optional[str] = None
 
-
-class CourseOut(CourseBase):
+class CourseOutPre(CourseBase):
     uuid: UUID = Field(...)
     creation_date: datetime = Field(...)
-    tutor_id: UUID = Field(...)
     invitation_code: str = Field(...)
 
+class CourseOut(CourseOutPre):
+    tutor_id: UUID = Field(...)
 
-class CourseOutUser(CourseOut):
+class CourseOutUser(CourseOutPre):
     tutor: UserOut = Field(...)

@@ -30,7 +30,6 @@ def map_user_out_schema(course: Course, user: User) -> CourseOutUser:
         description=course.description,
         logo_path=course.logo_path,
         invitation_code=course.invitation_code,
-        tutor_id=course.tutor_id,
         creation_date=course.creation_date,
         tutor=tutor_schema,
     )
