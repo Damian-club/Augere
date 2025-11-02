@@ -13,7 +13,7 @@ from uuid import UUID
 def map_model_to_schema(schema_category: SchemaCategory) -> SchemaCategoryOut:
     return SchemaCategoryOut(
         uuid=schema_category.uuid,
-        schema_id=schema_category.schema_id,
+        schema_id=schema_category.schema_uuid,
         name=schema_category.name,
         position=schema_category.position,
     )

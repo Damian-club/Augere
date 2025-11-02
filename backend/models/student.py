@@ -15,18 +15,18 @@ class Student(Base):
     inscription_date: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, default=datetime.now
     )
-    student_id: Mapped[PyUUID] = mapped_column(
+    student_uuid: Mapped[PyUUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("user.uuid"), nullable=False
     )
-    course_id: Mapped[PyUUID] = mapped_column(
+    course_uuid: Mapped[PyUUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("course.uuid"), nullable=False
     )
 
     student: Mapped["User"] = relationship(
-        "User", back_populates="student_records", foreign_keys=[student_id]
+        "User", back_populates="student_records", foreign_keys=[student_uuid]
     )
     course: Mapped["Course"] = relationship(
-        "Course", back_populates="students", foreign_keys=[course_id]
+        "Course", back_populates="students", foreign_keys=[course_uuid]
     )
     progress_records: Mapped[list["Progress"]] = relationship(
         back_populates="student", cascade="all, delete-orphan"

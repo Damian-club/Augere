@@ -33,7 +33,7 @@ def map_model_to_schema(assignment_data: AssignmentData) -> AssignmentDataOut:
     return AssignmentDataOut(
         uuid=assignment_data.uuid,
         creation_date=assignment_data.creation_date,
-        progress_id=assignment_data.progress_id,
+        progress_id=assignment_data.progress_uuid,
         answer=assignment_data.answer,
         feedback=assignment_data.feedback,
         success=assignment_data.success,

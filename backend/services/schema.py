@@ -49,7 +49,7 @@ def _map_schema_to_full_schema_out(schema: Schema) -> FullSchemaOut:
 
         full_schema: FullSchemaOut = FullSchemaOut(
             uuid=schema.uuid,
-            course_id=schema.course_id,
+            course_id=schema.course_uuid,
             category_list=mapped_categories,
         )
 
@@ -59,7 +59,7 @@ def _map_schema_to_full_schema_out(schema: Schema) -> FullSchemaOut:
 
 
 def map_model_to_schema(schema: Schema) -> SchemaOut:
-    return SchemaOut(uuid=schema.uuid, course_id=schema.course_id)
+    return SchemaOut(uuid=schema.uuid, course_id=schema.course_uuid)
 
 
 def _get_schema_by_uuid(uuid: UUID, db: Session) -> Schema:
@@ -73,7 +73,7 @@ def _get_schema_by_uuid(uuid: UUID, db: Session) -> Schema:
 
 def _get_schema_by_course_uuid(course_uuid: UUID, db: Session) -> Schema:
     try:
-        schema: Schema = db.query(Schema).filter(Schema.course_id == course_uuid).first()
+        schema: Schema = db.query(Schema).filter(Schema.course_uuid == course_uuid).first()
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error al buscar el esquema: {e}")
     if not schema:

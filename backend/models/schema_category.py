@@ -11,14 +11,14 @@ class SchemaCategory(Base):
     uuid: Mapped[PyUUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, nullable=False, default=uuid4
     )
-    schema_id: Mapped[PyUUID] = mapped_column(
+    schema_uuid: Mapped[PyUUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("schema.uuid"), nullable=False
     )
     name: Mapped[str] = mapped_column(String, nullable=False)
     position: Mapped[int] = mapped_column(Integer, nullable=False)
 
     schema: Mapped["Schema"] = relationship(
-        back_populates="categories", foreign_keys=[schema_id]
+        back_populates="categories", foreign_keys=[schema_uuid]
     )
     entries: Mapped[list["SchemaEntry"]] = relationship(
         back_populates="category", cascade="all, delete-orphan"

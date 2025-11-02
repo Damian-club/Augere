@@ -42,7 +42,7 @@ def map_model_to_schema(course: Course) -> CourseOut:
         description=course.description,
         logo_path=course.logo_path,
         invitation_code=course.invitation_code,
-        tutor_id=course.tutor_id,
+        tutor_id=course.tutor_uuid,
         creation_date=course.creation_date,
     )
 
@@ -72,7 +72,7 @@ def create_course(course_create: CourseCreate, user: User, db: Session) -> Cours
 def update_course(uuid: UUID, course_update: CourseUpdate, user: User, db: Session) -> CourseOut:
     course: Course = _get_course_by_uuid(uuid, db=db)
 
-    if course.tutor_id != user.uuid:
+    if course.tutor_uuid != user.uuid:
         raise HTTPException(
             status_code=403, detail="No tienes permiso para actualizar este curso"
         )
@@ -100,7 +100,7 @@ def update_course(uuid: UUID, course_update: CourseUpdate, user: User, db: Sessi
 def delete_course(uuid: UUID, user: User, db: Session) -> Message:
     course: Course = _get_course_by_uuid(uuid, db=db)
 
-    if course.tutor_id != user.uuid:
+    if course.tutor_uuid != user.uuid:
         raise HTTPException(
             status_code=403, detail="No tienes permiso para eliminar este curso"
         )
@@ -116,7 +116,7 @@ def delete_course(uuid: UUID, user: User, db: Session) -> Message:
 
 def get_course(uuid: UUID, user: User, db: Session) -> CourseOut:
     course: Course = _get_course_by_uuid(uuid, db=db)
-    if course.tutor_id != user.uuid:
+    if course.tutor_uuid != user.uuid:
         raise HTTPException(
             status_code=403, detail="No tienes permiso para ver este curso"
         )
@@ -126,7 +126,7 @@ def get_course(uuid: UUID, user: User, db: Session) -> CourseOut:
 
 def get_course_user(uuid: UUID, user: User, db: Session) -> CourseOut:
     course: Course = _get_course_by_uuid(uuid, db=db)
-    if course.tutor_id != user.uuid:
+    if course.tutor_uuid != user.uuid:
         raise HTTPException(
             status_code=403, detail="No tienes permiso para ver este curso"
         )
@@ -151,7 +151,7 @@ def list_user_enrolled_courses(user: User, db: Session) -> list[CourseOutUser]:
     result: list[CourseOut] = []
     for student in student_records:
         course: Course = student.course
-        tutor: User = db.query(User).filter(User.uuid == course.tutor_id).first()
+        tutor: User = db.query(User).filter(User.uuid == course.tutor_uuid).first()
 
         result.append(
             map_user_out_schema(

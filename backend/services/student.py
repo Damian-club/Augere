@@ -17,8 +17,8 @@ def map_model_to_schema(student: Student) -> StudentOut:
     return StudentOut(
         uuid=student.uuid,
         inscription_date=student.inscription_date,
-        student_id=student.student_id,
-        course_id=student.course_id,
+        student_id=student.student_uuid,
+        course_id=student.course_uuid,
     )
 
 
@@ -91,8 +91,8 @@ def delete_student(
         student: Student = (
             db.query(Student)
             .filter(
-                Student.student_id == user_uuid,
-                Student.course_id == course_uuid,
+                Student.student_uuid == user_uuid,
+                Student.course_uuid == course_uuid,
             )
             .first()
         )
@@ -108,7 +108,7 @@ def delete_student(
 
     course: Course = student.course
 
-    if user.uuid not in (course.tutor_id, user_uuid):
+    if user.uuid not in (course.tutor_uuid, user_uuid):
         raise HTTPException(
             status_code=403, detail="No tienes permiso para eliminar este estudiante"
         )

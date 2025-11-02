@@ -11,7 +11,7 @@ class Schema(Base):
     uuid: Mapped[PyUUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, nullable=False, default=uuid4
     )
-    course_id: Mapped[PyUUID] = mapped_column(
+    course_uuid: Mapped[PyUUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("course.uuid"), nullable=False, unique=True
     )
 

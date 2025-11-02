@@ -24,7 +24,7 @@ def map_model_to_schema(ai_chat: AIChat) -> AIChatOut:
     return AIChatOut(
         uuid=ai_chat.uuid,
         creation_date=ai_chat.creation_date,
-        progress_id=ai_chat.progress_id,
+        progress_id=ai_chat.progress_uuid,
         author=ai_chat.author,
         content=ai_chat.content,
     )

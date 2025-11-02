@@ -24,8 +24,8 @@ def _get_progress_by_uuid(uuid: UUID, db: Session) -> Progress:
 def map_model_to_schema(progress: Progress) -> ProgressOut:
     return ProgressOut(
         uuid=progress.uuid,
-        entry_id=progress.entry_id,
-        student_id=progress.student_id,
+        entry_id=progress.entry_uuid,
+        student_id=progress.student_uuid,
         finished=progress.finished,
     )
 

@@ -25,7 +25,7 @@ class SchemaEntry(Base):
     body: Mapped[str] = mapped_column(String, nullable=False)
     position: Mapped[int] = mapped_column(Integer, nullable=False)
     context: Mapped[str] = mapped_column(String, nullable=True)
-    category_id: Mapped[PyUUID] = mapped_column(
+    category_uuid: Mapped[PyUUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("schema_category.uuid"), nullable=False
     )
     entry_type: Mapped[EntryType] = mapped_column(
