@@ -25,5 +25,5 @@ class User(Base):
         "Course", back_populates="tutor", cascade="all, delete-orphan"
     )
     student_records: Mapped[list["Student"]] = relationship(
-        "Student", back_populates="student", cascade="all, delete-orphan"
+        "Student", back_populates="user", cascade="all, delete-orphan"
     )
