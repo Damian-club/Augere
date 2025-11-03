@@ -97,10 +97,33 @@ export class CourseService {
   }
 
   async getCourseWithTutor(uuid: string): Promise<Course> {
-    const res = await fetch(`${this.baseUrl}/summary/public/${uuid}`, {
+    const res = await fetch(`${this.baseUrl}/summary/private/${uuid}`, {
       headers: this.getHeaders(),
     });
     if (!res.ok) throw new Error("Error al obtener detalles del curso");
+    return res.json();
+  }
+
+  // Obtener resumen privado de un curso:
+  async getPrivateSummary(uuid: string): Promise<Course> {
+    const res = await fetch(`${this.baseUrl}/summary/private/${uuid}`, {
+      headers: this.getHeaders(),
+    });
+    if (!res.ok) throw new Error("Error al obtener resumen privado del curso");
+    return res.json();
+  }
+
+  // Obtener resumen general de los cursos de un usaurio:
+  async getOverview(): Promise<{
+    completion_percentage: number;
+    completed_count: number;
+    total_count: number;
+    course_list: { name: string; completion_percentage: number }[];
+  }> {
+    const res = await fetch(`${this.baseUrl}/overview`, {
+      headers: this.getHeaders(),
+    });
+    if (!res.ok) throw new Error("Error al obtener resumen general");
     return res.json();
   }
 }

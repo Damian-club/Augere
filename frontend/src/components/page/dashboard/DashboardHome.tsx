@@ -1,17 +1,50 @@
 import { useEffect, useState } from "react";
 import styles from "./DashboardHome.module.css";
-import { getCurrentUser } from "../../../api/auth";
+import { authService, courseService } from "../../../services";
+
+type OverviewData = {
+  completion_percentage: number;
+  completed_count: number;
+  total_count: number;
+  course_list: { name: string; completion_percentage: number }[];
+};
 
 export default function DashboardHome() {
   const [user, setUser] = useState<{ name: string } | null>(null);
-  const progress = 40;
+  const [overview, setOverview] = useState<OverviewData | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const loadData = async () => {
+      try {
+        const userData = await authService.getCurrentUser();
+        setUser(userData);
 
-    getCurrentUser()
-      .then((data) => setUser(data))
-      .catch((err) => console.log(err));
+        const overviewData = await courseService.getOverview();
+        setOverview(overviewData);
+      } catch (err) {
+        console.error("Error al cargar datos del dashboard:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
   }, []);
+
+  if (loading) {
+    return <div className={styles.loader}>Cargando datos...</div>;
+  }
+
+  if (!overview) {
+    return (
+      <div className={styles.emptyState}>
+        <p>No hay datos disponibles aún.</p>
+      </div>
+    );
+  }
+
+  const progress = overview.completion_percentage || 0;
 
   return (
     <div className={styles.dashboardHome}>
@@ -28,53 +61,32 @@ export default function DashboardHome() {
             <span>{progress}%</span>
           </div>
           <p>
-            <strong>2/4</strong> completados
+            <strong>
+              {overview.completed_count}/{overview.total_count}
+            </strong>{" "}
+            completados
           </p>
           <p>Tu progreso total en los cursos</p>
         </div>
 
         {/* Lista de cursos con progreso */}
         <div className={styles.courseList}>
-          <div className={styles.courseRow}>
-            <span>Algoritmos</span>
-            <div className={styles.bar}>
-              <div style={{ width: "80%" }} />
+          {overview.course_list.map((course, i) => (
+            <div key={i} className={styles.courseRow}>
+              <span>{course.name}</span>
+              <div className={styles.bar}>
+                <div style={{ width: `${course.completion_percentage}%` }} />
+              </div>
             </div>
-          </div>
-          <div className={styles.courseRow}>
-            <span>Lógica y diagramas</span>
-            <div className={styles.bar}>
-              <div style={{ width: "40%" }} />
-            </div>
-          </div>
-          <div className={styles.courseRow}>
-            <span>Computación</span>
-            <div className={styles.bar}>
-              <div style={{ width: "60%" }} />
-            </div>
-          </div>
-          <div className={styles.courseRow}>
-            <span>Historia de la computación</span>
-            <div className={styles.bar}>
-              <div style={{ width: "20%" }} />
-            </div>
-          </div>
+          ))}
         </div>
       </div>
 
-      {/* Seccion Detallada */}
+      {/* Sección Resumen */}
       <div className={styles.summary}>
         <div className={styles.summaryCard}>
-          <h3>4</h3>
+          <h3>{overview.total_count}</h3>
           <p>Cursos activos</p>
-        </div>
-        <div className={styles.summaryCard}>
-          <h3>12h</h3>
-          <p>Tiempo de estudio</p>
-        </div>
-        <div className={styles.summaryCard}>
-          <h3>8.7</h3>
-          <p>Puntaje promedio</p>
         </div>
       </div>
     </div>

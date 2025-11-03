@@ -58,7 +58,7 @@ export default function CoursePage() {
               onClick={async () => {
                 toast.dismiss(t.id);
                 try {
-                  await studentService.unenrollFromCourse(course.uuid);
+                  await studentService.unenrollFromCourse(course.uuid); 
                   setEnrolled((prev) =>
                     prev.filter((c) => c.uuid !== course.uuid)
                   );
@@ -121,7 +121,7 @@ export default function CoursePage() {
             <CourseCard
               key={c.uuid}
               title={c.title}
-              author={`Por: ${c.tutor.name || "Tutor"}`}
+              author={`Por: ${c.tutor?.name || "Tutor"}`}
               description={c.description}
               progress={0}
               color={pastelGradientFromString(c.title)}
