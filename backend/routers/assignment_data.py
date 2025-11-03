@@ -1,4 +1,14 @@
-from fastapi import APIRouter, Depends
+from core.db import get_db
+from uuid import UUID
+
+# API -----------------
+from fastapi import (
+    APIRouter,
+    Depends
+)
+#----------------------
+
+# SCHEMAS ----------------------------
 from schemas.assignment_data import (
     AssignmentDataCreate,
     AssignmentDataOut,
@@ -6,9 +16,9 @@ from schemas.assignment_data import (
     AssignmentDataCreateSimple
 )
 from schemas.message import Message
-from core.db import get_db
-from uuid import UUID
+#-------------------------------------
 
+# SERVICES -----------------------------
 from services.assignment_data import (
     create_assignment_data,
     delete_assignment_data,
@@ -17,6 +27,7 @@ from services.assignment_data import (
     get_assignment_data_by_progress,
     create_assignment_data_simple
 )
+#---------------------------------------
 
 router = APIRouter(prefix="/assignment_data", tags=["Assignment Data"])
 

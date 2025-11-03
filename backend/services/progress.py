@@ -1,10 +1,16 @@
-from schemas.progress import ProgressCreate, ProgressOut, ProgressUpdate
 from schemas.message import Message
 from models.progress import Progress
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from uuid import UUID
 
+# SCHEMAS -----------------------
+from schemas.progress import (
+    ProgressCreate,
+    ProgressOut,
+    ProgressUpdate
+)
+#--------------------------------
 
 # Util
 def _get_progress_by_uuid(uuid: UUID, db: Session) -> Progress:

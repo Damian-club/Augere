@@ -1,13 +1,16 @@
+from models.schema_category import SchemaCategory
+from fastapi import HTTPException
+from sqlalchemy.orm import Session
+from uuid import UUID
+
+# SCHEMAS -------------------------------
 from schemas.schema_category import (
     SchemaCategoryCreate,
     SchemaCategoryOut,
     SchemaCategoryUpdate,
 )
 from schemas.message import Message
-from models.schema_category import SchemaCategory
-from fastapi import HTTPException
-from sqlalchemy.orm import Session
-from uuid import UUID
+#----------------------------------------
 
 
 def map_model_to_schema(schema_category: SchemaCategory) -> SchemaCategoryOut:

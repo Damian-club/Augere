@@ -1,3 +1,8 @@
+from fastapi import HTTPException
+from sqlalchemy.orm import Session
+from uuid import UUID
+
+# SCHEMAS -----------------------------------------------
 from schemas.schema import (
     SchemaCreate,
     SchemaOut,
@@ -8,6 +13,9 @@ from schemas.schema import (
 from schemas.message import Message
 from schemas.schema_category import SchemaCategoryOut
 from schemas.schema_entry import SchemaEntryOut
+#-------------------------------------------------------
+
+# MODELS -------------------------------------------
 from models.schema import Schema
 from models.schema_category import SchemaCategory
 from models.schema_entry import SchemaEntry
@@ -15,10 +23,7 @@ from models.course import Course
 from models.user import User
 from models.student import Student
 from models.progress import Progress
-from fastapi import HTTPException
-from sqlalchemy.orm import Session
-from uuid import UUID
-
+#---------------------------------------------------
 
 # Util
 def _map_schema_to_full_schema_out(schema: Schema) -> FullSchemaOut:
