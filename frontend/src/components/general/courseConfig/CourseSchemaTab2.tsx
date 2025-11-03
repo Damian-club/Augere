@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { schemaService } from "../../../services";
 import type { Course } from "../../../schemas/course";
 import {
@@ -10,11 +11,7 @@ import {
   IoSaveOutline,
   IoTrashOutline,
 } from "react-icons/io5";
-import {
-  // type Category,
-  type Entry,
-  type FullSchema,
-} from "../../../schemas/schema";
+import { type Entry, type FullSchema } from "../../../schemas/schema";
 import style from "./CourseSchemaTab.module.css";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import type { DropResult } from "@hello-pangea/dnd";
@@ -54,7 +51,6 @@ export default function CourseSchemaTab2({ course }: Props) {
     loadSchema();
   }, [course.uuid]);
 
-  // === DRAG & DROP ===
   const handleDragEnd = (result: DropResult) => {
     const { source, destination } = result;
     if (!destination || !schema) return;
@@ -75,12 +71,9 @@ export default function CourseSchemaTab2({ course }: Props) {
     setSchema(newSchema);
   };
 
-  // === SELECCIONAR ENTRY ===
   const handleSelectEntry = (entry: Entry) => setSelectedEntry(entry);
 
-  // === GENERAR ESQUEMA MOCK ===
   const handleGenerateSchema = () => {
-    // Aquí normalmente llamarías al servicio real
     const mockSchema: FullSchema = {
       course_uuid: course.uuid,
       uuid: "schema-uuid-" + Date.now(),
@@ -125,20 +118,16 @@ export default function CourseSchemaTab2({ course }: Props) {
     setSchema(mockSchema);
   };
 
-  // === GUARDAR BODY ===
   const handleSaveBody = () => {
     if (!selectedEntry) return;
     console.log("Guardando cuerpo para:", selectedEntry.name);
-    // Llamar al servicio para guardar
   };
 
-  // === GENERAR CONTEXTO IA ===
   const handleGenerateContext = () => {
     if (!selectedEntry) return;
     console.log("Generando contexto IA para:", selectedEntry.name);
   };
 
-  // === ICONOS ===
   const getIcon = (entryType: string) => {
     switch (entryType) {
       case "assignment":
@@ -216,7 +205,6 @@ export default function CourseSchemaTab2({ course }: Props) {
                               (c) => c.uuid !== category.uuid
                             );
                           setSchema(newSchema);
-                          // Si selectedEntry estaba en esta categoría, limpiar editor
                           if (
                             selectedEntry &&
                             selectedEntry.category_uuid === category.uuid
@@ -242,78 +230,90 @@ export default function CourseSchemaTab2({ course }: Props) {
                                 draggableId={entry.uuid!}
                                 index={index}
                               >
-                                {(provided, snapshot) => (
-                                  <div
-                                    ref={provided.innerRef}
-                                    {...provided.draggableProps}
-                                    {...provided.dragHandleProps}
-                                    className={`${style.entryItem} ${
-                                      selectedEntry?.uuid === entry.uuid
-                                        ? style.selected
-                                        : ""
-                                    } ${
-                                      snapshot.isDragging ? style.dragging : ""
-                                    }`}
-                                    style={{ ...provided.draggableProps.style }}
-                                    onClick={() => handleSelectEntry(entry)}
-                                  >
-                                    {getIcon(entry.entry_type)}
-                                    <input
-                                      className={style.entryName}
-                                      value={entry.name}
-                                      onChange={(e) => {
-                                        const newSchema = { ...schema! };
-                                        const cat =
-                                          newSchema.category_list.find(
-                                            (c) => c.uuid === category.uuid
-                                          );
-                                        const ent = cat?.entry_list.find(
-                                          (en) => en.uuid === entry.uuid
-                                        );
-                                        if (ent) ent.name = e.target.value;
-                                        setSchema(newSchema);
-
-                                        // Sincronizar selectedEntry si corresponde
-                                        if (
-                                          selectedEntry?.uuid === entry.uuid &&
-                                          ent
-                                        ) {
-                                          setSelectedEntry({
-                                            uuid: ent.uuid!,
-                                            name: ent.name!,
-                                            body: ent.body || "",
-                                            context: ent.context || "",
-                                            entry_type: ent.entry_type!,
-                                            position: ent.position!,
-                                            category_uuid: ent.category_uuid!,
-                                          });
-                                        }
-                                      }}
-                                    />
-                                    <span className={style.entryBadge}>
-                                      {entry.entry_type}
-                                    </span>
-                                    <IoTrashOutline
-                                      className={style.trashIcon}
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        const newSchema = { ...schema! };
-                                        const cat =
-                                          newSchema.category_list.find(
-                                            (c) => c.uuid === category.uuid
-                                          );
-                                        if (cat)
-                                          cat.entry_list =
-                                            cat.entry_list.filter(
-                                              (en) => en.uuid !== entry.uuid
+                                {(provided, snapshot) => {
+                                  const item = (
+                                    <div
+                                      ref={provided.innerRef}
+                                      {...provided.draggableProps}
+                                      {...provided.dragHandleProps}
+                                      className={`${style.entryItem} ${
+                                        selectedEntry?.uuid === entry.uuid
+                                          ? style.selected
+                                          : ""
+                                      } ${
+                                        snapshot.isDragging
+                                          ? style.dragging
+                                          : ""
+                                      }`}
+                                      onClick={() => handleSelectEntry(entry)}
+                                    >
+                                      {getIcon(entry.entry_type)}
+                                      <input
+                                        className={style.entryName}
+                                        value={entry.name}
+                                        onChange={(e) => {
+                                          const newSchema = { ...schema! };
+                                          const cat =
+                                            newSchema.category_list.find(
+                                              (c) => c.uuid === category.uuid
                                             );
-                                        setSchema(newSchema);
-                                        if (selectedEntry?.uuid === entry.uuid)
-                                          setSelectedEntry(null);
-                                      }}
-                                    />
-                                  </div>
-                                )}
+                                          const ent = cat?.entry_list.find(
+                                            (en) => en.uuid === entry.uuid
+                                          );
+                                          if (ent) ent.name = e.target.value;
+                                          setSchema(newSchema);
+
+                                          if (
+                                            selectedEntry?.uuid ===
+                                              entry.uuid &&
+                                            ent
+                                          ) {
+                                            setSelectedEntry({
+                                              uuid: ent.uuid!,
+                                              name: ent.name!,
+                                              body: ent.body || "",
+                                              context: ent.context || "",
+                                              entry_type: ent.entry_type!,
+                                              position: ent.position!,
+                                              category_uuid: ent.category_uuid!,
+                                            });
+                                          }
+                                        }}
+                                      />
+                                      <span className={style.entryBadge}>
+                                        {entry.entry_type}
+                                      </span>
+                                      <IoTrashOutline
+                                        className={style.trashIcon}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          const newSchema = { ...schema! };
+                                          const cat =
+                                            newSchema.category_list.find(
+                                              (c) => c.uuid === category.uuid
+                                            );
+                                          if (cat)
+                                            cat.entry_list =
+                                              cat.entry_list.filter(
+                                                (en) => en.uuid !== entry.uuid
+                                              );
+                                          setSchema(newSchema);
+                                          if (
+                                            selectedEntry?.uuid === entry.uuid
+                                          )
+                                            setSelectedEntry(null);
+                                        }}
+                                      />
+                                    </div>
+                                  );
+
+                                  // Renderizar en portal cuando está arrastrando
+                                  if (snapshot.isDragging) {
+                                    return createPortal(item, document.body);
+                                  }
+
+                                  return item;
+                                }}
                               </Draggable>
                             ))}
                           {provided.placeholder}
@@ -327,6 +327,7 @@ export default function CourseSchemaTab2({ course }: Props) {
 
           {/* === PANEL EDITOR === */}
           <div className={style.editorPanel}>
+            {/* ... resto del código sin cambios ... */}
             <h3 className={style.panelTitle}>Editor de Contenido</h3>
             {!selectedEntry ? (
               <div className={style.placeholderState}>
@@ -344,7 +345,7 @@ export default function CourseSchemaTab2({ course }: Props) {
                         : style.assignment
                     }`}
                   >
-                    {selectedEntry.entry_type === "topic" ? "Tema" : "Tarea"}
+                    {selectedEntry.entry_type}
                   </span>
                 </div>
 
@@ -362,7 +363,6 @@ export default function CourseSchemaTab2({ course }: Props) {
                         body: e.target.value,
                       });
 
-                      // Actualizar en schema
                       if (schema) {
                         const newSchema = { ...schema };
                         const cat = newSchema.category_list.find(
@@ -396,7 +396,6 @@ export default function CourseSchemaTab2({ course }: Props) {
                         context: e.target.value,
                       });
 
-                      // Actualizar en schema
                       if (schema) {
                         const newSchema = { ...schema };
                         const cat = newSchema.category_list.find(

@@ -97,7 +97,7 @@ export class CourseService {
   }
 
   async getCourseWithTutor(uuid: string): Promise<Course> {
-    const res = await fetch(`${this.baseUrl}/user/${uuid}`, {
+    const res = await fetch(`${this.baseUrl}/summary/public/${uuid}`, {
       headers: this.getHeaders(),
     });
     if (!res.ok) throw new Error("Error al obtener detalles del curso");
