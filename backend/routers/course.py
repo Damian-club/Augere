@@ -36,36 +36,6 @@ from services.course import get_overview as s_get_overview
 
 router = APIRouter(prefix="/course", tags=["Course"])
 
-
-@router.post("/", summary="Crear un nuevo curso", response_model=CourseOut)
-def r_create_course(
-    course_create: CourseCreate, user: User = Depends(get_current_user), db=Depends(get_db)
-) -> CourseOut:
-    return s_create_course(course_create, user=user, db=db)
-
-
-@router.get("/{uuid}", summary="Obtener un curso por UUID", response_model=CourseOut)
-def r_get_course(uuid: UUID, user: User = Depends(get_current_user), db=Depends(get_db)) -> CourseOut:
-    return s_get_course(uuid, user=user, db=db)
-
-
-@router.put("/{uuid}", summary="Actualizar un curso", response_model=CourseOut)
-def r_update_course(
-    uuid: UUID,
-    course_update: CourseUpdate,
-    user: User = Depends(get_current_user),
-    db=Depends(get_db),
-) -> CourseOut:
-    return s_update_course(uuid, course_update=course_update, user=user, db=db)
-
-
-@router.delete("/{uuid}", summary="Eliminar un curso", response_model=Message)
-def r_delete_course(
-    uuid: UUID, user: User = Depends(get_current_user), db=Depends(get_db)
-) -> Message:
-    return s_delete_course(uuid, user=user, db=db)
-
-
 @router.get(
     "/enrolled-courses",
     summary="Listar mis cursos inscritos",
@@ -117,3 +87,31 @@ def r_get_private_summary_course(
     uuid: UUID, user: User = Depends(get_current_user), db=Depends(get_db)
 ) -> PrivateSummaryCourseOut:
     return s_get_private_summary_course(uuid, user=user, db=db)
+
+@router.get("/{uuid}", summary="Obtener un curso por UUID", response_model=CourseOut)
+def r_get_course(uuid: UUID, user: User = Depends(get_current_user), db=Depends(get_db)) -> CourseOut:
+    return s_get_course(uuid, user=user, db=db)
+
+
+@router.put("/{uuid}", summary="Actualizar un curso", response_model=CourseOut)
+def r_update_course(
+    uuid: UUID,
+    course_update: CourseUpdate,
+    user: User = Depends(get_current_user),
+    db=Depends(get_db),
+) -> CourseOut:
+    return s_update_course(uuid, course_update=course_update, user=user, db=db)
+
+
+@router.delete("/{uuid}", summary="Eliminar un curso", response_model=Message)
+def r_delete_course(
+    uuid: UUID, user: User = Depends(get_current_user), db=Depends(get_db)
+) -> Message:
+    return s_delete_course(uuid, user=user, db=db)
+
+@router.post("/", summary="Crear un nuevo curso", response_model=CourseOut)
+def r_create_course(
+    course_create: CourseCreate, user: User = Depends(get_current_user), db=Depends(get_db)
+) -> CourseOut:
+    return s_create_course(course_create, user=user, db=db)
+
