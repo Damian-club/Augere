@@ -62,6 +62,14 @@ def _map_schema_to_full_schema_out(schema: Schema) -> FullSchemaOut:
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error al mapear el esquema: {e}")
 
+def _delete_existing_schema_for_course(course_uuid: UUID, db: Session) -> None:
+    try:
+        existing_schema = db.query(Schema).filter(Schema.course_uuid == course_uuid).first()
+        if existing_schema:
+            db.delete(existing_schema)
+            db.flush()
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error al eliminar esquema existente: {e}")
 
 def map_model_to_schema(schema: Schema) -> SchemaOut:
     return SchemaOut(uuid=schema.uuid, course_uuid=schema.course_uuid)
@@ -87,9 +95,9 @@ def _get_schema_by_course_uuid(course_uuid: UUID, db: Session) -> Schema:
 
 # Basic schema CRUD
 def create_schema(schema_create: SchemaCreate, db: Session) -> SchemaOut:
-    schema: Schema = Schema(
-        course_uuid=schema_create.course_uuid,
-    )
+    _delete_existing_schema_for_course(schema_create.course_uuid, db)
+    schema: Schema = Schema(course_uuid=schema_create.course_uuid)
+    
     try:
         db.add(schema)
         db.commit()
@@ -120,6 +128,7 @@ def delete_schema(uuid: UUID, db: Session) -> Message:
 
 
 def create_schema_full(full_schema_create: FullSchemaCreate, db: Session) -> FullSchemaCategoryOut:
+    _delete_existing_schema_for_course(full_schema_create.course_uuid, db)
     schema: Schema = Schema(course_uuid=full_schema_create.course_uuid)
 
     course: Course = schema.course
