@@ -25,8 +25,8 @@ class Progress(Base):
         back_populates="progress_records", foreign_keys=[student_uuid]
     )
     ai_chat_records: Mapped[list["AIChat"]] = relationship(
-        back_populates="progress", cascade="all, delete-orphan"
+        back_populates="progress", cascade="all, delete-orphan", order_by="AIChat.creation_date.asc()"
     )
     assignment_data_record: Mapped["AssignmentData"] = relationship(
-        back_populates="progress", uselist=False, cascade="all, delete-orphan"
+        back_populates="progress", uselist=False, cascade="all, delete-orphan", order_by="AssignmentData.creation_date.asc()"
     )

@@ -51,6 +51,7 @@ class PublicSummaryCourseOut(CourseOutPre):
 
 class OverviewCourse(BaseModel):
     name: str = Field(...)
+    completion_percentage: float = Field(...)
 
 class OverviewOut(BaseModel):
     completion_percentage: float = Field(...)

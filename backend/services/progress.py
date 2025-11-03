@@ -20,7 +20,6 @@ def _get_progress_by_uuid(uuid: UUID, db: Session) -> Progress:
         raise HTTPException(status_code=404, detail="Progreso no encontrado")
     return progress
 
-
 def map_model_to_schema(progress: Progress) -> ProgressOut:
     return ProgressOut(
         uuid=progress.uuid,
