@@ -1,3 +1,9 @@
+from fastapi import HTTPException
+from sqlalchemy.orm import Session
+from services.auth import map_model_to_schema as user_map_model_to_schema
+from uuid import UUID, uuid4
+
+# SCHEMAS -----------------------------
 from schemas.course import (
     CourseCreate,
     CourseOut,
@@ -10,62 +16,62 @@ from schemas.course import (
     OverviewOut
 )
 from schemas.message import Message
+from schemas.user import UserOut
+#-------------------------------------
+
+# MODELS ------------------------------
 from models.course import Course
 from models.user import User
 from models.student import Student
 from models.progress import Progress
-from fastapi import HTTPException
-from sqlalchemy.orm import Session
-from services.auth import map_model_to_schema as user_map_model_to_schema
-from schemas.user import UserOut
-from uuid import UUID, uuid4
+#--------------------------------------
+
+# UTIL -------------------------------
 from util.percentage import get_percentage
+#------------------------------------
+
 
 def _get_course_by_uuid(uuid: UUID, db: Session) -> Course:
-    try:
-        course: Course = db.query(Course).filter(Course.uuid == uuid).first()
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Error al obtener el curso: {e}")
+    course = db.query(Course).filter(Course.uuid == uuid).first()
     if not course:
         raise HTTPException(status_code=404, detail="Curso no encontrado")
     return course
 
 
 def _map_private_summary(course: Course) -> PrivateSummaryCourseOut:
-    student_model_list: list[Student] = course.students
-    user_model_list: list[User] = [student.user for student in student_model_list]
-
-    student_count: int = len(student_model_list)
+    student_model_list = course.students
+    student_count = len(student_model_list)
 
     student_list: list[PrivateSummaryStudent] = []
+    completion_sum = 0.0
 
-    completion_sum: float = 0.0
-    for student, user in zip(student_model_list, user_model_list):
-        progress_model_list: list[Progress] = student.progress_records
+    for student in student_model_list:
+        user = student.user
+        progress_model_list = student.progress_records
 
-        progress_count: int = len(progress_model_list)
-        progress_true_count: int = sum(1 for progress in progress_model_list if progress.finished)
+        progress_count = len(progress_model_list)
+        progress_true_count = sum(1 for progress in progress_model_list if progress.finished)
 
-        progress_list: list[PrivateSummaryStudentProgress] = [
+        progress_list = [
             PrivateSummaryStudentProgress(
                 entry_uuid=progress.entry_uuid,
                 finished=progress.finished
             )
             for progress in progress_model_list
         ]
-        
-        student_completion_percentage: float = get_percentage(total=progress_count, count=progress_true_count)
-        completion_sum += student_completion_percentage
+
+        student_percentage = get_percentage(progress_count, progress_true_count)
+        completion_sum += student_percentage
 
         student_list.append(
             PrivateSummaryStudent(
                 name=user.name,
-                completion_percentage=student_completion_percentage,
+                completion_percentage=student_percentage,
                 progress_list=progress_list
             )
         )
-    
-    average_completion_percentage: float = get_percentage(total=student_count, count=completion_sum)
+
+    average_completion_percentage = get_percentage(student_count, completion_sum)
 
     return PrivateSummaryCourseOut(
         uuid=course.uuid,
@@ -79,22 +85,22 @@ def _map_private_summary(course: Course) -> PrivateSummaryCourseOut:
         student_count=student_count
     )
 
-def _map_public_summary(course: Course, user: User):
-    tutor: User = course.tutor
 
+def _map_public_summary(course: Course, user: User, db: Session):
+    tutor = course.tutor
     if not tutor:
         raise HTTPException(status_code=404, detail="No existe un tutor")
-    
-    tutor_schema: UserOut = user_map_model_to_schema(tutor)
 
-    from student import get_student_by_user_course
-    student: Student = get_student_by_user_course(user.uuid, course.uuid)
-    progress_model_list: list[Progress] = student.progress_records
+    tutor_schema = user_map_model_to_schema(tutor)
 
-    total_progress_count: int = len(progress_model_list)
-    progress_true_count: int = sum(1 for progress in progress_model_list if progress.finished)
+    from services.student import get_student_by_user_course
+    student = get_student_by_user_course(user.uuid, course.uuid, db=db)
+    progress_model_list = student.progress_records
 
-    completion_percentage: float = get_percentage(total=total_progress_count, count=progress_true_count)
+    total_progress_count = len(progress_model_list)
+    progress_true_count = sum(1 for progress in progress_model_list if progress.finished)
+
+    completion_percentage = get_percentage(total_progress_count, progress_true_count)
 
     return PublicSummaryCourseOut(
         uuid=course.uuid,
@@ -124,7 +130,7 @@ def create_course(course_create: CourseCreate, user: User, db: Session) -> Cours
     if course_create.invitation_code is None:
         course_create.invitation_code = uuid4().hex[:8]
 
-    course: Course = Course(
+    course = Course(
         title=course_create.title,
         description=course_create.description,
         logo_path=course_create.logo_path,
@@ -141,13 +147,12 @@ def create_course(course_create: CourseCreate, user: User, db: Session) -> Cours
 
     return map_model_to_schema(course)
 
+
 def update_course(uuid: UUID, course_update: CourseUpdate, user: User, db: Session) -> CourseOut:
-    course: Course = _get_course_by_uuid(uuid, db=db)
+    course = _get_course_by_uuid(uuid, db=db)
 
     if course.tutor_uuid != user.uuid:
-        raise HTTPException(
-            status_code=403, detail="No tienes permiso para actualizar este curso"
-        )
+        raise HTTPException(status_code=403, detail="No tienes permiso para actualizar este curso")
 
     if course_update.title is not None:
         course.title = course_update.title
@@ -162,20 +167,16 @@ def update_course(uuid: UUID, course_update: CourseUpdate, user: User, db: Sessi
         db.commit()
         db.refresh(course)
     except Exception as e:
-        raise HTTPException(
-            status_code=400, detail=f"Error al actualizar el curso: {e}"
-        )
+        raise HTTPException(status_code=400, detail=f"Error al actualizar el curso: {e}")
 
     return map_model_to_schema(course)
 
 
 def delete_course(uuid: UUID, user: User, db: Session) -> Message:
-    course: Course = _get_course_by_uuid(uuid, db=db)
+    course = _get_course_by_uuid(uuid, db=db)
 
     if course.tutor_uuid != user.uuid:
-        raise HTTPException(
-            status_code=403, detail="No tienes permiso para eliminar este curso"
-        )
+        raise HTTPException(status_code=403, detail="No tienes permiso para eliminar este curso")
 
     try:
         db.delete(course)
@@ -187,85 +188,65 @@ def delete_course(uuid: UUID, user: User, db: Session) -> Message:
 
 
 def get_course(uuid: UUID, user: User, db: Session) -> CourseOut:
-    course: Course = _get_course_by_uuid(uuid, db=db)
+    course = _get_course_by_uuid(uuid, db=db)
     if course.tutor_uuid != user.uuid:
-        raise HTTPException(
-            status_code=403, detail="No tienes permiso para ver este curso"
-        )
+        raise HTTPException(status_code=403, detail="No tienes permiso para ver este curso")
 
     return map_model_to_schema(course)
 
 
 def get_private_summary_course(uuid: UUID, user: User, db: Session) -> PrivateSummaryCourseOut:
-    course: Course = _get_course_by_uuid(uuid, db=db)
+    course = _get_course_by_uuid(uuid, db=db)
     if course.tutor_uuid != user.uuid:
-        raise HTTPException(
-            status_code=403, detail="No tienes permiso para ver este curso"
-        )
-
-    tutor: User = course.tutor
-    if not tutor:
-        raise HTTPException(status_code=404, detail="ID del tutor no encontrado")
+        raise HTTPException(status_code=403, detail="No tienes permiso para ver este curso")
 
     return _map_private_summary(course)
 
-def get_public_summary_course(uuid: UUID, user: User, db: Session) -> PublicSummaryCourseOut:
-    course: Course = _get_course_by_uuid(uuid)
 
-    return _map_public_summary(course, user=user)
+def get_public_summary_course(uuid: UUID, user: User, db: Session) -> PublicSummaryCourseOut:
+    course = _get_course_by_uuid(uuid, db=db)
+    return _map_public_summary(course, user=user, db=db)
+
 
 def list_user_tutored_courses(user: User) -> list[PrivateSummaryCourseOut]:
-    courses: list[Course] = user.tutored_courses if user else []
-
+    courses = user.tutored_courses if user else []
     return [_map_private_summary(course) for course in courses]
 
+
 def list_user_enrolled_courses(user: User, db: Session) -> list[PublicSummaryCourseOut]:
-    student_records: list[Student] = user.student_records if user else []
+    student_records = user.student_records if user else []
+    return [_map_public_summary(student.course, user, db) for student in student_records]
 
-    result: list[CourseOut] = []
-    for student in student_records:
-        course: Course = student.course
-
-        result.append(
-            _map_public_summary(
-                course,
-                user=user
-            )
-        )
-
-    return result
 
 def get_overview(user: User, db: Session) -> OverviewOut:
-    student_model_list: list[Student] = user.student_records
-
-    total_count: int = len(student_model_list)
+    student_model_list = user.student_records
+    total_count = len(student_model_list)
     course_list: list[OverviewCourse] = []
 
-    accumulated_percentage: float = 0.0
+    accumulated_percentage = 0.0
 
     for student in student_model_list:
-        progress_model_list: list[Progress] = student.progress_records
+        progress_model_list = student.progress_records
+        course = student.course
 
-        course: Course = student.course
         if not course:
             continue
 
-        course_name: str = course.title
-        course_total_count: int = len(progress_model_list)
-        course_true_count: int = sum(1 for progress in progress_model_list if progress.finished)
+        course_total_count = len(progress_model_list)
+        course_true_count = sum(1 for progress in progress_model_list if progress.finished)
 
-        percentage: float = get_percentage(total=course_total_count, count=course_true_count)
+        percentage = get_percentage(course_total_count, course_true_count)
         accumulated_percentage += percentage
 
         course_list.append(
             OverviewCourse(
-                name=course_name,
+                name=course.title,
                 completion_percentage=percentage
             )
         )
 
-    completion_percentage: float = get_percentage(total=total_count, count=accumulated_percentage)
-    completed_count: int = sum(1 for overview_course in course_list if overview_course.completion_percentage >= 1.0)
+    completion_percentage = get_percentage(total_count, accumulated_percentage)
+    completed_count = sum(1 for c in course_list if c.completion_percentage >= 1.0)
 
     return OverviewOut(
         completion_percentage=completion_percentage,

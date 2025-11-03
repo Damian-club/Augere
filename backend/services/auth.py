@@ -1,14 +1,33 @@
-from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from datetime import timedelta
-
-from util.auth import verify_password, get_password_hash, create_access_token
-from schemas.user import UserLogin, UserRegister, UserOut, UserUpdate
-from schemas.message import Message
-from schemas.token import Token
 from models.user import User
 from core.settings import settings
 
+# API ------------------
+from fastapi import (
+    HTTPException,
+    status
+)
+#-----------------------
+
+# UTIL -------------------
+from util.auth import (
+    verify_password,
+    get_password_hash,
+    create_access_token
+)
+#-------------------------
+
+# SCHEMAS ------------------------------
+from schemas.user import (
+    UserLogin,
+    UserRegister,
+    UserOut,
+    UserUpdate
+)
+from schemas.message import Message
+from schemas.token import Token
+#--------------------------------------
 
 def map_model_to_schema(user: User) -> UserOut:
     return UserOut(
@@ -18,7 +37,6 @@ def map_model_to_schema(user: User) -> UserOut:
         uuid=user.uuid,
         creation_date=user.creation_date,
     )
-
 
 def login(user_login: UserLogin, db: Session) -> Token:
     user: User = db.query(User).filter(User.email == user_login.email).first()

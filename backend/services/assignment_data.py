@@ -1,3 +1,13 @@
+from services.progress import _get_progress_by_uuid
+from fastapi import HTTPException
+from sqlalchemy.orm import Session
+from uuid import UUID
+# MODELS ------------------------------------------
+from models.assignment_data import AssignmentData
+from models.progress import Progress
+#--------------------------------------------------
+
+# SCHEMAS ------------------------------
 from schemas.assignment_data import (
     AssignmentDataCreate,
     AssignmentDataOut,
@@ -5,13 +15,7 @@ from schemas.assignment_data import (
     AssignmentDataCreateSimple
 )
 from schemas.message import Message
-from models.assignment_data import AssignmentData
-from models.progress import Progress
-from services.progress import _get_progress_by_uuid
-from fastapi import HTTPException
-from sqlalchemy.orm import Session
-from uuid import UUID
-
+#---------------------------------------
 
 # Util
 def _get_assignment_data_by_uuid(uuid: UUID, db: Session) -> AssignmentData:

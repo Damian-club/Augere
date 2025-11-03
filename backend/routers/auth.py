@@ -1,12 +1,27 @@
-from fastapi import APIRouter, Depends
-from schemas.user import UserLogin, UserRegister, UserOut, UserUpdate
-from schemas.token import Token
-from schemas.message import Message
-from fastapi.security import OAuth2PasswordRequestForm
 from core.db import get_db
 from models.user import User
 from dependencies.user import get_current_user
 
+# API ---------------------------------------------------
+from fastapi import (
+    APIRouter,
+    Depends
+)
+from fastapi.security import OAuth2PasswordRequestForm
+#--------------------------------------------------------
+
+# SCHEMAS -----------------------------
+from schemas.user import (
+    UserLogin,
+    UserRegister,
+    UserOut,
+    UserUpdate
+)
+from schemas.token import Token
+from schemas.message import Message
+#--------------------------------------
+
+# SERVICES --------------------
 from services.auth import (
     login,
     register,
@@ -14,6 +29,7 @@ from services.auth import (
     me,
     update_account
 )
+#-----------------------------
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
