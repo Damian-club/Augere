@@ -15,7 +15,6 @@ class SchemaCreate(SchemaBase):
 class SchemaOut(SchemaBase):
     uuid: UUID = Field(...)
 
-
 class FullSchemaCategoryCreate(SchemaCategoryCreateFull):
     entry_list: list[SchemaEntryCreateFull] = Field(default_factory=list)
 

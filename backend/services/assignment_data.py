@@ -12,6 +12,7 @@ from schemas.assignment_data import (
     AssignmentDataCreate,
     AssignmentDataOut,
     AssignmentDataUpdate,
+    AssignmentDataCreateSimple
 )
 from schemas.message import Message
 #---------------------------------------
@@ -116,6 +117,20 @@ def get_assignment_data(uuid: UUID, db: Session) -> AssignmentDataOut:
 
     return map_model_to_schema(assignment_data)
 
+def create_assignment_data_simple(
+    progress_uuid: UUID,
+    assignment_data_create_simple: AssignmentDataCreateSimple,
+    db: Session
+) -> AssignmentDataOut:
+    return create_assignment_data(
+        AssignmentDataCreate(
+            progress_uuid=progress_uuid,
+            answer=assignment_data_create_simple.answer,
+            feedback=assignment_data_create_simple.feedback,
+            success=assignment_data_create_simple.success
+        ),
+        db=db
+    )
 
 def get_assignment_data_by_progress(
     progress_uuid: UUID, db: Session

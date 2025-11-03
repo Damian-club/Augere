@@ -13,6 +13,7 @@ from schemas.assignment_data import (
     AssignmentDataCreate,
     AssignmentDataOut,
     AssignmentDataUpdate,
+    AssignmentDataCreateSimple
 )
 from schemas.message import Message
 #-------------------------------------
@@ -23,7 +24,8 @@ from services.assignment_data import (
     delete_assignment_data,
     get_assignment_data,
     update_assignment_data,
-    get_assignment_data_by_progress
+    get_assignment_data_by_progress,
+    create_assignment_data_simple
 )
 #---------------------------------------
 
@@ -50,6 +52,10 @@ def r_delete_assignment_data(uuid: UUID, db=Depends(get_db)) -> Message:
     return delete_assignment_data(uuid, db=db)
 
 
-@router.get("/list/{progress_uuid}", response_model=list[AssignmentDataOut])
-def r_get_assignment_data_by_progress(uuid: UUID, db=Depends(get_db)) -> list[AssignmentDataOut]:
-    return get_assignment_data_by_progress(uuid, db=db)
+@router.get("/progress/{progress_uuid}", response_model=list[AssignmentDataOut])
+def r_get_assignment_data_by_progress(progress_uuid: UUID, db=Depends(get_db)) -> list[AssignmentDataOut]:
+    return get_assignment_data_by_progress(progress_uuid, db=db)
+
+@router.post("/progress/{progress_uuid}", response_model=AssignmentDataOut)
+def r_create_assignment_data_by_progress(progress_uuid: UUID, assignment_data_create_simple: AssignmentDataCreateSimple, db=Depends(get_db)) -> AssignmentDataOut:
+    return create_assignment_data_simple(progress_uuid, assignment_data_create_simple=assignment_data_create_simple, db=db)

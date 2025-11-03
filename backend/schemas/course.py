@@ -46,4 +46,15 @@ class PrivateSummaryCourseOut(CourseOutPre):
     student_count: int = Field(...)
 
 class PublicSummaryCourseOut(CourseOutPre):
+    completion_percentage: float = Field(...)
     tutor: UserOut = Field(...)
+
+class OverviewCourse(BaseModel):
+    name: str = Field(...)
+    completion_percentage: float = Field(...)
+
+class OverviewOut(BaseModel):
+    completion_percentage: float = Field(...)
+    completed_count: int = Field(...)
+    total_count: int = Field(...)
+    course_list: list[OverviewCourse] = Field(...)
