@@ -87,8 +87,8 @@ def _map_public_summary(course: Course, user: User, db: Session):
     
     tutor_schema: UserOut = user_map_model_to_schema(tutor)
 
-    from services.student import get_student_by_user_course
-    student: Student = get_student_by_user_course(user.uuid, course.uuid, db=db)
+    from services.student import get_student_model_by_user_course
+    student: Student = get_student_model_by_user_course(user.uuid, course_uuid=course.uuid, db=db)
     progress_model_list: list[Progress] = student.progress_records
 
     total_progress_count: int = len(progress_model_list)
