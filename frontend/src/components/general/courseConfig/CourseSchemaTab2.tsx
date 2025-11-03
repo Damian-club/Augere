@@ -8,13 +8,16 @@ import {
   IoArrowDownCircleOutline,
   IoSparklesOutline,
   IoSaveOutline,
+  IoTrashOutline,
 } from "react-icons/io5";
 import {
-  type Category,
+  // type Category,
   type Entry,
   type FullSchema,
 } from "../../../schemas/schema";
 import style from "./CourseSchemaTab.module.css";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import type { DropResult } from "@hello-pangea/dnd";
 
 type Props = {
   course: Course;
@@ -29,16 +32,14 @@ export default function CourseSchemaTab2({ course }: Props) {
   useEffect(() => {
     const loadSchema = async () => {
       try {
-        // Obtener esquema por el course_id
         const fullSchema = await schemaService.getFullSchemaByCourse(
           course.uuid
         );
         setSchema(fullSchema);
       } catch (err) {
-        console.warn("No se encontro esquema, creando uno nuevo...");
+        console.warn("No se encontró esquema, creando uno nuevo...");
         try {
-          // Crear esquema
-          const newSchema = await schemaService.createSchema(course.uuid);
+          await schemaService.createSchema(course.uuid);
           const fullSchema = await schemaService.getFullSchemaByCourse(
             course.uuid
           );
@@ -53,14 +54,33 @@ export default function CourseSchemaTab2({ course }: Props) {
     loadSchema();
   }, [course.uuid]);
 
-  // Manejar entry seleccionado
-  const handleSelectEntry = (entry: Entry) => {
-    setSelectedEntry(entry);
+  // === DRAG & DROP ===
+  const handleDragEnd = (result: DropResult) => {
+    const { source, destination } = result;
+    if (!destination || !schema) return;
+
+    const newSchema = { ...schema };
+    const category = newSchema.category_list.find(
+      (cat) => cat.uuid === source.droppableId
+    );
+    if (!category) return;
+
+    const [movedEntry] = category.entry_list.splice(source.index, 1);
+    category.entry_list.splice(destination.index, 0, movedEntry);
+    category.entry_list = category.entry_list.map((entry, idx) => ({
+      ...entry,
+      position: idx,
+    }));
+
+    setSchema(newSchema);
   };
 
-  const handleGenerateSchema = () => {
-    console.log("Generando esquema con prompt:", aiPrompt);
+  // === SELECCIONAR ENTRY ===
+  const handleSelectEntry = (entry: Entry) => setSelectedEntry(entry);
 
+  // === GENERAR ESQUEMA MOCK ===
+  const handleGenerateSchema = () => {
+    // Aquí normalmente llamarías al servicio real
     const mockSchema: FullSchema = {
       course_uuid: course.uuid,
       uuid: "schema-uuid-" + Date.now(),
@@ -73,9 +93,8 @@ export default function CourseSchemaTab2({ course }: Props) {
           entry_list: [
             {
               name: "¿Qué es un algoritmo?",
-              body: "Un algoritmo es un conjunto finito de instrucciones bien definidas que resuelven un problema específico.",
-              context:
-                "Introducción básica para principiantes, usar ejemplos cotidianos como recetas de cocina",
+              body: "Contenido...",
+              context: "Contexto...",
               entry_type: "topic",
               position: 0,
               category_uuid: "cat-intro",
@@ -83,9 +102,8 @@ export default function CourseSchemaTab2({ course }: Props) {
             },
             {
               name: "Notación Big O",
-              body: "La notación Big O describe el comportamiento asintótico de un algoritmo en el peor de los casos.",
-              context:
-                "Explicar con gráficas y ejemplos prácticos de O(1), O(n), O(log n), O(n²)",
+              body: "Contenido...",
+              context: "Contexto...",
               entry_type: "topic",
               position: 1,
               category_uuid: "cat-intro",
@@ -93,8 +111,8 @@ export default function CourseSchemaTab2({ course }: Props) {
             },
             {
               name: "Tarea: Análisis de Complejidad",
-              body: "Analiza la complejidad temporal de 5 algoritmos proporcionados y justifica tu respuesta.",
-              context: "Ejercicios prácticos de nivel básico-intermedio",
+              body: "Contenido...",
+              context: "Contexto...",
               entry_type: "assignment",
               position: 2,
               category_uuid: "cat-intro",
@@ -102,114 +120,25 @@ export default function CourseSchemaTab2({ course }: Props) {
             },
           ],
         },
-        {
-          name: "Estructuras de Datos Lineales",
-          position: 1,
-          schema_uuid: "schema-uuid-123",
-          uuid: "cat-linear",
-          entry_list: [
-            {
-              name: "Arrays y Listas",
-              body: "Arrays son estructuras de tamaño fijo, mientras que las listas dinámicas pueden crecer según necesidad.",
-              context:
-                "Comparar arrays vs listas enlazadas, ventajas y desventajas",
-              entry_type: "topic",
-              position: 0,
-              category_uuid: "cat-linear",
-              uuid: "entry-linear-1",
-            },
-            {
-              name: "Pilas (Stacks)",
-              body: "Estructura LIFO (Last In First Out) utilizada en llamadas recursivas y deshacer/rehacer.",
-              context:
-                "Ejemplos con navegador web (historial), llamadas de funciones",
-              entry_type: "topic",
-              position: 1,
-              category_uuid: "cat-linear",
-              uuid: "entry-linear-2",
-            },
-            {
-              name: "Colas (Queues)",
-              body: "Estructura FIFO (First In First Out) utilizada en sistemas de procesamiento y BFS.",
-              context:
-                "Ejemplos con impresoras, colas de mensajes, algoritmos de búsqueda",
-              entry_type: "topic",
-              position: 2,
-              category_uuid: "cat-linear",
-              uuid: "entry-linear-3",
-            },
-          ],
-        },
-        {
-          name: "Árboles y Grafos",
-          position: 2,
-          schema_uuid: "schema-uuid-123",
-          uuid: "cat-trees",
-          entry_list: [
-            {
-              name: "Árboles Binarios",
-              body: "Estructura jerárquica donde cada nodo tiene como máximo dos hijos.",
-              context:
-                "Explicar recorridos: inorden, preorden, postorden con ejemplos visuales",
-              entry_type: "topic",
-              position: 0,
-              category_uuid: "cat-trees",
-              uuid: "entry-trees-1",
-            },
-            {
-              name: "Árboles Binarios de Búsqueda (BST)",
-              body: "Árbol binario donde el hijo izquierdo es menor y el derecho es mayor que el nodo padre.",
-              context:
-                "Operaciones CRUD con complejidad O(log n) en el mejor caso",
-              entry_type: "topic",
-              position: 1,
-              category_uuid: "cat-trees",
-              uuid: "entry-trees-2",
-            },
-            {
-              name: "Grafos: Representación y Recorridos",
-              body: "Grafos se pueden representar con matrices de adyacencia o listas de adyacencia.",
-              context:
-                "Explicar DFS y BFS con ejemplos de redes sociales y mapas",
-              entry_type: "topic",
-              position: 2,
-              category_uuid: "cat-trees",
-              uuid: "entry-trees-3",
-            },
-            {
-              name: "Proyecto: Implementar un BST",
-              body: "Implementa un árbol binario de búsqueda con operaciones de insertar, buscar y eliminar.",
-              context: "Proyecto práctico con tests incluidos",
-              entry_type: "assignment",
-              position: 3,
-              category_uuid: "cat-trees",
-              uuid: "entry-trees-4",
-            },
-          ],
-        },
       ],
     };
-
-    // Cargar el esquema mock
     setSchema(mockSchema);
-    // TODO: En producción, llamar al servicio real: schemaService.generateSchema(course.uuid, aiPrompt)
   };
 
-  // Guardar cuerpo
+  // === GUARDAR BODY ===
   const handleSaveBody = () => {
     if (!selectedEntry) return;
     console.log("Guardando cuerpo para:", selectedEntry.name);
-    // TODO: Llamar al servicio para guardar
+    // Llamar al servicio para guardar
   };
 
-  // Generar contexto con IA
+  // === GENERAR CONTEXTO IA ===
   const handleGenerateContext = () => {
     if (!selectedEntry) return;
     console.log("Generando contexto IA para:", selectedEntry.name);
-    // TODO: Llamar al servicio para generar contexto
   };
 
-  // Obtener icono del entry
+  // === ICONOS ===
   const getIcon = (entryType: string) => {
     switch (entryType) {
       case "assignment":
@@ -225,6 +154,7 @@ export default function CourseSchemaTab2({ course }: Props) {
 
   return (
     <div className={style.schemaContainer}>
+      {/* === IA PROMPT === */}
       <div className={style.aiPromptSection}>
         <div className={style.promptHeader}>
           <IoSparklesOutline className={style.sparkleIcon} />
@@ -232,14 +162,13 @@ export default function CourseSchemaTab2({ course }: Props) {
         </div>
         <textarea
           className={style.aiPromptInput}
-          placeholder="Describe el esquema que deseas generar. Ejemplo: 'Curso de Python desde cero con 3 módulos: fundamentos, POO y web development'"
+          placeholder="Describe el esquema..."
           value={aiPrompt}
           onChange={(e) => setAiPrompt(e.target.value)}
           rows={3}
         />
         <button className={style.generateBtn} onClick={handleGenerateSchema}>
-          <IoSparklesOutline />
-          Generar Esquema
+          <IoSparklesOutline /> Generar Esquema
         </button>
       </div>
 
@@ -254,10 +183,10 @@ export default function CourseSchemaTab2({ course }: Props) {
         </div>
       ) : (
         <div className={style.mainContent}>
-          {/* === PANEL DE ESQUEMA === */}
+          {/* === PANEL ESQUEMA === */}
           <div className={style.schemaPanel}>
             <h3 className={style.panelTitle}>Esquema del Curso</h3>
-            <div className={style.categoriesList}>
+            <DragDropContext onDragEnd={handleDragEnd}>
               {schema?.category_list
                 .sort((a, b) => a.position - b.position)
                 .map((category) => (
@@ -266,35 +195,134 @@ export default function CourseSchemaTab2({ course }: Props) {
                       <IoArrowDownCircleOutline
                         className={style.categoryIcon}
                       />
-                      <h4>{category.name}</h4>
+                      <input
+                        className={style.categoryName}
+                        value={category.name}
+                        onChange={(e) => {
+                          const newSchema = { ...schema };
+                          const cat = newSchema.category_list.find(
+                            (c) => c.uuid === category.uuid
+                          );
+                          if (cat) cat.name = e.target.value;
+                          setSchema(newSchema);
+                        }}
+                      />
+                      <IoTrashOutline
+                        className={style.trashIcon}
+                        onClick={() => {
+                          const newSchema = { ...schema };
+                          newSchema.category_list =
+                            newSchema.category_list.filter(
+                              (c) => c.uuid !== category.uuid
+                            );
+                          setSchema(newSchema);
+                          // Si selectedEntry estaba en esta categoría, limpiar editor
+                          if (
+                            selectedEntry &&
+                            selectedEntry.category_uuid === category.uuid
+                          ) {
+                            setSelectedEntry(null);
+                          }
+                        }}
+                      />
                     </div>
 
-                    <div className={style.entriesList}>
-                      {category.entry_list
-                        .sort((a, b) => a.position - b.position)
-                        .map((entry) => (
-                          <div
-                            key={entry.uuid}
-                            className={`${style.entryItem} ${
-                              selectedEntry?.uuid === entry.uuid
-                                ? style.selected
-                                : ""
-                            }`}
-                            onClick={() => handleSelectEntry(entry)}
-                          >
-                            {getIcon(entry.entry_type)}
-                            <span className={style.entryName}>
-                              {entry.name}
-                            </span>
-                            <span className={style.entryBadge}>
-                              {entry.entry_type}
-                            </span>
-                          </div>
-                        ))}
-                    </div>
+                    <Droppable droppableId={category.uuid!}>
+                      {(provided) => (
+                        <div
+                          className={style.entriesList}
+                          {...provided.droppableProps}
+                          ref={provided.innerRef}
+                        >
+                          {category.entry_list
+                            .sort((a, b) => a.position - b.position)
+                            .map((entry, index) => (
+                              <Draggable
+                                key={entry.uuid}
+                                draggableId={entry.uuid!}
+                                index={index}
+                              >
+                                {(provided, snapshot) => (
+                                  <div
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    {...provided.dragHandleProps}
+                                    className={`${style.entryItem} ${
+                                      selectedEntry?.uuid === entry.uuid
+                                        ? style.selected
+                                        : ""
+                                    } ${
+                                      snapshot.isDragging ? style.dragging : ""
+                                    }`}
+                                    style={{ ...provided.draggableProps.style }}
+                                    onClick={() => handleSelectEntry(entry)}
+                                  >
+                                    {getIcon(entry.entry_type)}
+                                    <input
+                                      className={style.entryName}
+                                      value={entry.name}
+                                      onChange={(e) => {
+                                        const newSchema = { ...schema! };
+                                        const cat =
+                                          newSchema.category_list.find(
+                                            (c) => c.uuid === category.uuid
+                                          );
+                                        const ent = cat?.entry_list.find(
+                                          (en) => en.uuid === entry.uuid
+                                        );
+                                        if (ent) ent.name = e.target.value;
+                                        setSchema(newSchema);
+
+                                        // Sincronizar selectedEntry si corresponde
+                                        if (
+                                          selectedEntry?.uuid === entry.uuid &&
+                                          ent
+                                        ) {
+                                          setSelectedEntry({
+                                            uuid: ent.uuid!,
+                                            name: ent.name!,
+                                            body: ent.body || "",
+                                            context: ent.context || "",
+                                            entry_type: ent.entry_type!,
+                                            position: ent.position!,
+                                            category_uuid: ent.category_uuid!,
+                                          });
+                                        }
+                                      }}
+                                    />
+                                    <span className={style.entryBadge}>
+                                      {entry.entry_type}
+                                    </span>
+                                    <IoTrashOutline
+                                      className={style.trashIcon}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        const newSchema = { ...schema! };
+                                        const cat =
+                                          newSchema.category_list.find(
+                                            (c) => c.uuid === category.uuid
+                                          );
+                                        if (cat)
+                                          cat.entry_list =
+                                            cat.entry_list.filter(
+                                              (en) => en.uuid !== entry.uuid
+                                            );
+                                        setSchema(newSchema);
+                                        if (selectedEntry?.uuid === entry.uuid)
+                                          setSelectedEntry(null);
+                                      }}
+                                    />
+                                  </div>
+                                )}
+                              </Draggable>
+                            ))}
+                          {provided.placeholder}
+                        </div>
+                      )}
+                    </Droppable>
                   </div>
                 ))}
-            </div>
+            </DragDropContext>
           </div>
 
           {/* === PANEL EDITOR === */}
@@ -320,7 +348,6 @@ export default function CourseSchemaTab2({ course }: Props) {
                   </span>
                 </div>
 
-                {/* Campo CUERPO */}
                 <div className={style.editorField}>
                   <label className={style.fieldLabel}>
                     <IoDocumentTextOutline />
@@ -328,50 +355,67 @@ export default function CourseSchemaTab2({ course }: Props) {
                   </label>
                   <textarea
                     className={style.fieldTextarea}
-                    placeholder="Escribe aquí el contenido principal de este tema o tarea..."
                     value={selectedEntry.body || ""}
-                    onChange={(e) =>
+                    onChange={(e) => {
                       setSelectedEntry({
                         ...selectedEntry,
                         body: e.target.value,
-                      })
-                    }
+                      });
+
+                      // Actualizar en schema
+                      if (schema) {
+                        const newSchema = { ...schema };
+                        const cat = newSchema.category_list.find(
+                          (c) => c.uuid === selectedEntry.category_uuid
+                        );
+                        const ent = cat?.entry_list.find(
+                          (en) => en.uuid === selectedEntry.uuid
+                        );
+                        if (ent) ent.body = e.target.value;
+                        setSchema(newSchema);
+                      }
+                    }}
                     rows={6}
                   />
                   <button className={style.saveBtn} onClick={handleSaveBody}>
-                    <IoSaveOutline />
-                    Guardar Cuerpo
+                    <IoSaveOutline /> Guardar Cuerpo
                   </button>
                 </div>
 
-                {/* Campo CONTEXTO */}
                 <div className={style.editorField}>
                   <label className={style.fieldLabel}>
                     <IoSparklesOutline />
                     Contexto para IA
-                    <span className={style.fieldHint}>
-                      Proporciona contexto adicional para generar contenido con
-                      IA
-                    </span>
                   </label>
                   <textarea
                     className={style.fieldTextarea}
-                    placeholder="Ej: 'Explicar con ejemplos prácticos en Python, nivel intermedio, enfocado en buenas prácticas'"
                     value={selectedEntry.context || ""}
-                    onChange={(e) =>
+                    onChange={(e) => {
                       setSelectedEntry({
                         ...selectedEntry,
                         context: e.target.value,
-                      })
-                    }
+                      });
+
+                      // Actualizar en schema
+                      if (schema) {
+                        const newSchema = { ...schema };
+                        const cat = newSchema.category_list.find(
+                          (c) => c.uuid === selectedEntry.category_uuid
+                        );
+                        const ent = cat?.entry_list.find(
+                          (en) => en.uuid === selectedEntry.uuid
+                        );
+                        if (ent) ent.context = e.target.value;
+                        setSchema(newSchema);
+                      }
+                    }}
                     rows={4}
                   />
                   <button
                     className={style.generateContextBtn}
                     onClick={handleGenerateContext}
                   >
-                    <IoSparklesOutline />
-                    Generar con IA
+                    <IoSparklesOutline /> Generar con IA
                   </button>
                 </div>
               </div>
