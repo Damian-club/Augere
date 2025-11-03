@@ -88,7 +88,7 @@ def get_student(uuid: UUID, db: Session) -> StudentOut:
         raise HTTPException(status_code=404, detail="Estudiante no encontrado")
     return map_model_to_schema(student)
 
-def get_student_by_user_course(user_uuid: UUID, course_uuid: UUID, db: Session) -> StudentOut:
+def get_student_model_by_user_course(user_uuid: UUID, course_uuid: UUID, db: Session) -> Student:
     try:
         student: Student = db.query(Student).filter(Student.course_uuid == course_uuid).filter(Student.student_uuid == user_uuid).first()
     except Exception as e:
@@ -97,6 +97,10 @@ def get_student_by_user_course(user_uuid: UUID, course_uuid: UUID, db: Session) 
         )
     if not student:
         raise HTTPException(status_code=404, detail="Estudiante no encontrado")
+    return student
+
+def get_student_by_user_course(user_uuid: UUID, course_uuid: UUID, db: Session) -> StudentOut:
+    student: Student = get_student_model_by_user_course(user_uuid, course_uuid=course_uuid, db=db)
     return map_model_to_schema(student)
 
 def delete_student(
