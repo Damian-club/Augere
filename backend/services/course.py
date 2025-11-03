@@ -210,7 +210,7 @@ def get_private_summary_course(uuid: UUID, user: User, db: Session) -> PrivateSu
     return _map_private_summary(course)
 
 def get_public_summary_course(uuid: UUID, user: User, db: Session) -> PublicSummaryCourseOut:
-    course: Course = _get_course_by_uuid(uuid)
+    course: Course = _get_course_by_uuid(uuid, db=db)
 
     return _map_public_summary(course, user=user, db=db)
 
