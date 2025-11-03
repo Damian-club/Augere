@@ -79,7 +79,7 @@ def _map_private_summary(course: Course) -> PrivateSummaryCourseOut:
         student_count=student_count
     )
 
-def _map_public_summary(course: Course, user: User):
+def _map_public_summary(course: Course, user: User, db: Session):
     tutor: User = course.tutor
 
     if not tutor:
@@ -88,7 +88,7 @@ def _map_public_summary(course: Course, user: User):
     tutor_schema: UserOut = user_map_model_to_schema(tutor)
 
     from services.student import get_student_by_user_course
-    student: Student = get_student_by_user_course(user.uuid, course.uuid)
+    student: Student = get_student_by_user_course(user.uuid, course.uuid, db=db)
     progress_model_list: list[Progress] = student.progress_records
 
     total_progress_count: int = len(progress_model_list)
@@ -212,7 +212,7 @@ def get_private_summary_course(uuid: UUID, user: User, db: Session) -> PrivateSu
 def get_public_summary_course(uuid: UUID, user: User, db: Session) -> PublicSummaryCourseOut:
     course: Course = _get_course_by_uuid(uuid)
 
-    return _map_public_summary(course, user=user)
+    return _map_public_summary(course, user=user, db=db)
 
 def list_user_tutored_courses(user: User) -> list[PrivateSummaryCourseOut]:
     courses: list[Course] = user.tutored_courses if user else []
@@ -225,7 +225,8 @@ def list_user_enrolled_courses(user: User, db: Session) -> list[PublicSummaryCou
     result: list[CourseOut] = [
         _map_public_summary(
             course=student.course,
-            user=user
+            user=user,
+            db=db
         )
         for student in student_records
     ]
