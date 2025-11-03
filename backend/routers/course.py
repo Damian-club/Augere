@@ -36,12 +36,19 @@ from services.course import get_overview as s_get_overview
 
 router = APIRouter(prefix="/course", tags=["Course"])
 
+@router.post("/", summary="Crear un nuevo curso", response_model=CourseOut)
+def r_create_course(
+    course_create: CourseCreate, user: User = Depends(get_current_user), db=Depends(get_db)
+) -> CourseOut:
+    return s_create_course(course_create, user=user, db=db)
+
+
 @router.get(
     "/enrolled-courses",
     summary="Listar mis cursos inscritos",
     response_model=list[PublicSummaryCourseOut]
 )
-def r_list_my_courses(user: User = Depends(get_current_user), db=Depends(get_db)) -> list[PublicSummaryCourseOut]:
+def r_list_user_enrolled_courses(user: User = Depends(get_current_user), db=Depends(get_db)) -> list[PublicSummaryCourseOut]:
     return s_list_user_enrolled_courses(user, db=db)
 
 
@@ -108,10 +115,3 @@ def r_delete_course(
     uuid: UUID, user: User = Depends(get_current_user), db=Depends(get_db)
 ) -> Message:
     return s_delete_course(uuid, user=user, db=db)
-
-@router.post("/", summary="Crear un nuevo curso", response_model=CourseOut)
-def r_create_course(
-    course_create: CourseCreate, user: User = Depends(get_current_user), db=Depends(get_db)
-) -> CourseOut:
-    return s_create_course(course_create, user=user, db=db)
-
