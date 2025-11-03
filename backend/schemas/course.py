@@ -31,17 +31,19 @@ class CourseOutPre(CourseBase):
 class CourseOut(CourseOutPre):
     tutor_uuid: UUID = Field(...)
 
-class SummaryStudentProgress(BaseModel):
+class PrivateSummaryStudentProgress(BaseModel):
     entry_uuid: UUID = Field(...)
     finished: bool = Field(...)
 
-class SummaryStudent(BaseModel):
+class PrivateSummaryStudent(BaseModel):
     name: str = Field(...)
     completion_percentage: float = Field(...)
-    progress_list: list[SummaryStudentProgress]
+    progress_list: list[PrivateSummaryStudentProgress]
 
-class CourseOutSummary(CourseOutPre):
-    tutor: UserOut = Field(...)
+class PrivateSummaryCourseOut(CourseOutPre):
     completion_percentage: float = Field(...)
-    student_list: list[SummaryStudent] = Field(...)
+    student_list: list[PrivateSummaryStudent] = Field(...)
     student_count: int = Field(...)
+
+class PublicSummaryCourseOut(CourseOutPre):
+    tutor: UserOut = Field(...)

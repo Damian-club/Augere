@@ -2,9 +2,10 @@ from schemas.course import (
     CourseCreate,
     CourseOut,
     CourseUpdate,
-    CourseOutSummary,
-    SummaryStudentProgress,
-    SummaryStudent
+    PrivateSummaryCourseOut,
+    PrivateSummaryStudentProgress,
+    PrivateSummaryStudent,
+    PublicSummaryCourseOut
 )
 from schemas.message import Message
 from models.course import Course
@@ -38,23 +39,18 @@ def _get_course_by_uuid(uuid: UUID, db: Session) -> Course:
     return course
 
 
-def _map_course_out_summary(course: Course, db: Session) -> CourseOutSummary:
-    tutor: User = course.tutor
-    if not tutor:
-        raise HTTPException(status_code=404, detail="No se encontró al tutor")
-    tutor_schema: UserOut  = user_map_model_to_schema(tutor)
-
+def _map_private_summary(course: Course) -> PrivateSummaryCourseOut:
     student_model_list: list[Student] = course.students
     user_model_list: list[User] = [student.user for student in student_model_list]
 
     student_count: int = len(student_model_list)
 
-    student_list: list[SummaryStudent] = []
+    student_list: list[PrivateSummaryStudent] = []
 
     completion_sum: float = 0.0
     for student, user in zip(student_model_list, user_model_list):
         progress_records: list[Progress] = student.progress_records
-        progress_list: list[SummaryStudentProgress] = []
+        progress_list: list[PrivateSummaryStudentProgress] = []
 
         progress_count: int = len(progress_records)
         progress_true_count: int = 0
@@ -65,7 +61,7 @@ def _map_course_out_summary(course: Course, db: Session) -> CourseOutSummary:
                 progress_true_count += 1
 
             progress_list.append(
-                SummaryStudentProgress(
+                PrivateSummaryStudentProgress(
                     entry_uuid=progress.entry_uuid,
                     finished=is_finished
                 )
@@ -75,7 +71,7 @@ def _map_course_out_summary(course: Course, db: Session) -> CourseOutSummary:
         completion_sum += student_completion_percentage
 
         student_list.append(
-            SummaryStudent(
+            PrivateSummaryStudent(
                 name=user.name,
                 completion_percentage=student_completion_percentage,
                 progress_list=progress_list
@@ -84,19 +80,35 @@ def _map_course_out_summary(course: Course, db: Session) -> CourseOutSummary:
     
     average_completion_percentage: float = _floor_two_decimal_places(completion_sum / student_count if student_count != 0 else 0.0)
 
-    return CourseOutSummary(
+    return PrivateSummaryCourseOut(
         uuid=course.uuid,
         title=course.title,
         description=course.description,
         logo_path=course.logo_path,
         invitation_code=course.invitation_code,
         creation_date=course.creation_date,
-        tutor=tutor_schema,
         completion_percentage=average_completion_percentage,
         student_list=student_list,
         student_count=student_count
     )
 
+def _map_public_summary(course: Course):
+    tutor: User = course.tutor
+
+    if not tutor:
+        raise HTTPException(status_code=404, detail="No existe un tutor")
+    
+    tutor_schema: UserOut = user_map_model_to_schema(tutor)
+
+    return PublicSummaryCourseOut(
+        uuid=course.uuid,
+        title=course.title,
+        description=course.description,
+        logo_path=course.logo_path,
+        creation_date=course.creation_date,
+        invitation_code=course.invitation_code,
+        tutor=tutor_schema
+    )
 
 def map_model_to_schema(course: Course) -> CourseOut:
     return CourseOut(
@@ -130,7 +142,6 @@ def create_course(course_create: CourseCreate, user: User, db: Session) -> Cours
         raise HTTPException(status_code=400, detail=f"Error al crear el curso: {e}")
 
     return map_model_to_schema(course)
-
 
 def update_course(uuid: UUID, course_update: CourseUpdate, user: User, db: Session) -> CourseOut:
     course: Course = _get_course_by_uuid(uuid, db=db)
@@ -187,7 +198,7 @@ def get_course(uuid: UUID, user: User, db: Session) -> CourseOut:
     return map_model_to_schema(course)
 
 
-def get_course_user(uuid: UUID, user: User, db: Session) -> CourseOut:
+def get_private_summary_course(uuid: UUID, user: User, db: Session) -> PrivateSummaryCourseOut:
     course: Course = _get_course_by_uuid(uuid, db=db)
     if course.tutor_uuid != user.uuid:
         raise HTTPException(
@@ -198,17 +209,19 @@ def get_course_user(uuid: UUID, user: User, db: Session) -> CourseOut:
     if not tutor:
         raise HTTPException(status_code=404, detail="ID del tutor no encontrado")
 
+    return _map_private_summary(course)
 
-    return _map_course_out_summary(course, db=db)
+def get_public_summary_course(uuid: UUID, db: Session) -> PublicSummaryCourseOut:
+    course: Course = _get_course_by_uuid(uuid)
 
+    return _map_public_summary(course)
 
-def list_user_tutored_courses(user: User) -> list[CourseOut]:
+def list_user_tutored_courses(user: User) -> list[PrivateSummaryCourseOut]:
     courses: list[Course] = user.tutored_courses if user else []
 
-    return [map_model_to_schema(course) for course in courses]
+    return [_map_private_summary(course) for course in courses]
 
-
-def list_user_enrolled_courses(user: User, db: Session) -> list[CourseOutSummary]:
+def list_user_enrolled_courses(user: User, db: Session) -> list[PublicSummaryCourseOut]:
     student_records: list[Student] = user.student_records if user else []
 
     result: list[CourseOut] = []
@@ -216,9 +229,8 @@ def list_user_enrolled_courses(user: User, db: Session) -> list[CourseOutSummary
         course: Course = student.course
 
         result.append(
-            _map_course_out_summary(
-                course,
-                db=db
+            _map_public_summary(
+                course
             )
         )
 
