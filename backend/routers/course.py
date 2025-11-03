@@ -4,7 +4,8 @@ from schemas.course import (
     CourseOut,
     CourseUpdate,
     PrivateSummaryCourseOut,
-    PublicSummaryCourseOut
+    PublicSummaryCourseOut,
+    OverviewOut
 )
 from uuid import UUID
 from schemas.message import Message
@@ -20,6 +21,7 @@ from services.course import delete_course as s_delete_course
 from services.course import get_private_summary_course as s_get_private_summary_course
 from services.course import get_public_summary_course as s_get_public_summary_course
 from services.course import get_course as s_get_course
+from services.course import get_overview as s_get_overview
 
 router = APIRouter(prefix="/course", tags=["Course"])
 
@@ -84,3 +86,13 @@ def get_public_summary_course(
     uuid: UUID, user: User = Depends(get_current_user), db=Depends(get_db)
 ) -> PrivateSummaryCourseOut:
     return s_get_public_summary_course(uuid, user=user, db=db)
+
+@router.get(
+    "/overview",
+    summary="Obtener resumen de los cursos del usuario",
+    response_model=OverviewOut,
+)
+def get_overview(
+    user: User = Depends(get_current_user), db=Depends(get_db)
+) -> OverviewOut:
+    return s_get_overview(user, db=db)
