@@ -33,7 +33,7 @@ export class SchemaService {
     const res = await fetch(`${this.baseUrl}/`, {
       method: "POST",
       headers: this.getHeaders(),
-      body: JSON.stringify({ course_id: courseId }),
+      body: JSON.stringify({ course_uuid: courseId }),
     });
 
     const data = await this.handleResp(res);
@@ -72,7 +72,7 @@ export class SchemaService {
 
   // Obtener esquema completo por course_id
   async getFullSchemaByCourse(courseId: string): Promise<FullSchema> {
-    const res = await fetch(`${this.baseUrl}/full/by-course/${courseId}`, {
+    const res = await fetch(`${this.baseUrl}/full/by_course/${courseId}`, {
       headers: this.getHeaders(),
     });
     if (!res.ok) throw new Error("Error al obtener esquema completo por curso");

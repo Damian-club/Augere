@@ -6,11 +6,12 @@ export interface Entry {
   entry_type: string;
   position: number;
   category_id?: string;
+  category_uuid: string;
 }
 
 export interface Category {
   uuid?: string;
-  schema_id?: string; 
+  schema_uuid?: string;
   name: string;
   position: number;
   entry_list: Entry[];
@@ -18,10 +19,11 @@ export interface Category {
 
 export interface Schema {
   uuid: string;
-  course_id: string;
+  course_uuid: string;
 }
 
 export interface FullSchema extends Schema {
+  course_uuid: string;
   category_list: Category[];
 }
 
