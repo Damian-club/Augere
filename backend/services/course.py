@@ -1,3 +1,10 @@
+from fastapi import HTTPException
+from sqlalchemy.orm import Session
+from services.auth import map_model_to_schema as user_map_model_to_schema
+from uuid import UUID, uuid4
+from math import floor
+
+# SCHEMAS -----------------------------
 from schemas.course import (
     CourseCreate,
     CourseOut,
@@ -8,17 +15,15 @@ from schemas.course import (
     PublicSummaryCourseOut
 )
 from schemas.message import Message
+from schemas.user import UserOut
+#-------------------------------------
+
+# MODELS ------------------------------
 from models.course import Course
 from models.user import User
 from models.student import Student
 from models.progress import Progress
-from fastapi import HTTPException
-from sqlalchemy.orm import Session
-from services.auth import map_model_to_schema as user_map_model_to_schema
-from schemas.user import UserOut
-from uuid import UUID, uuid4
-from math import floor
-
+#--------------------------------------
 
 # Util
 

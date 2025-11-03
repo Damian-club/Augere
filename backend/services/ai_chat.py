@@ -1,12 +1,20 @@
-from schemas.ai_chat import AIChatCreate, AIChatOut, AIChatUpdate
-from schemas.message import Message
-from models.ai_chat import AIChat
-from models.progress import Progress
 from services.progress import _get_progress_by_uuid
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from uuid import UUID
+# MODELS ----------------------------
+from models.ai_chat import AIChat
+from models.progress import Progress
+#------------------------------------
 
+# SCHEMAS -----------------------------
+from schemas.ai_chat import (
+    AIChatCreate,
+    AIChatOut,
+    AIChatUpdate
+)
+from schemas.message import Message
+#-------------------------------------
 
 def _get_ai_chat_by_uuid(uuid: UUID, db: Session) -> AIChat:
     try:

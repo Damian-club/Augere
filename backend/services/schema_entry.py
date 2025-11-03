@@ -1,12 +1,21 @@
-from schemas.schema_entry import SchemaEntryCreate, SchemaEntryOut, SchemaEntryUpdate
-from schemas.message import Message
-from models.schema_entry import SchemaEntry
-from models.schema_category import SchemaCategory
-from models.user import User
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from uuid import UUID
 
+# MODELS ------------------------------------------
+from models.schema_entry import SchemaEntry
+from models.schema_category import SchemaCategory
+from models.user import User
+#--------------------------------------------------
+
+# SCHEMAS -----------------------------
+from schemas.schema_entry import (
+    SchemaEntryCreate,
+    SchemaEntryOut,
+    SchemaEntryUpdate
+)
+from schemas.message import Message
+#--------------------------------------
 
 # Util
 def _get_entry_by_uuid(uuid: UUID, db: Session) -> SchemaEntry:

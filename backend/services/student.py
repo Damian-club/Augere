@@ -1,5 +1,13 @@
+from fastapi import HTTPException
+from sqlalchemy.orm import Session
+from uuid import UUID
+
+# SCHEMAS ----------------------------------------------
 from schemas.student import StudentCreate, StudentOut
 from schemas.message import Message
+#-------------------------------------------------------
+
+# MODELS -------------------------------------------
 from models.student import Student
 from models.course import Course
 from models.user import User
@@ -8,10 +16,7 @@ from models.schema_category import SchemaCategory
 from models.schema import Schema
 from models.schema_entry import SchemaEntry
 from models.progress import Progress
-from fastapi import HTTPException
-from sqlalchemy.orm import Session
-from uuid import UUID
-
+#----------------------------------------------------
 
 def map_model_to_schema(student: Student) -> StudentOut:
     return StudentOut(

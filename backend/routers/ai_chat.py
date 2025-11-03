@@ -1,9 +1,23 @@
-from fastapi import APIRouter, Depends
-from schemas.ai_chat import AIChatCreate, AIChatOut, AIChatUpdate
-from schemas.message import Message
 from core.db import get_db
 from uuid import UUID
 
+# API ------------------
+from fastapi import (
+    APIRouter,
+    Depends
+)
+#-----------------------
+
+# SCHEMAS --------------------------
+from schemas.ai_chat import (
+    AIChatCreate,
+    AIChatOut,
+    AIChatUpdate
+)
+from schemas.message import Message
+#-----------------------------------
+
+# SERVICES -------------------------
 from services.ai_chat import (
     create_ai_chat,
     delete_ai_chat,
@@ -11,6 +25,7 @@ from services.ai_chat import (
     update_ai_chat,
     get_ai_chat_by_progress
 )
+#-----------------------------------
 
 router = APIRouter(prefix='/ai_chat', tags=['AI Chat'])
 
