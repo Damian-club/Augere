@@ -10,6 +10,7 @@ import {
   IoSparklesOutline,
   IoSaveOutline,
   IoTrashOutline,
+  IoAddOutline,
 } from "react-icons/io5";
 import { type Entry, type FullSchema } from "../../../schemas/schema";
 import style from "./CourseSchemaTab.module.css";
@@ -25,6 +26,9 @@ export default function CourseSchemaTab2({ course }: Props) {
   const [selectedEntry, setSelectedEntry] = useState<Entry | null>(null);
   const [loading, setLoading] = useState(true);
   const [aiPrompt, setAiPrompt] = useState("");
+  const [editingType, setEditingType] = useState(false);
+  const [typeInput, setTypeInput] = useState(""); // valor del input mientras editas
+  const [customTypes, setCustomTypes] = useState<string[]>([]); // para nuevos tipos
 
   useEffect(() => {
     const loadSchema = async () => {
@@ -52,21 +56,43 @@ export default function CourseSchemaTab2({ course }: Props) {
   }, [course.uuid]);
 
   const handleDragEnd = (result: DropResult) => {
-    const { source, destination } = result;
+    const { source, destination, type } = result;
     if (!destination || !schema) return;
 
     const newSchema = { ...schema };
-    const category = newSchema.category_list.find(
-      (cat) => cat.uuid === source.droppableId
-    );
-    if (!category) return;
 
-    const [movedEntry] = category.entry_list.splice(source.index, 1);
-    category.entry_list.splice(destination.index, 0, movedEntry);
-    category.entry_list = category.entry_list.map((entry, idx) => ({
-      ...entry,
-      position: idx,
-    }));
+    if (type === "CATEGORY") {
+      // mover categoría
+      const [movedCat] = newSchema.category_list.splice(source.index, 1);
+      newSchema.category_list.splice(destination.index, 0, movedCat);
+      newSchema.category_list = newSchema.category_list.map((cat, idx) => ({
+        ...cat,
+        position: idx,
+      }));
+    } else if (type === "ENTRY") {
+      // mover entry (intra o inter-categoría)
+      const sourceCat = newSchema.category_list.find(
+        (c) => c.uuid === source.droppableId
+      );
+      const destCat = newSchema.category_list.find(
+        (c) => c.uuid === destination.droppableId
+      );
+      if (!sourceCat || !destCat) return;
+
+      const [movedEntry] = sourceCat.entry_list.splice(source.index, 1);
+      movedEntry.category_uuid = destCat.uuid!; // actualizar categoría si cambió
+      destCat.entry_list.splice(destination.index, 0, movedEntry);
+
+      // recalcular posiciones
+      sourceCat.entry_list = sourceCat.entry_list.map((en, idx) => ({
+        ...en,
+        position: idx,
+      }));
+      destCat.entry_list = destCat.entry_list.map((en, idx) => ({
+        ...en,
+        position: idx,
+      }));
+    }
 
     setSchema(newSchema);
   };
@@ -139,6 +165,93 @@ export default function CourseSchemaTab2({ course }: Props) {
     }
   };
 
+  const saveType = (value: string) => {
+    if (!value.trim()) {
+      setEditingType(false);
+      return;
+    }
+
+    let newType = value.trim();
+
+    // Si no es topic ni assignment, lo añadimos a customTypes
+    if (!["topic", "assignment"].includes(newType.toLowerCase())) {
+      setCustomTypes((prev) => [...prev, newType]);
+    }
+
+    // Actualizamos el selectedEntry
+    if (selectedEntry) {
+      setSelectedEntry({ ...selectedEntry, entry_type: newType });
+    }
+
+    // Actualizamos el schema
+    if (schema && selectedEntry) {
+      const newSchema = { ...schema };
+      const cat = newSchema.category_list.find(
+        (c) => c.uuid === selectedEntry.category_uuid
+      );
+      const ent = cat?.entry_list.find((en) => en.uuid === selectedEntry.uuid);
+      if (ent) ent.entry_type = newType;
+      setSchema(newSchema);
+    }
+
+    setEditingType(false);
+  };
+
+  const addCategory = () => {
+    if (!schema) return;
+
+    const newCatUuid = "cat-" + Date.now();
+    const newEntryUuid = "entry-" + Date.now();
+
+    const newCategory = {
+      name: "Nueva Categoría",
+      position: schema.category_list.length,
+      schema_uuid: schema.uuid,
+      uuid: newCatUuid,
+      entry_list: [
+        {
+          name: "Nuevo Entry",
+          body: "",
+          context: "",
+          entry_type: "topic",
+          position: 0,
+          category_uuid: newCatUuid,
+          uuid: newEntryUuid,
+        },
+      ],
+    };
+
+    setSchema({
+      ...schema,
+      category_list: [...schema.category_list, newCategory],
+    });
+
+    // Selecciona automáticamente el entry recién creado
+    setSelectedEntry(newCategory.entry_list[0]);
+  };
+
+  const addEntry = (categoryUuid: string) => {
+    if (!schema) return;
+
+    const cat = schema.category_list.find((c) => c.uuid === categoryUuid);
+    if (!cat) return;
+
+    const newEntryUuid = "entry-" + Date.now();
+    const newEntry: Entry = {
+      name: "Nuevo Entry",
+      body: "",
+      context: "",
+      entry_type: "topic",
+      position: cat.entry_list.length,
+      category_uuid: categoryUuid,
+      uuid: newEntryUuid,
+    };
+
+    cat.entry_list.push(newEntry);
+
+    setSchema({ ...schema });
+  };
+
   if (loading) return <p>Cargando esquema...</p>;
 
   return (
@@ -176,152 +289,225 @@ export default function CourseSchemaTab2({ course }: Props) {
           <div className={style.schemaPanel}>
             <h3 className={style.panelTitle}>Esquema del Curso</h3>
             <DragDropContext onDragEnd={handleDragEnd}>
-              {schema?.category_list
-                .sort((a, b) => a.position - b.position)
-                .map((category) => (
-                  <div key={category.uuid} className={style.category}>
-                    <div className={style.categoryHeader}>
-                      <IoArrowDownCircleOutline
-                        className={style.categoryIcon}
-                      />
-                      <input
-                        className={style.categoryName}
-                        value={category.name}
-                        onChange={(e) => {
-                          const newSchema = { ...schema };
-                          const cat = newSchema.category_list.find(
-                            (c) => c.uuid === category.uuid
-                          );
-                          if (cat) cat.name = e.target.value;
-                          setSchema(newSchema);
-                        }}
-                      />
-                      <IoTrashOutline
-                        className={style.trashIcon}
-                        onClick={() => {
-                          const newSchema = { ...schema };
-                          newSchema.category_list =
-                            newSchema.category_list.filter(
-                              (c) => c.uuid !== category.uuid
-                            );
-                          setSchema(newSchema);
-                          if (
-                            selectedEntry &&
-                            selectedEntry.category_uuid === category.uuid
-                          ) {
-                            setSelectedEntry(null);
-                          }
-                        }}
-                      />
-                    </div>
-
-                    <Droppable droppableId={category.uuid!}>
-                      {(provided) => (
-                        <div
-                          className={style.entriesList}
-                          {...provided.droppableProps}
-                          ref={provided.innerRef}
+              <Droppable droppableId="categories" type="CATEGORY">
+                {(provided) => (
+                  <div ref={provided.innerRef} {...provided.droppableProps}>
+                    {schema?.category_list
+                      .sort((a, b) => a.position - b.position)
+                      .map((category, index) => (
+                        <Draggable
+                          key={category.uuid}
+                          draggableId={category.uuid!}
+                          index={index}
                         >
-                          {category.entry_list
-                            .sort((a, b) => a.position - b.position)
-                            .map((entry, index) => (
-                              <Draggable
-                                key={entry.uuid}
-                                draggableId={entry.uuid!}
-                                index={index}
+                          {(provided, snapshot) => {
+                            const item = (
+                              <div
+                                key={category.uuid}
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                className={style.category}
                               >
-                                {(provided, snapshot) => {
-                                  const item = (
+                                <div
+                                  {...provided.dragHandleProps}
+                                  className={style.categoryHeader}
+                                >
+                                  <IoArrowDownCircleOutline
+                                    className={style.categoryIcon}
+                                  />
+                                  <input
+                                    className={style.categoryName}
+                                    value={category.name}
+                                    onChange={(e) => {
+                                      const newSchema = { ...schema };
+                                      const cat = newSchema.category_list.find(
+                                        (c) => c.uuid === category.uuid
+                                      );
+                                      if (cat) cat.name = e.target.value;
+                                      setSchema(newSchema);
+                                    }}
+                                  />
+                                  <IoAddOutline
+                                    className={`${style.addEntryIcon} ${style.addCategoryIcon}`}
+                                    onClick={addCategory}
+                                  />
+                                  <IoTrashOutline
+                                    className={style.trashIcon}
+                                    onClick={() => {
+                                      const newSchema = { ...schema };
+                                      newSchema.category_list =
+                                        newSchema.category_list.filter(
+                                          (c) => c.uuid !== category.uuid
+                                        );
+                                      setSchema(newSchema);
+                                      if (
+                                        selectedEntry &&
+                                        selectedEntry.category_uuid ===
+                                          category.uuid
+                                      ) {
+                                        setSelectedEntry(null);
+                                      }
+                                    }}
+                                  />
+                                </div>
+
+                                <Droppable
+                                  droppableId={category.uuid!}
+                                  type="ENTRY"
+                                >
+                                  {(provided) => (
                                     <div
+                                      className={style.entriesList}
+                                      {...provided.droppableProps}
                                       ref={provided.innerRef}
-                                      {...provided.draggableProps}
-                                      {...provided.dragHandleProps}
-                                      className={`${style.entryItem} ${
-                                        selectedEntry?.uuid === entry.uuid
-                                          ? style.selected
-                                          : ""
-                                      } ${
-                                        snapshot.isDragging
-                                          ? style.dragging
-                                          : ""
-                                      }`}
-                                      onClick={() => handleSelectEntry(entry)}
                                     >
-                                      {getIcon(entry.entry_type)}
-                                      <input
-                                        className={style.entryName}
-                                        value={entry.name}
-                                        onChange={(e) => {
-                                          const newSchema = { ...schema! };
-                                          const cat =
-                                            newSchema.category_list.find(
-                                              (c) => c.uuid === category.uuid
-                                            );
-                                          const ent = cat?.entry_list.find(
-                                            (en) => en.uuid === entry.uuid
-                                          );
-                                          if (ent) ent.name = e.target.value;
-                                          setSchema(newSchema);
+                                      {category.entry_list
+                                        .sort((a, b) => a.position - b.position)
+                                        .map((entry, index) => (
+                                          <Draggable
+                                            key={entry.uuid}
+                                            draggableId={entry.uuid!}
+                                            index={index}
+                                          >
+                                            {(provided, snapshot) => {
+                                              const item = (
+                                                <div
+                                                  ref={provided.innerRef}
+                                                  {...provided.draggableProps}
+                                                  {...provided.dragHandleProps}
+                                                  className={`${
+                                                    style.entryItem
+                                                  } ${
+                                                    selectedEntry?.uuid ===
+                                                    entry.uuid
+                                                      ? style.selected
+                                                      : ""
+                                                  } ${
+                                                    snapshot.isDragging
+                                                      ? style.dragging
+                                                      : ""
+                                                  }`}
+                                                  onClick={() =>
+                                                    handleSelectEntry(entry)
+                                                  }
+                                                >
+                                                  {getIcon(entry.entry_type)}
+                                                  <input
+                                                    className={style.entryName}
+                                                    value={entry.name}
+                                                    onChange={(e) => {
+                                                      const newSchema = {
+                                                        ...schema!,
+                                                      };
+                                                      const cat =
+                                                        newSchema.category_list.find(
+                                                          (c) =>
+                                                            c.uuid ===
+                                                            category.uuid
+                                                        );
+                                                      const ent =
+                                                        cat?.entry_list.find(
+                                                          (en) =>
+                                                            en.uuid ===
+                                                            entry.uuid
+                                                        );
+                                                      if (ent)
+                                                        ent.name =
+                                                          e.target.value;
+                                                      setSchema(newSchema);
 
-                                          if (
-                                            selectedEntry?.uuid ===
-                                              entry.uuid &&
-                                            ent
-                                          ) {
-                                            setSelectedEntry({
-                                              uuid: ent.uuid!,
-                                              name: ent.name!,
-                                              body: ent.body || "",
-                                              context: ent.context || "",
-                                              entry_type: ent.entry_type!,
-                                              position: ent.position!,
-                                              category_uuid: ent.category_uuid!,
-                                            });
-                                          }
-                                        }}
-                                      />
-                                      <span className={style.entryBadge}>
+                                                      if (
+                                                        selectedEntry?.uuid ===
+                                                          entry.uuid &&
+                                                        ent
+                                                      ) {
+                                                        setSelectedEntry({
+                                                          uuid: ent.uuid!,
+                                                          name: ent.name!,
+                                                          body: ent.body || "",
+                                                          context:
+                                                            ent.context || "",
+                                                          entry_type:
+                                                            ent.entry_type!,
+                                                          position:
+                                                            ent.position!,
+                                                          category_uuid:
+                                                            ent.category_uuid!,
+                                                        });
+                                                      }
+                                                    }}
+                                                  />
+                                                  {/* <span className={style.entryBadge}>
                                         {entry.entry_type}
-                                      </span>
-                                      <IoTrashOutline
-                                        className={style.trashIcon}
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          const newSchema = { ...schema! };
-                                          const cat =
-                                            newSchema.category_list.find(
-                                              (c) => c.uuid === category.uuid
-                                            );
-                                          if (cat)
-                                            cat.entry_list =
-                                              cat.entry_list.filter(
-                                                (en) => en.uuid !== entry.uuid
+                                      </span> */}
+                                                  <IoAddOutline
+                                                    className={
+                                                      style.addEntryIcon
+                                                    }
+                                                    onClick={(e) => {
+                                                      e.stopPropagation();
+                                                      addEntry(category.uuid!);
+                                                    }}
+                                                  />
+
+                                                  <IoTrashOutline
+                                                    className={style.trashIcon}
+                                                    onClick={(e) => {
+                                                      e.stopPropagation();
+                                                      const newSchema = {
+                                                        ...schema!,
+                                                      };
+                                                      const cat =
+                                                        newSchema.category_list.find(
+                                                          (c) =>
+                                                            c.uuid ===
+                                                            category.uuid
+                                                        );
+                                                      if (cat)
+                                                        cat.entry_list =
+                                                          cat.entry_list.filter(
+                                                            (en) =>
+                                                              en.uuid !==
+                                                              entry.uuid
+                                                          );
+                                                      setSchema(newSchema);
+                                                      if (
+                                                        selectedEntry?.uuid ===
+                                                        entry.uuid
+                                                      )
+                                                        setSelectedEntry(null);
+                                                    }}
+                                                  />
+                                                </div>
                                               );
-                                          setSchema(newSchema);
-                                          if (
-                                            selectedEntry?.uuid === entry.uuid
-                                          )
-                                            setSelectedEntry(null);
-                                        }}
-                                      />
+
+                                              // Renderizar en portal cuando está arrastrando
+                                              if (snapshot.isDragging) {
+                                                return createPortal(
+                                                  item,
+                                                  document.body
+                                                );
+                                              }
+
+                                              return item;
+                                            }}
+                                          </Draggable>
+                                        ))}
+                                      {provided.placeholder}
                                     </div>
-                                  );
-
-                                  // Renderizar en portal cuando está arrastrando
-                                  if (snapshot.isDragging) {
-                                    return createPortal(item, document.body);
-                                  }
-
-                                  return item;
-                                }}
-                              </Draggable>
-                            ))}
-                          {provided.placeholder}
-                        </div>
-                      )}
-                    </Droppable>
+                                  )}
+                                </Droppable>
+                              </div>
+                            );
+                            if (snapshot.isDragging)
+                              return createPortal(item, document.body);
+                            return item;
+                          }}
+                        </Draggable>
+                      ))}
                   </div>
-                ))}
+                )}
+              </Droppable>
             </DragDropContext>
           </div>
 
@@ -338,15 +524,49 @@ export default function CourseSchemaTab2({ course }: Props) {
               <div className={style.editorContent}>
                 <div className={style.selectedHeader}>
                   <h4>{selectedEntry.name}</h4>
-                  <span
-                    className={`${style.typeBadge} ${
-                      selectedEntry.entry_type === "topic"
-                        ? style.topic
-                        : style.assignment
-                    }`}
-                  >
-                    {selectedEntry.entry_type}
-                  </span>
+                  {editingType ? (
+                    <input
+                      className={style.typeBadgeInput}
+                      value={typeInput}
+                      onChange={(e) => setTypeInput(e.target.value)}
+                      onBlur={() => saveType(typeInput)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") saveType(typeInput);
+                        if (e.key === "Escape") setEditingType(false);
+                      }}
+                      autoFocus
+                      list="entryTypes"
+                    />
+                  ) : (
+                    <span
+                      className={`${style.typeBadge} ${
+                        selectedEntry.entry_type === "topic"
+                          ? style.topic
+                          : selectedEntry.entry_type === "assignment"
+                          ? style.assignment
+                          : style.customType
+                      }`}
+                      onClick={() => {
+                        setTypeInput(selectedEntry.entry_type);
+                        setEditingType(true);
+                      }}
+                    >
+                      {selectedEntry.entry_type}
+                    </span>
+                  )}
+
+                  <datalist id="entryTypes">
+                    <option value="topic" />
+                    <option value="assignment" />
+                    {customTypes.map((t) => (
+                      <option key={t} value={t} />
+                    ))}
+                  </datalist>
+
+                  <datalist id="entryTypes">
+                    <option value="topic" />
+                    <option value="assignment" />
+                  </datalist>
                 </div>
 
                 <div className={style.editorField}>
