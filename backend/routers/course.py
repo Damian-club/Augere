@@ -32,6 +32,52 @@ def create_course(
 ) -> CourseOut:
     return s_create_course(course_create, user=user, db=db)
 
+@router.get(
+    "/enrolled-courses", summary="Listar mis cursos", response_model=list[PublicSummaryCourseOut]
+)
+def list_my_courses(user: User = Depends(get_current_user), db=Depends(get_db)) -> list[PublicSummaryCourseOut]:
+    return s_list_user_enrolled_courses(user, db=db)
+
+@router.get(
+    "/tutored-courses",
+    summary="Listar cursos que tutoreo",
+    response_model=list[PrivateSummaryCourseOut],
+)
+def list_tutored_courses(
+    user: User = Depends(get_current_user),
+) -> list[PrivateSummaryCourseOut]:
+    return s_list_user_tutored_courses(user)
+
+@router.get(
+    "/overview",
+    summary="Obtener resumen de los cursos del usuario",
+    response_model=OverviewOut,
+)
+def get_overview(
+    user: User = Depends(get_current_user), db=Depends(get_db)
+) -> OverviewOut:
+    return s_get_overview(user, db=db)
+
+@router.get(
+    "/summary/public/{uuid}",
+    summary="Obtener resumen publico de un curso",
+    response_model=PublicSummaryCourseOut,
+)
+def get_public_summary_course(
+    uuid: UUID, user: User = Depends(get_current_user), db=Depends(get_db)
+) -> PrivateSummaryCourseOut:
+    return s_get_public_summary_course(uuid, user=user, db=db)
+
+@router.get(
+    "/summary/private/{uuid}",
+    summary="Obtener resumen privado de un curso",
+    response_model=PrivateSummaryCourseOut,
+)
+def get_private_summary_course(
+    uuid: UUID, user: User = Depends(get_current_user), db=Depends(get_db)
+) -> PrivateSummaryCourseOut:
+    return s_get_private_summary_course(uuid, user=user, db=db)
+
 @router.get("/{uuid}", summary="Obtener un curso por UUID", response_model=CourseOut)
 def get_course(uuid: UUID, user: User = Depends(get_current_user), db=Depends(get_db)) -> CourseOut:
     return s_get_course(uuid, user=user, db=db)
@@ -50,49 +96,3 @@ def delete_course(
     uuid: UUID, user: User = Depends(get_current_user), db=Depends(get_db)
 ) -> Message:
     return s_delete_course(uuid, user=user, db=db)
-
-@router.get(
-    "/enrolled-courses", summary="Listar mis cursos", response_model=list[PublicSummaryCourseOut]
-)
-def list_my_courses(user: User = Depends(get_current_user), db=Depends(get_db)) -> list[PublicSummaryCourseOut]:
-    return s_list_user_enrolled_courses(user, db=db)
-
-@router.get(
-    "/tutored-courses",
-    summary="Listar cursos que tutoreo",
-    response_model=list[PrivateSummaryCourseOut],
-)
-def list_tutored_courses(
-    user: User = Depends(get_current_user),
-) -> list[PrivateSummaryCourseOut]:
-    return s_list_user_tutored_courses(user)
-
-@router.get(
-    "/summary/private/{uuid}",
-    summary="Obtener resumen privado de un curso",
-    response_model=PrivateSummaryCourseOut,
-)
-def get_private_summary_course(
-    uuid: UUID, user: User = Depends(get_current_user), db=Depends(get_db)
-) -> PrivateSummaryCourseOut:
-    return s_get_private_summary_course(uuid, user=user, db=db)
-
-@router.get(
-    "/summary/public/{uuid}",
-    summary="Obtener resumen publico de un curso",
-    response_model=PublicSummaryCourseOut,
-)
-def get_public_summary_course(
-    uuid: UUID, user: User = Depends(get_current_user), db=Depends(get_db)
-) -> PrivateSummaryCourseOut:
-    return s_get_public_summary_course(uuid, user=user, db=db)
-
-@router.get(
-    "/overview",
-    summary="Obtener resumen de los cursos del usuario",
-    response_model=OverviewOut,
-)
-def get_overview(
-    user: User = Depends(get_current_user), db=Depends(get_db)
-) -> OverviewOut:
-    return s_get_overview(user, db=db)

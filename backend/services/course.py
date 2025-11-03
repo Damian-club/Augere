@@ -270,5 +270,6 @@ def get_overview(user: User, db: Session) -> OverviewOut:
     return OverviewOut(
         completion_percentage=completion_percentage,
         completed_count=completed_count,
+        total_count=total_count,
         course_list=course_list
     )
