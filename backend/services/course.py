@@ -22,7 +22,7 @@ from math import floor
 # Util
 
 def _get_percentage(total: int, count: int) -> float:
-    ratio: float = count / total
+    ratio: float = count / total if total != 0 else 0.0
     return _floor_two_decimal_places(ratio)
 
 def _floor_two_decimal_places(n: float) -> float:
@@ -82,7 +82,7 @@ def _map_course_out_summary(course: Course, db: Session) -> CourseOutSummary:
             )
         )
     
-    average_completion_percentage: float = _floor_two_decimal_places(completion_sum / student_count)
+    average_completion_percentage: float = _floor_two_decimal_places(completion_sum / student_count if student_count != 0 else 0.0)
 
     return CourseOutSummary(
         uuid=course.uuid,
