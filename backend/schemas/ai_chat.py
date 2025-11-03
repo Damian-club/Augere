@@ -10,20 +10,23 @@ class Author(str, Enum):
     AI = "ai"
 
 
-class AIChatBase(BaseModel):
-    progress_uuid: UUID = Field(...)
+
+class AIChatPreBase(BaseModel):
     author: Author = Field(...)
     content: str = Field(...)
 
+class AIChatBase(AIChatPreBase):
+    progress_uuid: UUID = Field(...)
 
 class AIChatCreate(AIChatBase):
     pass
 
+class AIChatCreateSimple(AIChatPreBase):
+    pass
 
 class AIChatOut(AIChatBase):
     uuid: UUID = Field(...)
     creation_date: datetime = Field(...)
-
 
 class AIChatUpdate(BaseModel):
     progress_uuid: Optional[UUID] = None
