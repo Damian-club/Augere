@@ -59,7 +59,6 @@ def create_ai_chat(ai_chat_create: AIChatCreate, db: Session) -> AIChatOut:
 def update_ai_chat(uuid: UUID, ai_chat_update: AIChatUpdate, db: Session) -> AIChatOut:
     ai_chat = _get_ai_chat_by_uuid(uuid, db=db)
 
-    # ✅ corrigido: actualizar atributos, no reemplazar objeto
     if ai_chat_update.progress_uuid is not None:
         ai_chat.progress_uuid = ai_chat_update.progress_uuid
     if ai_chat_update.author is not None:
