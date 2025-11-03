@@ -1,4 +1,4 @@
-from schemas.ai_chat import AIChatCreate, AIChatOut, AIChatUpdate
+from schemas.ai_chat import AIChatCreate, AIChatOut, AIChatUpdate, AIChatCreateSimple
 from schemas.message import Message
 from models.ai_chat import AIChat
 from models.progress import Progress
@@ -94,3 +94,13 @@ def get_ai_chat_by_progress(progress_uuid: UUID, db: Session) -> list[AIChatOut]
     progress: Progress = _get_progress_by_uuid(progress_uuid, db=db)
 
     return [map_model_to_schema(ai_chat) for ai_chat in progress.ai_chat_records]
+
+def create_ai_chat_simple(progress_uuid: UUID, ai_chat_create_simple: AIChatCreateSimple, db: Session) -> AIChatOut:
+    return create_ai_chat(
+        AIChatCreate(
+            author=ai_chat_create_simple.author,
+            content=ai_chat_create_simple.content,
+            progress_uuid=progress_uuid
+        ),
+        db=db
+    )
