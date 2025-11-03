@@ -96,7 +96,7 @@ export default function CoursePage() {
             <CourseCard
               key={c.uuid}
               title={c.title}
-              author={`Por: ${c.tutor_name || "Tú"}`}
+              author={`Por: ${"Tú"}`}
               description={c.description}
               progress={30}
               color={pastelGradientFromString(c.title)}
@@ -121,7 +121,7 @@ export default function CoursePage() {
             <CourseCard
               key={c.uuid}
               title={c.title}
-              author={`Por: ${c.tutor_name || "Tutor"}`}
+              author={`Por: ${c.tutor.name || "Tutor"}`}
               description={c.description}
               progress={0}
               color={pastelGradientFromString(c.title)}

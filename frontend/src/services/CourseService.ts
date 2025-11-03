@@ -49,7 +49,7 @@ export class CourseService {
     logo_path?: string;
     invitation_code?: string;
   }): Promise<Course> {
-    const res = await fetch(`${this.baseUrl}`, {
+    const res = await fetch(`${this.baseUrl}/${data.uuid}`, {
       method: "PUT",
       headers: this.getHeaders(),
       body: JSON.stringify(data),

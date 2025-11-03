@@ -18,7 +18,7 @@ export class StudentService {
   async joinCourse(invitationCode: string) {
     try {
       const res = await fetch(
-        `${this.baseUrl}/join?invitation_code=${encodeURIComponent(
+        `${this.baseUrl}/join/${encodeURIComponent(
           invitationCode
         )}`,
         {
