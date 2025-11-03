@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends
-from schemas.course import CourseCreate, CourseOut, CourseUpdate, CourseOutUser
+from schemas.course import CourseCreate, CourseOut, CourseUpdate, CourseOutSummary
 from uuid import UUID
 from schemas.message import Message
 from models.user import User
@@ -35,9 +35,9 @@ def update_course(
 
 
 @router.get(
-    "/enrolled-courses", summary="Listar mis cursos", response_model=list[CourseOutUser]
+    "/enrolled-courses", summary="Listar mis cursos", response_model=list[CourseOutSummary]
 )
-def list_my_courses(user: User = Depends(get_current_user), db=Depends(get_db)) -> list[CourseOutUser]:
+def list_my_courses(user: User = Depends(get_current_user), db=Depends(get_db)) -> list[CourseOutSummary]:
     return s_list_user_enrolled_courses(user, db=db)
 
 
@@ -55,11 +55,11 @@ def list_tutored_courses(
 @router.get(
     "/user/{uuid}",
     summary="Obtener un curso de usuario por UUID",
-    response_model=CourseOutUser,
+    response_model=CourseOutSummary,
 )
 def get_course_user(
     uuid: UUID, user: User = Depends(get_current_user), db=Depends(get_db)
-) -> CourseOutUser:
+) -> CourseOutSummary:
     return s_get_course_user(uuid, user=user, db=db)
 
 

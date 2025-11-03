@@ -1,16 +1,33 @@
-from schemas.course import CourseCreate, CourseOut, CourseUpdate, CourseOutUser
+from schemas.course import (
+    CourseCreate,
+    CourseOut,
+    CourseUpdate,
+    CourseOutSummary,
+    SummaryStudentProgress,
+    SummaryStudent
+)
 from schemas.message import Message
 from models.course import Course
 from models.user import User
 from models.student import Student
+from models.progress import Progress
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from services.auth import map_model_to_schema as user_map_model_to_schema
 from schemas.user import UserOut
 from uuid import UUID, uuid4
+from math import floor
 
 
 # Util
+
+def _get_percentage(total: int, count: int) -> float:
+    ratio: float = count / total
+    return _floor_two_decimal_places(ratio)
+
+def _floor_two_decimal_places(n: float) -> float:
+    return floor(n * 100) / 100
+
 def _get_course_by_uuid(uuid: UUID, db: Session) -> Course:
     try:
         course: Course = db.query(Course).filter(Course.uuid == uuid).first()
@@ -21,10 +38,53 @@ def _get_course_by_uuid(uuid: UUID, db: Session) -> Course:
     return course
 
 
-def map_user_out_schema(course: Course, user: User) -> CourseOutUser:
-    tutor_schema: UserOut  = user_map_model_to_schema(user)
+def _map_course_out_summary(course: Course, db: Session) -> CourseOutSummary:
+    tutor: User = course.tutor
+    if not tutor:
+        raise HTTPException(status_code=404, detail="No se encontró al tutor")
+    tutor_schema: UserOut  = user_map_model_to_schema(tutor)
 
-    return CourseOutUser(
+    student_model_list: list[Student] = course.students
+    user_model_list: list[User] = [student.user for student in student_model_list]
+
+    student_count: int = len(student_model_list)
+
+    student_list: list[SummaryStudent] = []
+
+    completion_sum: float = 0.0
+    for student, user in zip(student_model_list, user_model_list):
+        progress_records: list[Progress] = student.progress_records
+        progress_list: list[SummaryStudentProgress] = []
+
+        progress_count: int = len(progress_records)
+        progress_true_count: int = 0
+
+        for progress in progress_records:
+            is_finished = progress.finished
+            if is_finished:
+                progress_true_count += 1
+
+            progress_list.append(
+                SummaryStudentProgress(
+                    entry_uuid=progress.entry_uuid,
+                    finished=is_finished
+                )
+            )
+        
+        student_completion_percentage: float = _get_percentage(progress_count, progress_true_count)
+        completion_sum += student_completion_percentage
+
+        student_list.append(
+            SummaryStudent(
+                name=user.name,
+                completion_percentage=student_completion_percentage,
+                progress_list=progress_list
+            )
+        )
+    
+    average_completion_percentage: float = _floor_two_decimal_places(completion_sum / student_count)
+
+    return CourseOutSummary(
         uuid=course.uuid,
         title=course.title,
         description=course.description,
@@ -32,6 +92,9 @@ def map_user_out_schema(course: Course, user: User) -> CourseOutUser:
         invitation_code=course.invitation_code,
         creation_date=course.creation_date,
         tutor=tutor_schema,
+        completion_percentage=average_completion_percentage,
+        student_list=student_list,
+        student_count=student_count
     )
 
 
@@ -136,7 +199,7 @@ def get_course_user(uuid: UUID, user: User, db: Session) -> CourseOut:
         raise HTTPException(status_code=404, detail="ID del tutor no encontrado")
 
 
-    return map_user_out_schema(course, tutor)
+    return _map_course_out_summary(course, db=db)
 
 
 def list_user_tutored_courses(user: User) -> list[CourseOut]:
@@ -145,18 +208,17 @@ def list_user_tutored_courses(user: User) -> list[CourseOut]:
     return [map_model_to_schema(course) for course in courses]
 
 
-def list_user_enrolled_courses(user: User, db: Session) -> list[CourseOutUser]:
+def list_user_enrolled_courses(user: User, db: Session) -> list[CourseOutSummary]:
     student_records: list[Student] = user.student_records if user else []
 
     result: list[CourseOut] = []
     for student in student_records:
         course: Course = student.course
-        tutor: User = db.query(User).filter(User.uuid == course.tutor_uuid).first()
 
         result.append(
-            map_user_out_schema(
-                course=course,
-                user=tutor
+            _map_course_out_summary(
+                course,
+                db=db
             )
         )
 

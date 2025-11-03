@@ -22,7 +22,7 @@ class Student(Base):
         UUID(as_uuid=True), ForeignKey("course.uuid"), nullable=False
     )
 
-    student: Mapped["User"] = relationship(
+    user: Mapped["User"] = relationship(
         "User", back_populates="student_records", foreign_keys=[student_uuid]
     )
     course: Mapped["Course"] = relationship(
