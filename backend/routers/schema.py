@@ -52,10 +52,6 @@ def r_get_schema(uuid: UUID, db=Depends(get_db)) -> SchemaOut:
 def r_delete_schema(uuid: UUID, db=Depends(get_db)) -> Message:
     return delete_schema(uuid, db=db)
 
-@router.get("/by_course/{course_uuid}", summary="Obtener un esquema por curso", response_model=SchemaOut)
-def r_get_schema_by_course(course_uuid: UUID, db = Depends(get_db)) -> FullSchemaOut:
-    return get_schema_by_course(course_uuid, db=db)
-
 @router.get(
     "/full/{uuid}",
     summary="Obtener un esquema completo por UUID",
@@ -76,3 +72,7 @@ def r_create_full_schema(full_schema_create: FullSchemaCreate, db=Depends(get_db
 @router.get("/full/by_course/{course_uuid}", summary="Obtener un esquema completo por curso", response_model=FullSchemaOut)
 def r_get_schema_by_course(course_uuid: UUID, db = Depends(get_db)) -> FullSchemaOut:
     return get_full_schema_by_course(course_uuid, db=db)
+
+@router.get("/by_course/{course_uuid}", summary="Obtener un esquema por curso", response_model=SchemaOut)
+def r_get_schema_by_course(course_uuid: UUID, db = Depends(get_db)) -> FullSchemaOut:
+    return get_schema_by_course(course_uuid, db=db)
