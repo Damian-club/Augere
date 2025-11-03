@@ -48,7 +48,7 @@ def get_full_schema(uuid: UUID, db=Depends(get_db)) -> FullSchemaOut:
 
 
 @router.post(
-    "/full/{uuid}",
+    "/full/",
     summary="Crear un nuevo esquema completo",
     response_model=FullSchemaOut,
 )
