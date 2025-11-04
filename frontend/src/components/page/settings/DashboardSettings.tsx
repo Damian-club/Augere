@@ -3,7 +3,7 @@ import CourseCard from "../../general/course/CourseCard";
 import styles from "./DashboardSettings.module.css";
 import { IoCloudUploadOutline } from "react-icons/io5";
 import { authService, courseService } from "../../../services";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { pastelGradientFromString } from "../../../utils/colors";
 import type { Course } from "../../../schemas/course";
 import toast from "react-hot-toast";
@@ -21,6 +21,30 @@ export default function DashboardSettings() {
   const [createdCourses, setCreatedCourses] = useState<Course[]>([]);
   const [loadingCourses, setLoadingCourses] = useState(true);
   const [configCourseId, setConfigCourseId] = useState<string | null>(null);
+
+
+  const hiddenFileInput = useRef<HTMLInputElement | null>(null);
+
+  const promptUpload = () => {
+    hiddenFileInput.current?.click();
+  };
+
+  const onFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const dataBase64 = reader.result;
+      console.log(dataBase64);
+      if (typeof dataBase64 != "string") return;
+      console.log(dataBase64);
+      setFormData((prev) => ({ ...prev, "avatar_path": dataBase64 }));
+    };
+
+    reader.readAsDataURL(file);
+  }
+
 
   // Cargar usuario actual
   useEffect(() => {
@@ -110,16 +134,17 @@ export default function DashboardSettings() {
 
   return (
     <div className={styles.settings}>
+      <input type="file" ref={hiddenFileInput} className={styles.hidden} onChange={onFileChange}/>
       <h1>Configuración</h1>
       <hr />
 
       <section className={styles.profile}>
         <div className={styles.photoSection}>
           <p>Tu foto de perfil</p>
-          <div className={styles.photoBox}>
+          <button className={styles.photoBox} onClick={promptUpload}>
             <IoCloudUploadOutline size={24} />
             <span>Actualiza tu foto de perfil</span>
-          </div>
+          </button>
           <p className={styles.uuid}>
             UUID: {user ? user.uuid : "Cargando UUID..."}
           </p>
@@ -158,13 +183,7 @@ export default function DashboardSettings() {
           </label>
           <label>
             Avatar
-            <input
-              type="text"
-              name="avatar_path"
-              value={formData.avatar_path}
-              onChange={handleChange}
-              placeholder="https://..."
-            />
+            <img src={formData.avatar_path} alt="" className={styles.image}/>
           </label>
         </div>
       </section>

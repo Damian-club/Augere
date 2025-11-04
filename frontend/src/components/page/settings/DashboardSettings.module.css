@@ -1,3 +1,7 @@
+.hidden {
+  display: none;
+}
+
 .settings {
   padding: 2rem;
 }
@@ -87,7 +91,7 @@
   color: #374151;
 }
 
-.inputs input {
+.inputs input, .image {
   margin-top: 0.4rem;
   padding: 0.7rem 0.8rem;
   border: 1px solid #e5e7eb;
@@ -95,6 +99,13 @@
   background: #f9fafb;
   font-size: 0.9rem;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  max-width: 25vw;
+}
+
+.image {
+  border-radius: 50%;
+  object-fit: cover;
+  aspect-ratio: 1 / 1;
 }
 
 .inputs input:focus {
