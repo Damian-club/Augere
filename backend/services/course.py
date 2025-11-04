@@ -311,5 +311,5 @@ def get_student_excel(uuid: UUID, db: Session):
     return StreamingResponse(
         stream,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": "attachment; filename=data.xlsx"}
+        headers={"Content-Disposition": "attachment; filename=Estudiantes.xlsx"}
     )
