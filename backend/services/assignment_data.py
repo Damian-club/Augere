@@ -1,10 +1,12 @@
 from services.progress import _get_progress_by_uuid
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
+from util.ai_agent import AIAgent
 from uuid import UUID
 # MODELS ------------------------------------------
 from models.assignment_data import AssignmentData
 from models.progress import Progress
+from models.schema_entry import SchemaEntry
 #--------------------------------------------------
 
 # SCHEMAS ------------------------------
@@ -15,6 +17,7 @@ from schemas.assignment_data import (
     AssignmentDataCreateSimple
 )
 from schemas.message import Message
+from schemas.ai_util import Prompt, PromptAssignmentData
 #---------------------------------------
 
 # Util
@@ -141,3 +144,31 @@ def get_assignment_data_by_progress(
         map_model_to_schema(assignment_data)
         for assignment_data in progress.assignment_data_records
     ]
+
+def answer_assignment_data(
+    progress_uuid: UUID,
+    prompt: Prompt,
+    db: Session,
+    client: AIAgent
+) -> AssignmentDataOut:
+    progress: Progress = _get_progress_by_uuid(progress_uuid, db=db)
+    entry: SchemaEntry = progress.entry
+    if not entry:
+        raise HTTPException(status_code=404, detail="No existe entrada de esquema")
+
+    prompt_assignment_data: PromptAssignmentData = client.generate_feedback(
+        prompt=prompt,
+        context=entry.context
+    )
+
+    assignment_data: AssignmentDataOut = create_assignment_data(
+        AssignmentDataCreate(
+            answer=prompt,
+            feedback=prompt_assignment_data.feedback,
+            success=prompt_assignment_data.success,
+            progress_uuid=progress_uuid
+        ),
+        db=db
+    )
+
+    return assignment_data

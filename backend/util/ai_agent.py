@@ -20,19 +20,21 @@ class AIAgent():
     def __init__(self, client: OpenAI):
         self.client: OpenAI = client
 
-    def generate_hint(self, prompt: str, context: str, ai_chat_out: list[AIChatOut]) -> str:
+    def generate_hint(self, prompt: str, context: str, ai_chat_out_list: list[AIChatOut]) -> str:
         message_hint: list[dict[str, str]] = [
             {"role": map_message_author(message.author), "content": message.content}
-            for message in ai_chat_out
-        ]
-        
+            for message in ai_chat_out_list
+        ] + [{"role": "user", "content": prompt}]
+
         try:
+            from openai.types.chat.chat_completion_message import ChatCompletionMessage
+
             response: ParsedChatCompletion[PromptSchemaFull] = self.client.beta.chat.completions.parse(
                 model=ai_agent_config.DEFAULT_MODEL,
                 messages=[
                     {"role": "developer", "content": prompts.HINT_PROMPT},
-                    *message_hint,
-                    {"role": "user", "content": f'Contexto: {context}\nMensaje: {prompt}'}
+                    {"role": "developer", "content": f"Contexto: {context}"},
+                    *message_hint
                 ]
             )
 
@@ -91,7 +93,7 @@ if __name__ == '__main__':
     hint: str = ai_agent.generate_hint(
         prompt="¿Como debo hacer una suma? No te entendi bien.",
         context="Objetivos: practicar sumas básicas de un dígito; desarrollar fluidez y aplicar descomposición si ayuda. Criterios: exactitud y claridad del procedimiento.",
-        ai_chat_out=[
+        ai_chat_out_list=[
             AIChatOut(
                 author=Author.AI,
                 content="¿Como puedo ayudarte?",
@@ -115,4 +117,5 @@ if __name__ == '__main__':
             ),
         ]
     )
-    print("hint", hint)
+
+    print("Salida: ", hint)

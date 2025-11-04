@@ -78,9 +78,9 @@ def r_get_schema_by_course(course_uuid: UUID, db: Session = Depends(get_db)) -> 
     return get_full_schema_by_course(course_uuid, db=db)
 
 @router.get("/by_course/{course_uuid}", summary="Obtener un esquema por curso", response_model=SchemaOut)
-def r_get_schema_by_course(course_uuid: UUID, db: Session = Depends(get_db)) -> FullSchemaOut:
+def r_get_schema_by_course(course_uuid: UUID, db: Session = Depends(get_db)) -> SchemaOut:
     return get_schema_by_course(course_uuid, db=db)
 
 @router.get("/full/by_course/{course_uuid}/prompt", summary="Generar un curso con IA", response_model=FullSchemaOut)
-def r_prompt_schema_by_course(course_uuid: UUID, prompt: Prompt, db: Session = Depends(get_db)) -> FullSchemaOut:
+def r_prompt_schema_by_course(course_uuid: UUID, prompt: Prompt, db: Session = Depends(get_db), client: AIAgent = Depends(get_ai_client)) -> FullSchemaOut:
     ...

@@ -1,6 +1,7 @@
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from uuid import UUID
+from util.ai_agent import AIAgent
 
 # SCHEMAS -----------------------------------------------
 from schemas.schema import (
@@ -9,10 +10,12 @@ from schemas.schema import (
     FullSchemaOut,
     FullSchemaCategoryOut,
     FullSchemaCreate,
+    FullSchemaCategoryCreate,
+    SchemaEntryCreateFull
 )
 from schemas.message import Message
-from schemas.schema_category import SchemaCategoryOut
 from schemas.schema_entry import SchemaEntryOut
+from schemas.ai_util import Prompt, PromptSchemaFull
 #-------------------------------------------------------
 
 # MODELS -------------------------------------------
@@ -20,7 +23,6 @@ from models.schema import Schema
 from models.schema_category import SchemaCategory
 from models.schema_entry import SchemaEntry
 from models.course import Course
-from models.user import User
 from models.student import Student
 from models.progress import Progress
 #---------------------------------------------------
@@ -127,7 +129,7 @@ def delete_schema(uuid: UUID, db: Session) -> Message:
     return Message(detail="Esquema eliminado correctamente")
 
 
-def create_schema_full(full_schema_create: FullSchemaCreate, db: Session) -> FullSchemaCategoryOut:
+def create_schema_full(full_schema_create: FullSchemaCreate, db: Session) -> FullSchemaOut:
     _delete_existing_schema_for_course(full_schema_create.course_uuid, db)
     schema: Schema = Schema(course_uuid=full_schema_create.course_uuid)
 
@@ -177,13 +179,13 @@ def create_schema_full(full_schema_create: FullSchemaCreate, db: Session) -> Ful
     return _map_schema_to_full_schema_out(schema=schema)
 
 
-def get_schema_full(uuid: UUID, db: Session) -> FullSchemaCategoryOut:
+def get_schema_full(uuid: UUID, db: Session) -> FullSchemaOut:
     schema: Schema = _get_schema_by_uuid(uuid, db)
 
     return _map_schema_to_full_schema_out(schema)
 
 
-def get_full_schema_by_course(course_uuid: UUID, db: Session) -> FullSchemaCategoryOut:
+def get_full_schema_by_course(course_uuid: UUID, db: Session) -> FullSchemaOut:
     schema: Schema = _get_schema_by_course_uuid(course_uuid, db=db)
 
     return _map_schema_to_full_schema_out(schema)
@@ -193,3 +195,31 @@ def get_schema_by_course(course_uuid: UUID, db: Session) -> SchemaOut:
     schema: Schema = _get_schema_by_course_uuid(course_uuid, db=db)
 
     return map_model_to_schema(schema)
+
+def prompt_schema_by_course(course_uuid: UUID, prompt: Prompt, db: Session, client: AIAgent) -> FullSchemaOut:
+    ai_schema: PromptSchemaFull = client.generate_schema(prompt)
+    ai_schema.category_list
+
+    return create_schema_full(
+        full_schema_create=FullSchemaCreate(
+            course_uuid=course_uuid,
+            category_list=[
+                FullSchemaCategoryCreate(
+                    name=ai_category.name,
+                    position=ai_category_idx,
+                    entry_list=[
+                        SchemaEntryCreateFull(
+                            name=ai_entry.name,
+                            body=ai_entry.body,
+                            context=ai_entry.context,
+                            entry_type=ai_entry.entry_type,
+                            position=ai_entry_idx
+                        )
+                        for ai_entry_idx, ai_entry in enumerate(ai_category.entry_list, start=1)
+                    ]
+                )
+                for ai_category_idx, ai_category in enumerate(ai_schema.category_list, start=1)
+            ]
+        ),
+        db=db
+    )

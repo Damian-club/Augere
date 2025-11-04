@@ -1,8 +1,11 @@
-from schemas.ai_chat import AIChatCreate, AIChatOut, AIChatUpdate, AIChatCreateSimple
+from schemas.ai_chat import AIChatCreate, AIChatOut, AIChatUpdate, AIChatCreateSimple, AIPromptOut
 from schemas.message import Message
-from models.ai_chat import AIChat
+from models.ai_chat import AIChat, Author
 from models.progress import Progress
+from models.schema_entry import SchemaEntry
+from schemas.ai_util import Prompt
 from services.progress import _get_progress_by_uuid
+from util.ai_agent import AIAgent
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from uuid import UUID
@@ -103,4 +106,42 @@ def create_ai_chat_simple(progress_uuid: UUID, ai_chat_create_simple: AIChatCrea
             progress_uuid=progress_uuid
         ),
         db=db
+    )
+
+
+
+def prompt_schema_by_course(progress_uuid: UUID, prompt: Prompt, db: Session, client: AIAgent) -> AIPromptOut:
+    progress: Progress = _get_progress_by_uuid(progress_uuid, db=db)
+    schema_entry: SchemaEntry = progress.entry
+    if not schema_entry:
+        raise HTTPException(status_code=404, detail="Schema Entry no fue encontrado")
+
+    user_message: AIChatOut = create_ai_chat(
+        AIChatCreate(
+            author=Author.USER,
+            content=prompt.prompt,
+            progress_uuid=progress_uuid
+        ),
+        db=db
+    )
+
+    chat_history: list[AIChatOut] = get_ai_chat_by_progress(progress_uuid, db=db)
+    ai_hint: str = client.generate_hint(
+        prompt=prompt,
+        context=schema_entry.context,
+        ai_chat_out_list=chat_history
+    )
+
+    ai_message: AIChatOut = create_ai_chat(
+        AIChatCreate(
+            author=Author.AI,
+            content=ai_hint,
+            progress_uuid=progress_uuid
+        ),
+        db=db
+    )
+
+    return AIPromptOut(
+        user=user_message,
+        ai=ai_message
     )

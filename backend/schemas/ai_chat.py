@@ -30,3 +30,7 @@ class AIChatUpdate(BaseModel):
     progress_uuid: Optional[UUID] = None
     author: Optional[Author] = None
     content: Optional[str] = None
+
+class AIPromptOut(BaseModel):
+    user: AIChatOut
+    ai: AIChatOut

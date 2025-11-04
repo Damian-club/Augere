@@ -29,7 +29,8 @@ from services.assignment_data import (
     get_assignment_data,
     update_assignment_data,
     get_assignment_data_by_progress,
-    create_assignment_data_simple
+    create_assignment_data_simple,
+    answer_assignment_data
 )
 #---------------------------------------
 
@@ -65,5 +66,5 @@ def r_create_assignment_data_by_progress(progress_uuid: UUID, assignment_data_cr
     return create_assignment_data_simple(progress_uuid, assignment_data_create_simple=assignment_data_create_simple, db=db)
 
 @router.post("/progress/{progress_uuid}/answer")
-def r_answer_assignment_data(progress_uuid: UUID, prompt: Prompt, db: Session = Depends(get_db)) -> AssignmentDataOut:
-    ...
+def r_answer_assignment_data(progress_uuid: UUID, prompt: Prompt, db: Session = Depends(get_db), client: AIAgent = Depends(get_ai_client)) -> AssignmentDataOut:
+    return answer_assignment_data(progress_uuid, prompt=prompt, db=db, client=client)
