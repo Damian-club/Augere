@@ -31,19 +31,19 @@ from services.ai_chat import (
 
 router = APIRouter(prefix='/ai_chat', tags=['AI Chat'])
 
-@router.post('/', response_model=AIChatOut)
+@router.post('/', response_model=AIChatOut, summary="Crear un chat de IA", description="Este servicio se utiliza para crear un chat de IA")
 def r_create_ai_chat(ai_chat_create: AIChatCreate, db: Session = Depends(get_db)) -> AIChatOut:
     return create_ai_chat(ai_chat_create, db=db)
 
-@router.get('/{uuid}', response_model=AIChatOut)
+@router.get('/{uuid}', response_model=AIChatOut, summary="", description="")
 def r_get_ai_chat(uuid: UUID, db: Session = Depends(get_db)) -> AIChatOut:
     return get_ai_chat(uuid, db=db)
 
-@router.put('/{uuid}', response_model=AIChatOut)
+@router.put('/{uuid}', response_model=AIChatOut, summary="", description="")
 def r_update_ai_chat(uuid: UUID, ai_chat_update: AIChatUpdate, db: Session = Depends(get_db)) -> AIChatOut:
     return update_ai_chat(uuid, ai_chat_update=ai_chat_update, db=db)
 
-@router.delete('/{uuid}', response_model=Message)
+@router.delete('/{uuid}', response_model=Message, summary="", description="")
 def r_delete_ai_chat(uuid: UUID, db: Session = Depends(get_db)) -> Message:
     return delete_ai_chat(uuid, db=db)
 
