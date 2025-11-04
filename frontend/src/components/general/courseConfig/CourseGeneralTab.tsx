@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { courseService } from "../../../services";
 import toast from "react-hot-toast";
 import styles from "./CourseGeneralTab.module.css";
@@ -21,6 +21,26 @@ export default function CourseGeneralTab({
     logo_path: course.logo_path || "",
     color: "#0000ff",
   });
+
+  const [stats, setStats] = useState({
+    student_count: 0,
+    completion_percentage: 0,
+  });
+
+  useEffect(() => {
+    const fetchCourseSummary = async () => {
+      try {
+        const data = await courseService.getPrivateSummary(course.uuid);
+        setStats({
+          student_count: data.student_count || 0,
+          completion_percentage: data.completion_percentage || 0,
+        });
+      } catch (err) {
+        console.error("Error al cargar resumen del curso:", err);
+      }
+    };
+    fetchCourseSummary();
+  }, [course.uuid]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -123,11 +143,13 @@ export default function CourseGeneralTab({
         </div>
         <div className={styles.infoRow}>
           <span className={styles.infoLabel}>Alumnos:</span>
-          <span className={styles.infoValue}>{0}</span>
+          <span className={styles.infoValue}>{stats.student_count}</span>
         </div>
         <div className={styles.infoRow}>
           <span className={styles.infoLabel}>Promedio progreso:</span>
-          <span className={styles.infoValue}>{"0%"}</span>
+          <span className={styles.infoValue}>
+            {stats.completion_percentage}%
+          </span>
         </div>
       </div>
 
