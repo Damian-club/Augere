@@ -22,7 +22,12 @@ async def start(instance: FastAPI):
     yield
 
 
-app = FastAPI(title="Backend de Augere", lifespan=start)
+app = FastAPI(
+    title="Backend de Augere",
+    description="Descripcion",
+    version="0.1.0",
+    lifespan=start
+)
 
 # CORS Middleware
 app.add_middleware(
