@@ -33,7 +33,8 @@ from services.schema import (
     get_schema_full,
     create_schema_full,
     get_full_schema_by_course,
-    get_schema_by_course
+    get_schema_by_course,
+    prompt_schema_by_course
 )
 #-----------------------------------
 
@@ -81,6 +82,6 @@ def r_get_schema_by_course(course_uuid: UUID, db: Session = Depends(get_db)) -> 
 def r_get_schema_by_course(course_uuid: UUID, db: Session = Depends(get_db)) -> SchemaOut:
     return get_schema_by_course(course_uuid, db=db)
 
-@router.get("/full/by_course/{course_uuid}/prompt", summary="Generar un curso con IA", response_model=FullSchemaOut)
+@router.post("/full/by_course/{course_uuid}/prompt", summary="Generar un curso con IA", response_model=FullSchemaOut)
 def r_prompt_schema_by_course(course_uuid: UUID, prompt: Prompt, db: Session = Depends(get_db), client: AIAgent = Depends(get_ai_client)) -> FullSchemaOut:
-    ...
+    return prompt_schema_by_course(course_uuid, prompt=prompt, db=db, client=client)
