@@ -13,6 +13,7 @@ import style from "./CourseDashboard.module.css";
 import AIChatWidget from "../../general/AIChatWidget/AIChatWidget";
 import { authService, courseService } from "../../../services";
 import type { Course } from "../../../schemas/course";
+import type { User } from "../../../schemas/auth";
 
 export default function CourseDashboard() {
   const { uuid } = useParams();
