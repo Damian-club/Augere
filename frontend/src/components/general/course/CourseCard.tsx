@@ -13,6 +13,7 @@ type Props = {
   logo_path?: string;
   onDelete?: () => void;
   onIconClick?: () => void;
+  onClick?: () => void;
 };
 
 export default function CourseCard({
@@ -26,6 +27,7 @@ export default function CourseCard({
   logo_path,
   onDelete,
   onIconClick,
+  onClick,
 }: Props) {
   const [imageError, setImageError] = useState(false);
   const isCompact = variant === "compact";
@@ -38,11 +40,16 @@ export default function CourseCard({
     <div
       className={`${styles.card} ${isCompact ? styles.compact : ""}`}
       style={{ background: color }}
+      onClick={onClick}
     >
       {/* Botón de acción */}
       <button
         className={styles.iconBtn}
-        onClick={icon === "close" ? onDelete : onIconClick}
+        onClick={(e) => {
+          e.stopPropagation();
+          if (icon === "close") onDelete?.();
+          else onIconClick?.();
+        }}
       >
         {icon === "close" ? (
           <IoClose size={20} />

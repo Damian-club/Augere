@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+
 import toast from "react-hot-toast";
 import CourseCard from "../../general/course/CourseCard";
 import AddCourseCard from "../../general/course/AddCourseCard";
@@ -13,6 +15,7 @@ export default function CoursePage() {
   const [enrolled, setEnrolled] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [configCourseId, setConfigCourseId] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const fetchLists = async () => {
     try {
@@ -58,7 +61,7 @@ export default function CoursePage() {
               onClick={async () => {
                 toast.dismiss(t.id);
                 try {
-                  await studentService.unenrollFromCourse(course.uuid); 
+                  await studentService.unenrollFromCourse(course.uuid);
                   setEnrolled((prev) =>
                     prev.filter((c) => c.uuid !== course.uuid)
                   );
@@ -103,6 +106,7 @@ export default function CoursePage() {
               logo_path={c.logo_path}
               icon="settings"
               onIconClick={() => setConfigCourseId(c.uuid)}
+              onClick={() => navigate(`/course/${c.uuid}`)}
             />
           ))}
         </div>
@@ -128,6 +132,7 @@ export default function CoursePage() {
               logo_path={c.logo_path}
               icon="close"
               onDelete={() => handleUnenroll(c)}
+              onClick={() => navigate(`/course/${c.uuid}`)}
             />
           ))}
         </div>

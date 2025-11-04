@@ -1,244 +1,414 @@
 import { useEffect, useState } from "react";
-import {
-  IoDocumentText,
-  IoCubeOutline,
-  IoReaderOutline,
-} from "react-icons/io5";
+import { schemaService } from "../../../services";
 import type { Course } from "../../../schemas/course";
-import type { FullSchema } from "../../../schemas/schema";
-import styles from "./CourseSchemaTab.module.css";
+import {
+  IoDocumentTextOutline,
+  IoSparklesOutline,
+  IoSaveOutline,
+} from "react-icons/io5";
+import { type Entry, type FullSchema } from "../../../schemas/schema";
+import style from "./CourseSchemaTab.module.css";
+import type { DropResult } from "@hello-pangea/dnd";
+import CourseSchemaView from "../courseSchema/CourseSchemaView";
 
 type Props = {
   course: Course;
 };
 
-export default function CourseSchemaTab({ course }: Props) {
+export default function CourseSchemaTab2({ course }: Props) {
   const [schema, setSchema] = useState<FullSchema | null>(null);
+  const [selectedEntry, setSelectedEntry] = useState<Entry | null>(null);
   const [loading, setLoading] = useState(true);
-
-  const [selectedEntry, setSelectedEntry] = useState<{
-    categoryIdx: number;
-    entryIdx: number;
-  } | null>(null);
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [editingType, setEditingType] = useState(false);
+  const [typeInput, setTypeInput] = useState(""); // valor del input mientras editas
+  const [customTypes, setCustomTypes] = useState<string[]>([]); // para nuevos tipos
 
   useEffect(() => {
-    const testSchema: FullSchema = {
-      uuid: "test-uuid-123",
-      course_id: course.uuid,
+    const loadSchema = async () => {
+      try {
+        const fullSchema = await schemaService.getFullSchemaByCourse(
+          course.uuid
+        );
+        setSchema(fullSchema);
+      } catch (err) {
+        console.warn("No se encontró esquema, creando uno nuevo...");
+        try {
+          await schemaService.createSchema(course.uuid);
+          const fullSchema = await schemaService.getFullSchemaByCourse(
+            course.uuid
+          );
+          setSchema(fullSchema);
+        } catch (err2) {
+          console.error("Error creando el esquema: ", err2);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadSchema();
+  }, [course.uuid]);
+
+  const handleDragEnd = (result: DropResult) => {
+    const { source, destination, type } = result;
+    if (!destination || !schema) return;
+
+    const newSchema = { ...schema };
+
+    if (type === "CATEGORY") {
+      // mover categoría
+      const [movedCat] = newSchema.category_list.splice(source.index, 1);
+      newSchema.category_list.splice(destination.index, 0, movedCat);
+      newSchema.category_list = newSchema.category_list.map((cat, idx) => ({
+        ...cat,
+        position: idx,
+      }));
+    } else if (type === "ENTRY") {
+      // mover entry (intra o inter-categoría)
+      const sourceCat = newSchema.category_list.find(
+        (c) => c.uuid === source.droppableId
+      );
+      const destCat = newSchema.category_list.find(
+        (c) => c.uuid === destination.droppableId
+      );
+      if (!sourceCat || !destCat) return;
+
+      const [movedEntry] = sourceCat.entry_list.splice(source.index, 1);
+      movedEntry.category_uuid = destCat.uuid!; // actualizar categoría si cambió
+      destCat.entry_list.splice(destination.index, 0, movedEntry);
+
+      // recalcular posiciones
+      sourceCat.entry_list = sourceCat.entry_list.map((en, idx) => ({
+        ...en,
+        position: idx,
+      }));
+      destCat.entry_list = destCat.entry_list.map((en, idx) => ({
+        ...en,
+        position: idx,
+      }));
+    }
+
+    setSchema(newSchema);
+  };
+
+  const handleGenerateSchema = () => {
+    const mockSchema: FullSchema = {
+      course_uuid: course.uuid,
+      uuid: "schema-uuid-" + Date.now(),
       category_list: [
         {
-          name: "Algoritmos",
+          name: "Introducción a Algoritmos",
           position: 0,
+          schema_uuid: "schema-uuid-123",
+          uuid: "cat-intro",
           entry_list: [
             {
-              name: "Búsqueda binaria",
-              body: "",
-              context: "",
+              name: "¿Qué es un algoritmo?",
+              body: "Contenido...",
+              context: "Contexto...",
               entry_type: "topic",
               position: 0,
+              category_uuid: "cat-intro",
+              uuid: "entry-intro-1",
             },
             {
-              name: "Explicación",
-              body: "",
-              context: "Búsqueda binaria",
+              name: "Notación Big O",
+              body: "Contenido...",
+              context: "Contexto...",
               entry_type: "topic",
               position: 1,
+              category_uuid: "cat-intro",
+              uuid: "entry-intro-2",
             },
             {
-              name: "Trabajo algoritmo",
-              body: "",
-              context: "Búsqueda binaria",
+              name: "Tarea: Análisis de Complejidad",
+              body: "Contenido...",
+              context: "Contexto...",
               entry_type: "assignment",
               position: 2,
-            },
-            {
-              name: "Búsqueda secuencial",
-              body: "",
-              context: "",
-              entry_type: "topic",
-              position: 3,
-            },
-            {
-              name: "Concepto lista",
-              body: "",
-              context: "Búsqueda secuencial",
-              entry_type: "topic",
-              position: 4,
-            },
-            {
-              name: "Idea búsqueda",
-              body: "",
-              context: "Búsqueda secuencial",
-              entry_type: "topic",
-              position: 5,
-            },
-            {
-              name: "Trabajo algoritmo",
-              body: "",
-              context: "Búsqueda secuencial",
-              entry_type: "assignment",
-              position: 6,
+              category_uuid: "cat-intro",
+              uuid: "entry-intro-3",
             },
           ],
         },
       ],
     };
+    setSchema(mockSchema);
+  };
 
-    setSchema(testSchema);
-    setLoading(false);
-  }, [course.uuid]);
+  const handleSaveBody = () => {
+    if (!selectedEntry) return;
+    console.log("Guardando cuerpo para:", selectedEntry.name);
+  };
+
+  const handleGenerateContext = () => {
+    if (!selectedEntry) return;
+    console.log("Generando contexto IA para:", selectedEntry.name);
+  };
+
+  const saveType = (value: string) => {
+    if (!value.trim()) {
+      setEditingType(false);
+      return;
+    }
+
+    let newType = value.trim();
+
+    // Si no es topic ni assignment, lo añadimos a customTypes
+    if (!["topic", "assignment"].includes(newType.toLowerCase())) {
+      setCustomTypes((prev) => [...prev, newType]);
+    }
+
+    // Actualizamos el selectedEntry
+    if (selectedEntry) {
+      setSelectedEntry({ ...selectedEntry, entry_type: newType });
+    }
+
+    // Actualizamos el schema
+    if (schema && selectedEntry) {
+      const newSchema = { ...schema };
+      const cat = newSchema.category_list.find(
+        (c) => c.uuid === selectedEntry.category_uuid
+      );
+      const ent = cat?.entry_list.find((en) => en.uuid === selectedEntry.uuid);
+      if (ent) ent.entry_type = newType;
+      setSchema(newSchema);
+    }
+
+    setEditingType(false);
+  };
+
+  const addCategory = () => {
+    if (!schema) return;
+
+    const newCatUuid = "cat-" + Date.now();
+    const newEntryUuid = "entry-" + Date.now();
+
+    const newCategory = {
+      name: "Nueva Categoría",
+      position: schema.category_list.length,
+      schema_uuid: schema.uuid,
+      uuid: newCatUuid,
+      entry_list: [
+        {
+          name: "Nuevo Entry",
+          body: "",
+          context: "",
+          entry_type: "topic",
+          position: 0,
+          category_uuid: newCatUuid,
+          uuid: newEntryUuid,
+        },
+      ],
+    };
+
+    setSchema({
+      ...schema,
+      category_list: [...schema.category_list, newCategory],
+    });
+
+    // Selecciona automáticamente el entry recién creado
+    setSelectedEntry(newCategory.entry_list[0]);
+  };
+
+  const addEntry = (categoryUuid: string) => {
+    if (!schema) return;
+
+    const cat = schema.category_list.find((c) => c.uuid === categoryUuid);
+    if (!cat) return;
+
+    const newEntryUuid = "entry-" + Date.now();
+    const newEntry: Entry = {
+      name: "Nuevo Entry",
+      body: "",
+      context: "",
+      entry_type: "topic",
+      position: cat.entry_list.length,
+      category_uuid: categoryUuid,
+      uuid: newEntryUuid,
+    };
+
+    cat.entry_list.push(newEntry);
+
+    setSchema({ ...schema });
+  };
 
   if (loading) return <p>Cargando esquema...</p>;
 
-  const handleSaveBody = () => {
-    if (!selectedEntry || !schema) return;
-    alert(
-      "Body guardado:\n" +
-        schema.category_list[selectedEntry.categoryIdx].entry_list[
-          selectedEntry.entryIdx
-        ].body
-    );
-  };
-
-  const handleSendContext = () => {
-    if (!selectedEntry || !schema) return;
-    alert(
-      "Context enviado:\n" +
-        schema.category_list[selectedEntry.categoryIdx].entry_list[
-          selectedEntry.entryIdx
-        ].context
-    );
-  };
-
   return (
-    <div className={styles.schemaContainer}>
-      {schema?.category_list.map((cat, catIdx) => (
-        <div key={cat.name} className={styles.categoryCard}>
-          <h2 className={styles.categoryTitle}>{cat.name}</h2>
-
-          {/* Topics principales */}
-          {cat.entry_list
-            .filter((e) => e.context === "")
-            .map((topic) => {
-              const topicIdx = cat.entry_list.indexOf(topic);
-              const isSelected =
-                selectedEntry?.categoryIdx === catIdx &&
-                selectedEntry?.entryIdx === topicIdx;
-
-              return (
-                <div key={topic.name}>
-                  <div
-                    className={`${styles.entryCard} ${
-                      isSelected ? styles.selected : ""
-                    }`}
-                    onClick={() =>
-                      setSelectedEntry({
-                        categoryIdx: catIdx,
-                        entryIdx: topicIdx,
-                      })
-                    }
-                  >
-                    <div className={styles.entryHeader}>
-                      <IoDocumentText />
-                      {topic.name}
-                    </div>
-                  </div>
-                  {/* ASIIGMENT Y SUBTOPICS COMO TOPICS */}
-                  {cat.entry_list
-                    .filter((e) => e.context === topic.name)
-                    .map((sub) => {
-                      const subIdx = cat.entry_list.indexOf(sub);
-                      const isSelectedSub =
-                        selectedEntry?.categoryIdx === catIdx &&
-                        selectedEntry?.entryIdx === subIdx;
-                      return (
-                        <div
-                          key={sub.name}
-                          className={`${styles.entryCard} ${styles.subtopic} ${
-                            isSelectedSub ? styles.selected : ""
-                          }`}
-                          onClick={() =>
-                            setSelectedEntry({
-                              categoryIdx: catIdx,
-                              entryIdx: subIdx,
-                            })
-                          }
-                        >
-                          <div className={styles.entryHeader}>
-                            {sub.entry_type === "assignment" ? (
-                              <IoReaderOutline />
-                            ) : (
-                              <IoCubeOutline />
-                            )}
-                            {sub.name}
-                          </div>
-                        </div>
-                      );
-                    })}
-                </div>
-              );
-            })}
+    <div className={style.schemaContainer}>
+      {/* === IA PROMPT === */}
+      <div className={style.aiPromptSection}>
+        <div className={style.promptHeader}>
+          <IoSparklesOutline className={style.sparkleIcon} />
+          <h2>Generar Esquema con IA</h2>
         </div>
-      ))}
+        <textarea
+          className={style.aiPromptInput}
+          placeholder="Describe el esquema..."
+          value={aiPrompt}
+          onChange={(e) => setAiPrompt(e.target.value)}
+          rows={3}
+        />
+        <button className={style.generateBtn} onClick={handleGenerateSchema}>
+          <IoSparklesOutline /> Generar Esquema
+        </button>
+      </div>
 
-      {/* Seccion de Edicion */}
-      {selectedEntry && schema && (
-        <div className={styles.editPanel}>
-          <h3>
-            Editando:{" "}
-            {
-              schema.category_list[selectedEntry.categoryIdx].entry_list[
-                selectedEntry.entryIdx
-              ].name
-            }
-          </h3>
+      {schema?.category_list.length === 0 ? (
+        <div className={style.noSchemaState}>
+          <IoDocumentTextOutline className={style.noSchemaIcon} />
+          <h3>No has creado un esquema todavía</h3>
           <p>
-            Tipo:{" "}
-            {
-              schema.category_list[selectedEntry.categoryIdx].entry_list[
-                selectedEntry.entryIdx
-              ].entry_type
-            }
+            Usa el campo de arriba para generar un esquema con IA o crea uno
+            manualmente desde el backend.
           </p>
-
-          <div className={styles.editField}>
-            <label>Body (Markdown):</label>
-            <textarea
-              placeholder="Escribe el contenido aquí..."
-              value={
-                schema.category_list[selectedEntry.categoryIdx].entry_list[
-                  selectedEntry.entryIdx
-                ].body
-              }
-              onChange={(e) => {
-                const newSchema = { ...schema };
-                newSchema.category_list[selectedEntry.categoryIdx].entry_list[
-                  selectedEntry.entryIdx
-                ].body = e.target.value;
-                setSchema(newSchema);
-              }}
+        </div>
+      ) : (
+        <div className={style.mainContent}>
+          {/* === PANEL ESQUEMA === */}
+          <div className={style.schemaPanel}>
+            <h3 className={style.panelTitle}>Esquema del Curso</h3>
+            <CourseSchemaView
+              schema={schema}
+              setSchema={setSchema}
+              selectedEntry={selectedEntry}
+              setSelectedEntry={setSelectedEntry}
+              onDragEnd={handleDragEnd}
+              onAddCategory={addCategory}
+              onAddEntry={addEntry}
+              editable={true}
             />
-            <button onClick={handleSaveBody}>Guardar Body</button>
           </div>
 
-          <div className={styles.editField}>
-            <label>Contexto (IA):</label>
-            <textarea
-              placeholder="Escribe el contexto aquí..."
-              value={
-                schema.category_list[selectedEntry.categoryIdx].entry_list[
-                  selectedEntry.entryIdx
-                ].context
-              }
-              onChange={(e) => {
-                const newSchema = { ...schema };
-                newSchema.category_list[selectedEntry.categoryIdx].entry_list[
-                  selectedEntry.entryIdx
-                ].context = e.target.value;
-                setSchema(newSchema);
-              }}
-            />
-            <button onClick={handleSendContext}>Enviar Context</button>
+          {/* === PANEL EDITOR === */}
+          <div className={style.editorPanel}>
+            {/* ... resto del código sin cambios ... */}
+            <h3 className={style.panelTitle}>Editor de Contenido</h3>
+            {!selectedEntry ? (
+              <div className={style.placeholderState}>
+                <IoDocumentTextOutline className={style.placeholderIcon} />
+                <p>Selecciona un tema o tarea del esquema para editarlo</p>
+              </div>
+            ) : (
+              <div className={style.editorContent}>
+                <div className={style.selectedHeader}>
+                  <h4>{selectedEntry.name}</h4>
+                  {editingType ? (
+                    <input
+                      className={style.typeBadgeInput}
+                      value={typeInput}
+                      onChange={(e) => setTypeInput(e.target.value)}
+                      onBlur={() => saveType(typeInput)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") saveType(typeInput);
+                        if (e.key === "Escape") setEditingType(false);
+                      }}
+                      autoFocus
+                      list="entryTypes"
+                    />
+                  ) : (
+                    <span
+                      className={`${style.typeBadge} ${
+                        selectedEntry.entry_type === "topic"
+                          ? style.topic
+                          : selectedEntry.entry_type === "assignment"
+                          ? style.assignment
+                          : style.customType
+                      }`}
+                      onClick={() => {
+                        setTypeInput(selectedEntry.entry_type);
+                        setEditingType(true);
+                      }}
+                    >
+                      {selectedEntry.entry_type}
+                    </span>
+                  )}
+
+                  <datalist id="entryTypes">
+                    <option value="topic" />
+                    <option value="assignment" />
+                    {customTypes.map((t) => (
+                      <option key={t} value={t} />
+                    ))}
+                  </datalist>
+
+                  <datalist id="entryTypes">
+                    <option value="topic" />
+                    <option value="assignment" />
+                  </datalist>
+                </div>
+
+                <div className={style.editorField}>
+                  <label className={style.fieldLabel}>
+                    <IoDocumentTextOutline />
+                    Cuerpo del contenido
+                  </label>
+                  <textarea
+                    className={style.fieldTextarea}
+                    value={selectedEntry.body || ""}
+                    onChange={(e) => {
+                      setSelectedEntry({
+                        ...selectedEntry,
+                        body: e.target.value,
+                      });
+
+                      if (schema) {
+                        const newSchema = { ...schema };
+                        const cat = newSchema.category_list.find(
+                          (c) => c.uuid === selectedEntry.category_uuid
+                        );
+                        const ent = cat?.entry_list.find(
+                          (en) => en.uuid === selectedEntry.uuid
+                        );
+                        if (ent) ent.body = e.target.value;
+                        setSchema(newSchema);
+                      }
+                    }}
+                    rows={6}
+                  />
+                  <button className={style.saveBtn} onClick={handleSaveBody}>
+                    <IoSaveOutline /> Guardar Cuerpo
+                  </button>
+                </div>
+
+                <div className={style.editorField}>
+                  <label className={style.fieldLabel}>
+                    <IoSparklesOutline />
+                    Contexto para IA
+                  </label>
+                  <textarea
+                    className={style.fieldTextarea}
+                    value={selectedEntry.context || ""}
+                    onChange={(e) => {
+                      setSelectedEntry({
+                        ...selectedEntry,
+                        context: e.target.value,
+                      });
+
+                      if (schema) {
+                        const newSchema = { ...schema };
+                        const cat = newSchema.category_list.find(
+                          (c) => c.uuid === selectedEntry.category_uuid
+                        );
+                        const ent = cat?.entry_list.find(
+                          (en) => en.uuid === selectedEntry.uuid
+                        );
+                        if (ent) ent.context = e.target.value;
+                        setSchema(newSchema);
+                      }
+                    }}
+                    rows={4}
+                  />
+                  <button
+                    className={style.generateContextBtn}
+                    onClick={handleGenerateContext}
+                  >
+                    <IoSparklesOutline /> Generar con IA
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
