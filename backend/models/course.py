@@ -26,7 +26,7 @@ class Course(Base):
 
     tutor: Mapped["User"] = relationship("User", back_populates="tutored_courses")
     students: Mapped[list["Student"]] = relationship(
-        "Student", back_populates="course", cascade="all, delete-orphan"
+        "Student", back_populates="course", cascade="all, delete-orphan", order_by="Student.inscription_date.asc()"
     )
     schema: Mapped["Schema"] = relationship(
         "Schema", back_populates="course", uselist=False, cascade="all, delete-orphan"
