@@ -126,4 +126,42 @@ export class CourseService {
     if (!res.ok) throw new Error("Error al obtener resumen general");
     return res.json();
   }
+
+  // Obtener excel
+  async downloadExcel(uuid: string, name: string): Promise<void> {
+    const res = await fetch(`${this.baseUrl}/excel/${uuid}`, {
+      headers: this.getHeaders(),
+    });
+    if (!res.ok) throw new Error("Error al obtener el excel");
+
+    const blob = await res.blob();
+    let a = document.createElement("a");
+    let blobURL = window.URL.createObjectURL(blob);
+    a.href = blobURL;
+    a.download = `${name}.xlsx`.replace(" ", "_");
+    document.body.append(a);
+    a.click();
+    a.remove();
+
+    window.URL.revokeObjectURL(blobURL);
+  }
+
+  // Obtener CSV
+  async downloadCSV(uuid: string, name: string): Promise<void> {
+    const res = await fetch(`${this.baseUrl}/csv/${uuid}`, {
+      headers: this.getHeaders(),
+    });
+    if (!res.ok) throw new Error("Error al obtener el CSV");
+
+    const blob = await res.blob();
+    let a = document.createElement("a");
+    let blobURL = window.URL.createObjectURL(blob);
+    a.href = blobURL;
+    a.download = `${name}.csv`.replace(" ", "_");
+    document.body.append(a);
+    a.click();
+    a.remove();
+
+    window.URL.revokeObjectURL(blobURL);
+  }
 }

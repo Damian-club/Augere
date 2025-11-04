@@ -95,10 +95,20 @@ export default function CourseStudentsTab({ course }: Props) {
         )}
       </div>
       <div className={style.exportButtons}>
-        <button className={`${style.exportButton} ${style.excelButton}`}>
+        <button
+          className={`${style.exportButton} ${style.excelButton}`}
+          onClick={async () =>
+            await courseService.downloadExcel(course.uuid, course.title)
+          }
+        >
           Generar Excel
         </button>
-        <button className={`${style.exportButton} ${style.csvButton}`}>
+        <button
+          className={`${style.exportButton} ${style.csvButton}`}
+          onClick={async () =>
+            await courseService.downloadCSV(course.uuid, course.title)
+          }
+        >
           Generar CSV
         </button>
       </div>
