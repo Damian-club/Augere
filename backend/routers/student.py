@@ -2,6 +2,7 @@ from models.user import User
 from core.db import get_db
 from dependencies.user import get_current_user
 from uuid import UUID
+from sqlalchemy.orm import Session
 
 # API ------------------
 from fastapi import (
@@ -34,7 +35,7 @@ router = APIRouter(prefix="/student", tags=["Student"])
     "/", summary="Inscribir un estudiante a un curso", response_model=StudentOut
 )
 def r_create_student(
-    student_create: StudentCreate, user: User = Depends(get_current_user), db=Depends(get_db)
+    student_create: StudentCreate, user: User = Depends(get_current_user), db: Session = Depends(get_db)
 ) -> StudentOut:
     return create_student(student_create, user=user, db=db)
 
@@ -48,7 +49,7 @@ def r_delete_student(
     user_uuid: UUID,
     course_uuid: UUID,
     user: User = Depends(get_current_user),
-    db=Depends(get_db),
+    db: Session = Depends(get_db),
 ) -> Message:
     return delete_student(user_uuid=user_uuid, course_uuid=course_uuid, user=user, db=db)
 
@@ -56,7 +57,7 @@ def r_delete_student(
 @router.get(
     "/{uuid}", summary="Obtener información de un estudiante", response_model=StudentOut
 )
-def r_get_student(uuid: str, db=Depends(get_db)) -> StudentOut:
+def r_get_student(uuid: str, db: Session = Depends(get_db)) -> StudentOut:
     return get_student(uuid, db=db)
 
 
@@ -66,6 +67,6 @@ def r_get_student(uuid: str, db=Depends(get_db)) -> StudentOut:
     response_model=StudentOut,
 )
 def r_join_course(
-    invitation_code: str, user: User = Depends(get_current_user), db=Depends(get_db)
+    invitation_code: str, user: User = Depends(get_current_user), db: Session = Depends(get_db)
 ) -> StudentOut:
     return join_course(invitation_code, user=user, db=db)

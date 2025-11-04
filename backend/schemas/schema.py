@@ -4,6 +4,7 @@ from schemas.schema_entry import SchemaEntryOut, SchemaEntryCreateFull
 from uuid import UUID
 
 
+
 class SchemaBase(BaseModel):
     course_uuid: UUID = Field(...)
 

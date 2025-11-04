@@ -1,5 +1,6 @@
 from core.db import get_db
 from uuid import UUID
+from sqlalchemy.orm import Session
 
 # API -----------------
 from fastapi import (
@@ -34,7 +35,7 @@ router = APIRouter(prefix="/schema_category", tags=["Schema Category"])
     summary="Crear una nueva categoría de esquema",
     response_model=SchemaCategoryOut,
 )
-def r_create_schema_category(schema_category_create: SchemaCategoryCreate, db=Depends(get_db)) -> SchemaCategoryOut:
+def r_create_schema_category(schema_category_create: SchemaCategoryCreate, db: Session = Depends(get_db)) -> SchemaCategoryOut:
     return create_schema_category(schema_category_create, db=db)
 
 
@@ -43,7 +44,7 @@ def r_create_schema_category(schema_category_create: SchemaCategoryCreate, db=De
     summary="Obtener una categoría de esquema por UUID",
     response_model=SchemaCategoryOut,
 )
-def r_get_schema_category(uuid: str, db=Depends(get_db)) -> SchemaCategoryOut:
+def r_get_schema_category(uuid: str, db: Session = Depends(get_db)) -> SchemaCategoryOut:
     return get_schema_category(uuid, db=db)
 
 
@@ -52,7 +53,7 @@ def r_get_schema_category(uuid: str, db=Depends(get_db)) -> SchemaCategoryOut:
     summary="Eliminar una categoría de esquema por UUID",
     response_model=Message,
 )
-def r_delete_schema_category(uuid: str, db=Depends(get_db)) -> Message:
+def r_delete_schema_category(uuid: str, db: Session = Depends(get_db)) -> Message:
     return delete_schema_category(uuid, db=db)
 
 
@@ -61,5 +62,5 @@ def r_delete_schema_category(uuid: str, db=Depends(get_db)) -> Message:
     summary="Actualizar una categoría de esquema por UUID",
     response_model=SchemaCategoryOut,
 )
-def r_update_schema_category(uuid: UUID, schema_category_update: SchemaCategoryUpdate, db=Depends(get_db)) -> SchemaCategoryOut:
+def r_update_schema_category(uuid: UUID, schema_category_update: SchemaCategoryUpdate, db: Session = Depends(get_db)) -> SchemaCategoryOut:
     return update_schema_category(uuid, schema_category_update=schema_category_update, db=db)

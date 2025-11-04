@@ -2,6 +2,7 @@ from uuid import UUID
 from models.user import User
 from core.db import get_db
 from dependencies.user import get_current_user
+from sqlalchemy.orm import Session
 
 # API -----------------
 from fastapi import (
@@ -40,7 +41,7 @@ router = APIRouter(prefix="/course", tags=["Course"])
 
 @router.post("/", summary="Crear un nuevo curso", response_model=CourseOut)
 def r_create_course(
-    course_create: CourseCreate, user: User = Depends(get_current_user), db=Depends(get_db)
+    course_create: CourseCreate, user: User = Depends(get_current_user), db: Session = Depends(get_db)
 ) -> CourseOut:
     return create_course(course_create, user=user, db=db)
 
@@ -50,7 +51,7 @@ def r_create_course(
     summary="Listar mis cursos inscritos",
     response_model=list[PublicSummaryCourseOut]
 )
-def r_list_user_enrolled_courses(user: User = Depends(get_current_user), db=Depends(get_db)) -> list[PublicSummaryCourseOut]:
+def r_list_user_enrolled_courses(user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> list[PublicSummaryCourseOut]:
     return list_user_enrolled_courses(user, db=db)
 
 
@@ -71,7 +72,7 @@ def r_list_tutored_courses(
     response_model=OverviewOut,
 )
 def r_get_overview(
-    user: User = Depends(get_current_user), db=Depends(get_db)
+    user: User = Depends(get_current_user), db: Session = Depends(get_db)
 ) -> OverviewOut:
     return get_overview(user, db=db)
 
@@ -82,7 +83,7 @@ def r_get_overview(
     response_model=PublicSummaryCourseOut,
 )
 def r_get_public_summary_course(
-    uuid: UUID, user: User = Depends(get_current_user), db=Depends(get_db)
+    uuid: UUID, user: User = Depends(get_current_user), db: Session = Depends(get_db)
 ) -> PublicSummaryCourseOut:
     return get_public_summary_course(uuid, user=user, db=db)
 
@@ -93,12 +94,12 @@ def r_get_public_summary_course(
     response_model=PrivateSummaryCourseOut,
 )
 def r_get_private_summary_course(
-    uuid: UUID, user: User = Depends(get_current_user), db=Depends(get_db)
+    uuid: UUID, user: User = Depends(get_current_user), db: Session = Depends(get_db)
 ) -> PrivateSummaryCourseOut:
     return get_private_summary_course(uuid, user=user, db=db)
 
 @router.get("/{uuid}", summary="Obtener un curso por UUID", response_model=CourseOut)
-def r_get_course(uuid: UUID, user: User = Depends(get_current_user), db=Depends(get_db)) -> CourseOut:
+def r_get_course(uuid: UUID, user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> CourseOut:
     return get_course(uuid, user=user, db=db)
 
 
@@ -107,13 +108,13 @@ def r_update_course(
     uuid: UUID,
     course_update: CourseUpdate,
     user: User = Depends(get_current_user),
-    db=Depends(get_db),
+    db: Session = Depends(get_db),
 ) -> CourseOut:
     return update_course(uuid, course_update=course_update, user=user, db=db)
 
 
 @router.delete("/{uuid}", summary="Eliminar un curso", response_model=Message)
 def r_delete_course(
-    uuid: UUID, user: User = Depends(get_current_user), db=Depends(get_db)
+    uuid: UUID, user: User = Depends(get_current_user), db: Session = Depends(get_db)
 ) -> Message:
     return delete_course(uuid, user=user, db=db)

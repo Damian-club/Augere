@@ -9,8 +9,6 @@ class Author(str, Enum):
     USER = "user"
     AI = "ai"
 
-
-
 class AIChatPreBase(BaseModel):
     author: Author = Field(...)
     content: str = Field(...)
