@@ -83,12 +83,6 @@
   gap: 2rem;
 }
 
-/* === PANELES === */
-/* .schemaPanel {
-  max-height: 70vh;
-  overflow-y: auto;
-} */
-
 .schemaPanel,
 .editorPanel {
   background: #ffffff;
@@ -106,13 +100,6 @@
   padding-bottom: 0.75rem;
   margin-bottom: 1.25rem;
   text-align: center;
-}
-
-/* === EMPTY & NO SCHEMA STATES === */
-.emptyState {
-  text-align: center;
-  padding: 3rem 1rem;
-  color: #94a3b8;
 }
 
 .noSchemaState {
@@ -143,6 +130,257 @@
   color: #64748b;
   max-width: 520px;
   margin: 0 auto;
+}
+
+/* === EDITOR PANEL === */
+.placeholderState {
+  text-align: center;
+  color: #94a3b8;
+  padding: 4rem 2rem;
+}
+
+.placeholderIcon {
+  font-size: 3rem;
+  color: #cbd5e1;
+  margin-bottom: 0.75rem;
+}
+
+.editorContent {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+.selectedHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 0.75rem;
+  border-bottom: 1.5px solid #e5e7eb;
+}
+
+.selectedHeader h4 {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.typeBadge {
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  cursor: pointer;
+}
+
+.typeBadge.topic {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.typeBadge.assignment {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.customType {
+  background-color: #f3e8ff;
+  color: #6b21a8;
+}
+
+.typeBadgeInput {
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid #3b82f6;
+  font-weight: 500;
+  font-size: 0.85rem;
+  color: #1e293b;
+  width: 100px;
+  background-color: #ffffff;
+}
+
+/* === CAMPOS DE EDICIÓN === */
+.editorField {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.fieldLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 0.95rem;
+}
+
+.fieldLabel svg {
+  font-size: 1rem;
+  color: #3b82f6;
+}
+
+.fieldTextarea {
+  width: 100%;
+  padding: 0.9rem 1rem;
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  background: #f9fafb;
+  font-family: inherit;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  resize: vertical;
+  transition: all 0.25s ease;
+}
+
+.fieldTextarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+
+/* === BOTONES === */
+.saveBtn,
+.generateContextBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.7rem 1.25rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  align-self: flex-start;
+}
+
+.saveBtn {
+  background: #10b981;
+  color: white;
+}
+
+.saveBtn:hover {
+  background: #059669;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(16, 185, 129, 0.3);
+}
+
+.generateContextBtn {
+  background: #3b82f6;
+  color: white;
+}
+
+.generateContextBtn:hover {
+  background: #2563eb;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(37, 99, 235, 0.3);
+}
+
+
+
+/* === RESPONSIVE === */
+@media (max-width: 768px) {
+  .schemaContainer {
+    padding: 1rem;
+  }
+
+  .aiPromptSection,
+  .schemaPanel,
+  .editorPanel {
+    padding: 1.25rem;
+  }
+
+  .promptHeader h2 {
+    font-size: 1.15rem;
+  }
+
+  .generateBtn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .selectedHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+}
+
+/* LO QUE SE VA */
+/* === UTILIDADES === */
+.selected {
+  border-color: #3b82f6 !important;
+  background: #eff6ff !important;
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.12);
+}
+.entryItem[data-rbd-dragging-handle] {
+  transform: none !important;
+}
+
+.addCategoryBtn,
+.addEntryBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border-radius: 8px;
+  border: 1.5px solid #3b82f6;
+  background: #ffffff;
+  color: #3b82f6;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 0.5rem;
+}
+
+.addCategoryBtn:hover,
+.addEntryBtn:hover {
+  background: #3b82f6;
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+}
+
+.addEntryIcon {
+  cursor: pointer;
+  color: #4f46e5; /* azul estilo “botón” */
+  font-size: 1.5rem;
+  margin-left: 0.5rem;
+  transition: transform 0.15s, color 0.15s;
+  flex-shrink: 0; /* ¡Esto evita que se haga más pequeño! */
+}
+
+.addEntryIcon:hover {
+  color: #6366f1;
+  transform: scale(1.2);
+}
+
+.addCategoryIcon {
+  cursor: pointer;
+  color: #10b981; /* verde para agregar categoría */
+  font-size: 1.5rem;
+  margin-left: 0.5rem;
+  transition: transform 0.15s, color 0.15s;
+}
+
+.addCategoryIcon:hover {
+  color: #34d399;
+  transform: scale(1.2);
+}
+
+/* === EMPTY & NO SCHEMA STATES === */
+.emptyState {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #94a3b8;
 }
 
 /* === CATEGORÍAS === */
@@ -332,34 +570,6 @@
   color: #b91c1c;
 }
 
-/* === EDITOR PANEL === */
-.placeholderState {
-  text-align: center;
-  color: #94a3b8;
-  padding: 4rem 2rem;
-}
-
-.placeholderIcon {
-  font-size: 3rem;
-  color: #cbd5e1;
-  margin-bottom: 0.75rem;
-}
-
-.editorContent {
-  display: flex;
-  flex-direction: column;
-  gap: 1.75rem;
-}
-
-.selectedHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-bottom: 0.75rem;
-  border-bottom: 1.5px solid #e5e7eb;
-}
-
-.selectedHeader h4,
 .selectedTitle {
   margin: 0;
   font-size: 1.15rem;
@@ -367,217 +577,9 @@
   color: #1e293b;
 }
 
-.typeBadge {
-  padding: 0.35rem 0.75rem;
-  border-radius: 6px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  cursor: pointer;
-}
-
-.typeBadge.topic {
-  background: #dbeafe;
-  color: #1e40af;
-}
-
-.typeBadge.assignment {
-  background: #fef3c7;
-  color: #92400e;
-}
-
-/* === CAMPOS DE EDICIÓN === */
-.editorField {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.fieldLabel {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-weight: 600;
-  color: #1e293b;
-  font-size: 0.95rem;
-}
-
-.fieldLabel svg {
-  font-size: 1rem;
-  color: #3b82f6;
-}
-
 .fieldHint {
   font-size: 0.8rem;
   font-weight: 400;
   color: #64748b;
   margin-left: 1.6rem;
-}
-
-.fieldTextarea {
-  width: 100%;
-  padding: 0.9rem 1rem;
-  border: 1.5px solid #d1d5db;
-  border-radius: 8px;
-  background: #f9fafb;
-  font-family: inherit;
-  font-size: 0.95rem;
-  line-height: 1.6;
-  resize: vertical;
-  transition: all 0.25s ease;
-}
-
-.fieldTextarea:focus {
-  outline: none;
-  border-color: #3b82f6;
-  background: #ffffff;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
-}
-
-/* === BOTONES === */
-.saveBtn,
-.generateContextBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.7rem 1.25rem;
-  border: none;
-  border-radius: 8px;
-  font-weight: 500;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.25s ease;
-  align-self: flex-start;
-}
-
-.saveBtn {
-  background: #10b981;
-  color: white;
-}
-
-.saveBtn:hover {
-  background: #059669;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 14px rgba(16, 185, 129, 0.3);
-}
-
-.generateContextBtn {
-  background: #3b82f6;
-  color: white;
-}
-
-.generateContextBtn:hover {
-  background: #2563eb;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 14px rgba(37, 99, 235, 0.3);
-}
-
-/* === UTILIDADES === */
-.selected {
-  border-color: #3b82f6 !important;
-  background: #eff6ff !important;
-  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.12);
-}
-
-/* === RESPONSIVE === */
-@media (max-width: 768px) {
-  .schemaContainer {
-    padding: 1rem;
-  }
-
-  .aiPromptSection,
-  .schemaPanel,
-  .editorPanel {
-    padding: 1.25rem;
-  }
-
-  .promptHeader h2 {
-    font-size: 1.15rem;
-  }
-
-  .generateBtn {
-    width: 100%;
-    justify-content: center;
-  }
-
-  .selectedHeader {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
-  }
-}
-
-.entryItem[data-rbd-dragging-handle] {
-  transform: none !important;
-}
-
-.addCategoryBtn,
-.addEntryBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.5rem 1rem;
-  font-size: 0.9rem;
-  font-weight: 500;
-  border-radius: 8px;
-  border: 1.5px solid #3b82f6;
-  background: #ffffff;
-  color: #3b82f6;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  margin-top: 0.5rem;
-}
-
-.addCategoryBtn:hover,
-.addEntryBtn:hover {
-  background: #3b82f6;
-  color: #ffffff;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
-}
-
-.typeBadgeInput {
-  padding: 0.25rem 0.6rem;
-  border-radius: 6px;
-  border: 1px solid #3b82f6;
-  font-weight: 500;
-  font-size: 0.85rem;
-  color: #1e293b;
-  width: 100px;
-  background-color: #ffffff;
-}
-
-.customType {
-  background-color: #f3e8ff;
-  color: #6b21a8;
-}
-
-.addEntryIcon {
-  cursor: pointer;
-  color: #4f46e5; /* azul estilo “botón” */
-  font-size: 1.5rem;
-  margin-left: 0.5rem;
-  transition: transform 0.15s, color 0.15s;
-  flex-shrink: 0; /* ¡Esto evita que se haga más pequeño! */
-}
-
-.addEntryIcon:hover {
-  color: #6366f1;
-  transform: scale(1.2);
-}
-
-.addCategoryIcon {
-  cursor: pointer;
-  color: #10b981; /* verde para agregar categoría */
-  font-size: 1.5rem;
-  margin-left: 0.5rem;
-  transition: transform 0.15s, color 0.15s;
-}
-
-.addCategoryIcon:hover {
-  color: #34d399;
-  transform: scale(1.2);
 }
