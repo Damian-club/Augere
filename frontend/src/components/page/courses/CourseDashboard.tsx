@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { NavLink, useParams } from "react-router-dom";
 import {
   IoHomeOutline,
   IoBookOutline,
@@ -10,10 +10,15 @@ import {
 import CourseSchemaView from "../../general/courseSchema/CourseSchemaView";
 import type { FullSchema, Entry } from "../../../schemas/schema";
 import style from "./CourseDashboard.module.css";
+import AIChatWidget from "../../general/AIChatWidget/AIChatWidget";
+import { authService, courseService } from "../../../services";
+import type { Course } from "../../../schemas/course";
 
 export default function CourseDashboard() {
   const { uuid } = useParams();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [course, setCourse] = useState<Course | null>(null);
+  const [user, setUser] = useState<User | null>(null);
 
   const mockSchema: FullSchema = {
     course_uuid: "course-uuid-demo",
@@ -77,6 +82,26 @@ export default function CourseDashboard() {
   const [schema] = useState<FullSchema>(mockSchema);
   const [selectedEntry, setSelectedEntry] = useState<Entry | null>(null);
 
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const userData = await authService.getCurrentUser();
+        setUser(userData);
+      } catch {
+        setUser(null);
+      }
+    };
+    fetchUser();
+  }, []);
+
+  useEffect(() => {
+    if (!uuid) return;
+    courseService
+      .getCourse(uuid)
+      .then((data) => setCourse(data))
+      .catch((err) => console.error("Error al cargar el curso:", err));
+  }, [uuid]);
+
   return (
     <div className={style.dashboard}>
       {/* === SIDEBAR FLOTANTE === */}
@@ -95,8 +120,10 @@ export default function CourseDashboard() {
 
         {/* Título del curso */}
         <div className={style.courseHeader}>
-          <h2 className={style.courseTitle}>Diseño de Algoritmos</h2>
-          <span className={style.courseId}>ID: {uuid}</span>
+          <h2 className={style.courseTitle}>
+            {course?.title || "Cargando..."}
+          </h2>
+          <span className={style.courseId}>ID: {course?.uuid || uuid}</span>
         </div>
 
         {/* Esquema */}
@@ -104,19 +131,34 @@ export default function CourseDashboard() {
           <CourseSchemaView
             schema={schema}
             selectedEntry={selectedEntry}
-            setSelectedEntry={setSelectedEntry}
+            setSelectedEntry={(entry) => {
+              setSelectedEntry(entry);
+              setSidebarOpen(false);
+            }}
             editable={false}
           />
         </div>
 
         {/* Perfil usuario */}
         <div className={style.userProfile}>
-          <img
-            src="https://api.dicebear.com/9.x/bottts-neutral/svg?seed=student"
-            alt="Avatar"
-            className={style.avatar}
-          />
-          <span className={style.userName}>Juan Pérez</span>
+          {user ? (
+            <>
+              <img
+                src={
+                  user.avatar_path
+                    ? user.avatar_path
+                    : `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                        user.name || "Usuario"
+                      )}&background=random`
+                }
+                alt={user.name}
+                className={style.avatar}
+              />
+              <span className={style.userName}>{user.name}</span>
+            </>
+          ) : (
+            <span>Cargando...</span>
+          )}
         </div>
       </aside>
 
@@ -146,16 +188,18 @@ export default function CourseDashboard() {
 
       {/* === MENÚ DERECHO === */}
       <nav className={style.rightMenu}>
-        <button className={style.menuBtn} title="Inicio">
+        <NavLink to="/dashboard" className={style.menuBtn} title="Inicio">
           <IoHomeOutline />
-        </button>
-        <button className={style.menuBtn} title="Cursos">
+        </NavLink>
+        <NavLink to="/courses" className={style.menuBtn} title="Cursos">
           <IoBookOutline />
-        </button>
-        <button className={style.menuBtn} title="Configuración">
+        </NavLink>
+        <NavLink to="/settings" className={style.menuBtn} title="Configuración">
           <IoSettingsOutline />
-        </button>
+        </NavLink>
       </nav>
+      {/* AI CHAT widget */}
+      <AIChatWidget />
     </div>
   );
 }
