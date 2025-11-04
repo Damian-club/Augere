@@ -47,7 +47,7 @@ def _get_df_by_uuid(uuid: UUID, db: Session) -> pd.DataFrame:
         for student in student_list
     ]
     df: pd.DataFrame = pd.DataFrame(data, columns=['Estudiante', 'Porcentaje de completitud', 'Terminó el curso'])
-
+    df.index = df.index + 1
     return df
 
 
