@@ -47,7 +47,8 @@ def _get_df_by_uuid(uuid: UUID, db: Session) -> pd.DataFrame:
         for student in student_list
     ]
     df: pd.DataFrame = pd.DataFrame(data, columns=['Estudiante', 'Porcentaje de completitud', 'Terminó el curso'])
-    df.index = df.index + 1
+    df = df.sort_values(by='Estudiante', ascending=True, ignore_index=True)
+
     return df
 
 
@@ -295,7 +296,7 @@ def get_overview(user: User, db: Session) -> OverviewOut:
 def get_student_csv(uuid: UUID, db: Session):
     df: pd.DataFrame = _get_df_by_uuid(uuid, db=db)
     stream: StringIO = StringIO()
-    df.to_csv(stream, index_label="Código estudiante")
+    df.to_csv(stream, index=None)
     stream.seek(0)
     return StreamingResponse(
         stream,
@@ -306,7 +307,7 @@ def get_student_csv(uuid: UUID, db: Session):
 def get_student_excel(uuid: UUID, db: Session):
     df: pd.DataFrame = _get_df_by_uuid(uuid, db=db)
     stream: BytesIO = BytesIO()
-    df.to_excel(stream, index_label="Código estudiante", engine="openpyxl")
+    df.to_excel(stream, index=None, engine="openpyxl")
     stream.seek(0)
     return StreamingResponse(
         stream,
