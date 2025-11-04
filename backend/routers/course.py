@@ -4,11 +4,13 @@ from core.db import get_db
 from dependencies.user import get_current_user
 from sqlalchemy.orm import Session
 
+
 # API -----------------
 from fastapi import (
     APIRouter,
     Depends
 )
+from fastapi.responses import StreamingResponse
 #----------------------
 
 # SCHEMAS ----------------------------
@@ -33,7 +35,9 @@ from services.course import (
     get_private_summary_course,
     get_public_summary_course,
     get_course,
-    get_overview
+    get_overview,
+    get_student_csv,
+    get_student_excel
 )
 #-------------------------------------
 
@@ -97,6 +101,14 @@ def r_get_private_summary_course(
     uuid: UUID, user: User = Depends(get_current_user), db: Session = Depends(get_db)
 ) -> PrivateSummaryCourseOut:
     return get_private_summary_course(uuid, user=user, db=db)
+
+@router.get("/excel/{uuid}", response_class=StreamingResponse)
+def r_get_student_excel(uuid: UUID, db: Session = Depends(get_db)) -> StreamingResponse:
+    return get_student_excel(uuid, db=db)
+
+@router.get("/csv/{uuid}", response_class=StreamingResponse)
+def r_get_student_csv(uuid: UUID, db: Session = Depends(get_db)) -> StreamingResponse:
+    return get_student_csv(uuid, db=db)
 
 @router.get("/{uuid}", summary="Obtener un curso por UUID", response_model=CourseOut)
 def r_get_course(uuid: UUID, user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> CourseOut:

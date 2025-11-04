@@ -9,3 +9,5 @@ uvicorn==0.38.0
 python-multipart
 bcrypt==4.2.0
 openai
+pandas
+openpyxl

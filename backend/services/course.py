@@ -15,11 +15,14 @@ from models.user import User
 from models.student import Student
 from models.progress import Progress
 from fastapi import HTTPException
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from services.auth import map_model_to_schema as user_map_model_to_schema
 from schemas.user import UserOut
 from uuid import UUID, uuid4
 from util.percentage import get_percentage
+import pandas as pd
+from io import BytesIO, StringIO
 
 def _get_course_by_uuid(uuid: UUID, db: Session) -> Course:
     try:
@@ -29,6 +32,23 @@ def _get_course_by_uuid(uuid: UUID, db: Session) -> Course:
     if not course:
         raise HTTPException(status_code=404, detail="Curso no encontrado")
     return course
+
+def _get_df_by_uuid(uuid: UUID, db: Session) -> pd.DataFrame:
+    course: Course = _get_course_by_uuid(uuid, db=db)
+    summary: PrivateSummaryCourseOut = _map_private_summary(course)
+    student_list: list[PrivateSummaryStudent] = summary.student_list
+
+    data: list[tuple] = [
+        (
+            student.name,
+            student.completion_percentage,
+            student.completion_percentage >= 1.0
+        )
+        for student in student_list
+    ]
+    df: pd.DataFrame = pd.DataFrame(data, columns=['Estudiante', 'Porcentaje de completitud', 'Terminó el curso'])
+
+    return df
 
 
 def _map_private_summary(course: Course) -> PrivateSummaryCourseOut:
@@ -270,4 +290,26 @@ def get_overview(user: User, db: Session) -> OverviewOut:
         completed_count=completed_count,
         total_count=total_count,
         course_list=course_list
+    )
+
+def get_student_csv(uuid: UUID, db: Session):
+    df: pd.DataFrame = _get_df_by_uuid(uuid, db=db)
+    stream: StringIO = StringIO()
+    df.to_csv(stream, index_label="Código estudiante")
+    stream.seek(0)
+    return StreamingResponse(
+        stream,
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=Estudiantes.csv"}
+    )
+
+def get_student_excel(uuid: UUID, db: Session):
+    df: pd.DataFrame = _get_df_by_uuid(uuid, db=db)
+    stream: BytesIO = BytesIO()
+    df.to_excel(stream, index_label="Código estudiante", engine="openpyxl")
+    stream.seek(0)
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": "attachment; filename=data.xlsx"}
     )
