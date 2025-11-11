@@ -11,6 +11,7 @@ import {
 } from "react-icons/io5";
 import type { FullSchema, Entry } from "../../../schemas/schema";
 import style from "./CourseSchemaView.module.css";
+import { schemaCategoryService, schemaEntryService } from "../../../services";
 
 type Props = {
   schema: FullSchema | null;
@@ -94,6 +95,20 @@ export default function CourseSchemaView({
                             );
                             if (cat) cat.name = e.target.value;
                             setSchema(newSchema);
+                          }}
+                          onBlur={async () => {
+                            try {
+                              await schemaCategoryService.updateCategory(
+                                category.uuid!,
+                                category.name,
+                                category.position
+                              );
+                            } catch (err) {
+                              console.error("Error guardando categoría:", err);
+                              alert(
+                                "No se pudo guardar el nombre de la categoría"
+                              );
+                            }
                           }}
                         />
                       ) : (
@@ -195,6 +210,22 @@ export default function CourseSchemaView({
                                               ent
                                             ) {
                                               setSelectedEntry({ ...ent });
+                                            }
+                                          }}
+                                          onBlur={async () => {
+                                            try {
+                                              await schemaEntryService.updateEntry(
+                                                entry.uuid!,
+                                                { name: entry.name }
+                                              );
+                                            } catch (err) {
+                                              console.error(
+                                                "Error guardando entry:",
+                                                err
+                                              );
+                                              alert(
+                                                "No se pudo guardar el nombre del entry"
+                                              );
                                             }
                                           }}
                                         />

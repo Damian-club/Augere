@@ -283,8 +283,6 @@
   box-shadow: 0 6px 14px rgba(37, 99, 235, 0.3);
 }
 
-
-
 /* === RESPONSIVE === */
 @media (max-width: 768px) {
   .schemaContainer {
@@ -582,4 +580,42 @@
   font-weight: 400;
   color: #64748b;
   margin-left: 1.6rem;
+}
+
+/* MARKDWONS */
+.markdownPreview {
+  margin-top: 1rem;
+  padding: 0.5rem 0;
+  border-top: 1px solid #ddd;
+}
+
+.markdownPreview h4 {
+  font-size: 0.9rem;
+  color: #444;
+  margin-bottom: 0.5rem;
+}
+
+.markdownBox {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 1rem;
+  max-height: 300px;
+  overflow-y: auto;
+  font-family: "Inter", sans-serif;
+}
+
+.markdownBox h1,
+.markdownBox h2,
+.markdownBox h3 {
+  margin-top: 0.6rem;
+  margin-bottom: 0.3rem;
+}
+
+.markdownBox p {
+  margin: 0.4rem 0;
+}
+
+.markdownBox ul {
+  margin-left: 1.2rem;
 }

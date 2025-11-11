@@ -109,4 +109,53 @@ export class SchemaService {
       );
     return responseData as FullSchema;
   }
+
+  // Generar esquema con IA a partir de un prompt
+  async generateSchemaByPrompt(
+    courseUuid: string,
+    prompt: string
+  ): Promise<FullSchema> {
+    const res = await fetch(
+      `${this.baseUrl}/full/by_course/${courseUuid}/prompt`,
+      {
+        method: "POST",
+        headers: this.getHeaders(),
+        body: JSON.stringify({ prompt }),
+      }
+    );
+
+    const data = await this.handleResp(res);
+    if (!res.ok)
+      throw new Error(data?.detail || "Error al generar esquema con IA");
+    return data as FullSchema;
+  }
+
+  async updateCategory(uuid: string, data: Partial<{ position: number }>) {
+    const res = await fetch(`/schema_category/${uuid}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error("Error actualizando categoría");
+    return res.json();
+  }
+
+  async updateEntry(
+    uuid: string,
+    data: Partial<{
+      position: number;
+      category_uuid: string;
+      body?: string;
+      context?: string;
+      entry_type?: string;
+    }>
+  ) {
+    const res = await fetch(`/schema_entry/${uuid}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error("Error actualizando entry");
+    return res.json();
+  }
 }

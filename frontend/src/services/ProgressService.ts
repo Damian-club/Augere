@@ -19,62 +19,65 @@ export class ProgressService {
     };
   }
 
+  private async handleResp(res: Response) {
+    const text = await res.text();
+    try {
+      return JSON.parse(text);
+    } catch {
+      return text;
+    }
+  }
+
   // Crear progreso
-  async createProgress(data: ProgressCreate): Promise<Progress> {
+  async create(data: ProgressCreate): Promise<Progress> {
     const res = await fetch(`${this.baseUrl}/`, {
       method: "POST",
       headers: this.getHeaders(),
       body: JSON.stringify(data),
     });
 
-    if (!res.ok) {
-      const err = await res.json().catch(() => null);
-      throw new Error(err?.detail || "Error al crear progreso");
-    }
-
-    return await res.json();
+    const responseData = await this.handleResp(res);
+    if (!res.ok)
+      throw new Error(responseData?.detail || "Error al crear progreso");
+    return responseData as Progress;
   }
 
   // Obtener progreso por UUID
-  async getProgress(uuid: string): Promise<Progress> {
+  async get(uuid: string): Promise<Progress> {
     const res = await fetch(`${this.baseUrl}/${uuid}`, {
       headers: this.getHeaders(),
     });
 
-    if (!res.ok) {
-      const err = await res.json().catch(() => null);
-      throw new Error(err?.detail || "Error al obtener progreso");
-    }
-
-    return await res.json();
+    const responseData = await this.handleResp(res);
+    if (!res.ok)
+      throw new Error(responseData?.detail || "Error al obtener progreso");
+    return responseData as Progress;
   }
 
   // Actualizar progreso
-  async updateProgress(uuid: string, data: ProgressUpdate): Promise<Progress> {
+  async update(uuid: string, data: ProgressUpdate): Promise<Progress> {
     const res = await fetch(`${this.baseUrl}/${uuid}`, {
       method: "PUT",
       headers: this.getHeaders(),
       body: JSON.stringify(data),
     });
 
-    if (!res.ok) {
-      const err = await res.json().catch(() => null);
-      throw new Error(err?.detail || "Error al actualizar progreso");
-    }
-
-    return await res.json();
+    const responseData = await this.handleResp(res);
+    if (!res.ok)
+      throw new Error(responseData?.detail || "Error al actualizar progreso");
+    return responseData as Progress;
   }
 
   // Eliminar progreso
-  async deleteProgress(uuid: string): Promise<void> {
+  async delete(uuid: string): Promise<void> {
     const res = await fetch(`${this.baseUrl}/${uuid}`, {
       method: "DELETE",
       headers: this.getHeaders(),
     });
 
     if (!res.ok) {
-      const err = await res.json().catch(() => null);
-      throw new Error(err?.detail || "Error al eliminar progreso");
+      const responseData = await this.handleResp(res);
+      throw new Error(responseData?.detail || "Error al eliminar progreso");
     }
   }
 }

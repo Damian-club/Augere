@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
-import { schemaService } from "../../../services";
+import {
+  schemaService,
+  schemaEntryService,
+  schemaCategoryService,
+} from "../../../services";
 import type { Course } from "../../../schemas/course";
 import {
   IoDocumentTextOutline,
@@ -10,6 +14,8 @@ import { type Entry, type FullSchema } from "../../../schemas/schema";
 import style from "./CourseSchemaTab.module.css";
 import type { DropResult } from "@hello-pangea/dnd";
 import CourseSchemaView from "../courseSchema/CourseSchemaView";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 type Props = {
   course: Course;
@@ -21,7 +27,7 @@ export default function CourseSchemaTab2({ course }: Props) {
   const [loading, setLoading] = useState(true);
   const [aiPrompt, setAiPrompt] = useState("");
   const [editingType, setEditingType] = useState(false);
-  const [typeInput, setTypeInput] = useState(""); // valor del input mientras editas
+  const [typeInput, setTypeInput] = useState(""); // valor del input
   const [customTypes, setCustomTypes] = useState<string[]>([]); // para nuevos tipos
 
   useEffect(() => {
@@ -49,101 +55,231 @@ export default function CourseSchemaTab2({ course }: Props) {
     loadSchema();
   }, [course.uuid]);
 
-  const handleDragEnd = (result: DropResult) => {
-    const { source, destination, type } = result;
-    if (!destination || !schema) return;
+  const addCategory = async () => {
+    if (!schema) return;
 
-    const newSchema = { ...schema };
-
-    if (type === "CATEGORY") {
-      // mover categoría
-      const [movedCat] = newSchema.category_list.splice(source.index, 1);
-      newSchema.category_list.splice(destination.index, 0, movedCat);
-      newSchema.category_list = newSchema.category_list.map((cat, idx) => ({
-        ...cat,
-        position: idx,
-      }));
-    } else if (type === "ENTRY") {
-      // mover entry (intra o inter-categoría)
-      const sourceCat = newSchema.category_list.find(
-        (c) => c.uuid === source.droppableId
+    try {
+      // Crear categoría en backend
+      const newCat = await schemaCategoryService.createCategory(
+        schema.uuid!,
+        "Nueva Categoría",
+        schema.category_list.length
       );
-      const destCat = newSchema.category_list.find(
-        (c) => c.uuid === destination.droppableId
-      );
-      if (!sourceCat || !destCat) return;
 
-      const [movedEntry] = sourceCat.entry_list.splice(source.index, 1);
-      movedEntry.category_uuid = destCat.uuid!; // actualizar categoría si cambió
-      destCat.entry_list.splice(destination.index, 0, movedEntry);
+      // Crear entry inicial en backend
+      const newEntry = await schemaEntryService.createEntry({
+        name: "Nuevo Entry",
+        body: "",
+        context: "",
+        entry_type: "topic",
+        position: 0,
+        category_uuid: newCat.uuid,
+      });
 
-      // recalcular posiciones
-      sourceCat.entry_list = sourceCat.entry_list.map((en, idx) => ({
-        ...en,
-        position: idx,
-      }));
-      destCat.entry_list = destCat.entry_list.map((en, idx) => ({
-        ...en,
-        position: idx,
-      }));
+      newCat.entry_list = [newEntry];
+
+      // Actualizar frontend
+      setSchema({
+        ...schema,
+        category_list: [...schema.category_list, newCat],
+      });
+
+      setSelectedEntry(newEntry);
+    } catch (err) {
+      console.error("Error creando categoría o entry:", err);
+      alert("Error creando categoría o entry. Revisa la consola.");
     }
-
-    setSchema(newSchema);
   };
 
-  const handleGenerateSchema = () => {
-    const mockSchema: FullSchema = {
-      course_uuid: course.uuid,
-      uuid: "schema-uuid-" + Date.now(),
-      category_list: [
-        {
-          name: "Introducción a Algoritmos",
-          position: 0,
-          schema_uuid: "schema-uuid-123",
-          uuid: "cat-intro",
-          entry_list: [
-            {
-              name: "¿Qué es un algoritmo?",
-              body: "Contenido...",
-              context: "Contexto...",
-              entry_type: "topic",
-              position: 0,
-              category_uuid: "cat-intro",
-              uuid: "entry-intro-1",
-            },
-            {
-              name: "Notación Big O",
-              body: "Contenido...",
-              context: "Contexto...",
-              entry_type: "topic",
-              position: 1,
-              category_uuid: "cat-intro",
-              uuid: "entry-intro-2",
-            },
-            {
-              name: "Tarea: Análisis de Complejidad",
-              body: "Contenido...",
-              context: "Contexto...",
-              entry_type: "assignment",
-              position: 2,
-              category_uuid: "cat-intro",
-              uuid: "entry-intro-3",
-            },
-          ],
-        },
-      ],
-    };
-    setSchema(mockSchema);
+  const addEntry = async (categoryUuid: string) => {
+    if (!schema) return;
+
+    try {
+      const cat = schema.category_list.find((c) => c.uuid === categoryUuid);
+      if (!cat) return;
+
+      const newEntry = await schemaEntryService.createEntry({
+        name: "Nuevo Entry",
+        body: "",
+        context: "",
+        entry_type: "topic",
+        position: cat.entry_list.length,
+        category_uuid: categoryUuid,
+      });
+
+      cat.entry_list.push(newEntry);
+      setSchema({ ...schema });
+    } catch (err) {
+      console.error("Error creando entry:", err);
+      alert("Error creando entry. Revisa la consola.");
+    }
   };
 
-  const handleSaveBody = () => {
+  const handleDragEnd = async (result: DropResult) => {
+    if (!result.destination || !schema) return;
+
+    const { source, destination, type } = result;
+    const newSchema: FullSchema = { ...schema };
+
+    try {
+      if (type === "CATEGORY") {
+        // Mover categoría en frontend
+        const [movedCat] = newSchema.category_list.splice(source.index, 1);
+        newSchema.category_list.splice(destination.index, 0, movedCat);
+
+        // Actualizar posiciones en frontend
+        newSchema.category_list = newSchema.category_list.map((cat, idx) => ({
+          ...cat,
+          position: idx,
+        }));
+
+        // Actualizar posiciones en backend
+        await Promise.all(
+          newSchema.category_list.map((cat) =>
+            schemaCategoryService.updateCategory(
+              cat.uuid!,
+              cat.name,
+              cat.position
+            )
+          )
+        );
+      } else if (type === "ENTRY") {
+        const sourceCat = newSchema.category_list.find(
+          (c) => c.uuid === source.droppableId
+        );
+        const destCat = newSchema.category_list.find(
+          (c) => c.uuid === destination.droppableId
+        );
+        if (!sourceCat || !destCat) return;
+
+        // Mover entry en frontend
+        const [movedEntry] = sourceCat.entry_list.splice(source.index, 1);
+        movedEntry.category_uuid = destCat.uuid!;
+        destCat.entry_list.splice(destination.index, 0, movedEntry);
+
+        // Actualizar posiciones en frontend para ambas categorías
+        sourceCat.entry_list = sourceCat.entry_list.map((en, idx) => ({
+          ...en,
+          position: idx,
+        }));
+        destCat.entry_list = destCat.entry_list.map((en, idx) => ({
+          ...en,
+          position: idx,
+        }));
+
+        // Actualizar backend
+        const updateEntries = (entries: Entry[]) =>
+          entries.map((en) =>
+            schemaEntryService.updateEntry(en.uuid!, {
+              position: en.position,
+              category_uuid: en.category_uuid,
+            })
+          );
+
+        await Promise.all([
+          ...updateEntries(sourceCat.entry_list),
+          ...updateEntries(destCat.entry_list),
+        ]);
+      }
+
+      // Actualizar estado inmediatamente para que UI se refleje al vuelo
+      setSchema(newSchema);
+    } catch (err) {
+      console.error("Error actualizando posiciones en backend:", err);
+      alert("Error al mover elementos. Revisa la consola.");
+    }
+  };
+
+  const handleGenerateSchema2 = async () => {
+    if (!aiPrompt.trim())
+      return alert("Escribe un prompt antes de generar el esquema.");
+
+    try {
+      setLoading(true);
+      const response = await schemaService.generateSchemaByPrompt(
+        course.uuid,
+        aiPrompt
+      );
+      setSchema(response); // respuesta del backend (FullSchema)
+    } catch (err) {
+      console.error("Error generando esquema con IA:", err);
+      alert("Hubo un error generando el esquema con IA. Revisa la consola.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSaveBody = async () => {
     if (!selectedEntry) return;
-    console.log("Guardando cuerpo para:", selectedEntry.name);
-  };
 
-  const handleGenerateContext = () => {
+    try {
+      await schemaEntryService.updateEntry(selectedEntry.uuid!, {
+        body: selectedEntry.body || "",
+        context: selectedEntry.context || "",
+        entry_type: selectedEntry.entry_type,
+        position: selectedEntry.position ?? 0,
+        category_uuid: selectedEntry.category_uuid!,
+      });
+      alert("Contenido guardado");
+    } catch (err) {
+      console.error(err);
+      alert("Error guardando contenido");
+    }
+  };
+  const handleGenerateContext = async () => {
     if (!selectedEntry) return;
-    console.log("Generando contexto IA para:", selectedEntry.name);
+
+    const prompt = selectedEntry.context?.trim();
+    if (!prompt) return alert("Escribe un prompt para generar el contexto");
+
+    try {
+      setLoading(true);
+
+      // Usamos el mismo endpoint que ya existe
+      const response = await schemaService.generateSchemaByPrompt(
+        course.uuid,
+        prompt
+      );
+
+      // Sacamos solo la entry correspondiente
+      const updatedEntry = response.category_list
+        .flatMap((cat) => cat.entry_list)
+        .find((en) => en.uuid === selectedEntry.uuid);
+
+      if (!updatedEntry) {
+        alert("No se pudo generar el contenido");
+        return;
+      }
+
+      // Solo ponemos el texto generado en el body
+      setSelectedEntry({
+        ...selectedEntry,
+        body: updatedEntry.body || "",
+      });
+
+      // Actualizamos también el schema local
+      if (schema) {
+        const newSchema = { ...schema };
+        const cat = newSchema.category_list.find(
+          (c) => c.uuid === selectedEntry.category_uuid
+        );
+        if (cat) {
+          const entIdx = cat.entry_list.findIndex(
+            (en) => en.uuid === selectedEntry.uuid
+          );
+          if (entIdx !== -1)
+            cat.entry_list[entIdx].body = updatedEntry.body || "";
+        }
+        setSchema(newSchema);
+      }
+
+      alert("Contenido generado con IA ✅");
+    } catch (err) {
+      console.error(err);
+      alert("Error generando contenido con IA");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const saveType = (value: string) => {
@@ -178,61 +314,6 @@ export default function CourseSchemaTab2({ course }: Props) {
     setEditingType(false);
   };
 
-  const addCategory = () => {
-    if (!schema) return;
-
-    const newCatUuid = "cat-" + Date.now();
-    const newEntryUuid = "entry-" + Date.now();
-
-    const newCategory = {
-      name: "Nueva Categoría",
-      position: schema.category_list.length,
-      schema_uuid: schema.uuid,
-      uuid: newCatUuid,
-      entry_list: [
-        {
-          name: "Nuevo Entry",
-          body: "",
-          context: "",
-          entry_type: "topic",
-          position: 0,
-          category_uuid: newCatUuid,
-          uuid: newEntryUuid,
-        },
-      ],
-    };
-
-    setSchema({
-      ...schema,
-      category_list: [...schema.category_list, newCategory],
-    });
-
-    // Selecciona automáticamente el entry recién creado
-    setSelectedEntry(newCategory.entry_list[0]);
-  };
-
-  const addEntry = (categoryUuid: string) => {
-    if (!schema) return;
-
-    const cat = schema.category_list.find((c) => c.uuid === categoryUuid);
-    if (!cat) return;
-
-    const newEntryUuid = "entry-" + Date.now();
-    const newEntry: Entry = {
-      name: "Nuevo Entry",
-      body: "",
-      context: "",
-      entry_type: "topic",
-      position: cat.entry_list.length,
-      category_uuid: categoryUuid,
-      uuid: newEntryUuid,
-    };
-
-    cat.entry_list.push(newEntry);
-
-    setSchema({ ...schema });
-  };
-
   if (loading) return <p>Cargando esquema...</p>;
 
   return (
@@ -250,7 +331,7 @@ export default function CourseSchemaTab2({ course }: Props) {
           onChange={(e) => setAiPrompt(e.target.value)}
           rows={3}
         />
-        <button className={style.generateBtn} onClick={handleGenerateSchema}>
+        <button className={style.generateBtn} onClick={handleGenerateSchema2}>
           <IoSparklesOutline /> Generar Esquema
         </button>
       </div>
@@ -370,6 +451,14 @@ export default function CourseSchemaTab2({ course }: Props) {
                   <button className={style.saveBtn} onClick={handleSaveBody}>
                     <IoSaveOutline /> Guardar Cuerpo
                   </button>
+                  <div className={style.markdownPreview}>
+                    <h4>Vista previa (Markdown):</h4>
+                    <div className={style.markdownBox}>
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {selectedEntry.body || "_Sin contenido_"}
+                      </ReactMarkdown>
+                    </div>
+                  </div>
                 </div>
 
                 <div className={style.editorField}>

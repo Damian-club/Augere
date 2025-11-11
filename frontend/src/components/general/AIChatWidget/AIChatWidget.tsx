@@ -4,10 +4,35 @@ import {
   IoSendOutline,
   IoCloseOutline,
 } from "react-icons/io5";
+import { aiChatService } from "../../../services";
 import style from "./AIChatWidget.module.css";
 
-export default function AIChatWidget() {
+interface Props {
+  progressUuid: string;
+}
+
+export default function AIChatWidget({ progressUuid }: Props) {
   const [open, setOpen] = useState(false);
+  const [message, setMessage] = useState("");
+  const [messages, setMessages] = useState<
+    { author: "user" | "ai"; content: string }[]
+  >([]);
+
+  const handleSend = async () => {
+    if (!message.trim()) return;
+
+    const userMsg = { author: "user" as const, content: message };
+    setMessages((prev) => [...prev, userMsg]);
+    setMessage("");
+
+    try {
+      const res = await aiChatService.sendPrompt(progressUuid, message);
+      // el backend devuelve { user, ai }
+      setMessages((prev) => [...prev, res.ai]);
+    } catch (err) {
+      console.error("Error en chat IA:", err);
+    }
+  };
 
   return (
     <div className={style.chatContainer}>
@@ -21,9 +46,16 @@ export default function AIChatWidget() {
         </div>
 
         <div className={style.messages}>
-          <p className={style.messageIA}>
-            🐟 ¡Hola Pez JoJo! ¿En qué puedo ayudarte con este curso?
-          </p>
+          {messages.map((msg, i) => (
+            <p
+              key={i}
+              className={
+                msg.author === "ai" ? style.messageIA : style.messageUser
+              }
+            >
+              {msg.content}
+            </p>
+          ))}
         </div>
 
         <div className={style.inputArea}>
@@ -31,14 +63,17 @@ export default function AIChatWidget() {
             type="text"
             placeholder="Escribe tu pregunta..."
             className={style.input}
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSend()}
           />
-          <button className={style.sendBtn}>
+          <button className={style.sendBtn} onClick={handleSend}>
             <IoSendOutline />
           </button>
         </div>
       </div>
 
-      {/* Botón flotante para abrir */}
+      {/* Botón flotante */}
       {!open && (
         <button className={style.fab} onClick={() => setOpen(true)}>
           <IoSparklesOutline className={style.fabIcon} />
