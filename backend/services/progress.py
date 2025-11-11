@@ -36,29 +36,44 @@ def map_model_to_schema(progress: Progress) -> ProgressOut:
 
 
 def create_progress(progress_create: ProgressCreate, db: Session) -> ProgressOut:
-
-    progress: Progress = Progress(
-        entry_uuid=progress_create.entry_uuid, student_uuid=progress_create.student_uuid, finished=progress_create.finished
-    )
-
     try:
-        db.add(progress)
-        db.commit()
+        existing_progress: Progress = (
+            db.query(Progress)
+            .filter(
+                Progress.entry_uuid == progress_create.entry_uuid,
+                Progress.student_uuid == progress_create.student_uuid
+            )
+            .first()
+        )
+
+        if existing_progress:
+            existing_progress.finished = progress_create.finished
+            db.commit()
+            db.refresh(existing_progress)
+            return map_model_to_schema(existing_progress)
+        else:
+            new_progress = Progress(
+                entry_uuid=progress_create.entry_uuid,
+                student_uuid=progress_create.student_uuid,
+                finished=progress_create.finished
+            )
+            db.add(new_progress)
+            db.commit()
+            db.refresh(new_progress)
+            return map_model_to_schema(new_progress)
+
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Error al crear el progreso: {e}")
-
-    return map_model_to_schema(progress)
-
+        raise HTTPException(status_code=400, detail=f"Error al crear o actualizar progreso: {e}")
 
 def update_progress(uuid: UUID, progress_update: ProgressUpdate, db: Session) -> ProgressOut:
-    progress: ProgressOut = _get_progress_by_uuid(uuid, db=db)
+    progress: Progress = _get_progress_by_uuid(uuid, db=db)
 
     if progress_update.entry_uuid is not None:
-        progress = progress_update.entry_uuid
+        progress.entry_uuid = progress_update.entry_uuid
     if progress_update.student_uuid is not None:
-        progress = progress_update.student_uuid
+        progress.student_uuid = progress_update.student_uuid
     if progress_update.finished is not None:
-        progress = progress_update.finished
+        progress.finished = progress_update.finished
 
     try:
         db.commit()
@@ -69,7 +84,6 @@ def update_progress(uuid: UUID, progress_update: ProgressUpdate, db: Session) ->
         )
 
     return map_model_to_schema(progress)
-
 
 def delete_progress(uuid: UUID, db: Session) -> Message:
     progress: Progress = _get_progress_by_uuid(uuid, db=db)
@@ -87,3 +101,6 @@ def get_progress(progress_uuid: UUID, db: Session) -> ProgressOut:
     progress: Progress = _get_progress_by_uuid(progress_uuid, db)
 
     return map_model_to_schema(progress)
+
+def get_by_student(db: Session, student_uuid: UUID):
+    return db.query(Progress).filter(Progress.student_uuid == student_uuid).all()

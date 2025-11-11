@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { Course, StudentSummary } from "../../../schemas/course";
 import style from "./CourseStudentsTab.module.css";
-import { courseService } from "../../../services";
+import { courseService, schemaService } from "../../../services";
 import { IoEyeOutline } from "react-icons/io5";
 import StudentReviewPanel from "../student/StudentReviewPanel";
 
@@ -13,38 +13,64 @@ export default function CourseStudentsTab({ course }: Props) {
   const [students, setStudents] = useState<StudentSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedStudent, setSelectedStudent] = useState<string | null>(null);
+  const [studentProgressMap, setStudentProgressMap] = useState<
+    Record<string, number>
+  >({});
 
   useEffect(() => {
     const fetchStudents = async () => {
       try {
+        setLoading(true);
+        // Traer resumen privado del curso
         const data = await courseService.getPrivateSummary(course.uuid);
-        setStudents(data.student_list || []);
+        const studentList = data.student_list || [];
+
+        // Traer esquema del curso
+        const schema = await schemaService.getFullSchemaByCourse(course.uuid);
+        const entryUuids = schema.category_list.flatMap((cat) =>
+          cat.entry_list.map((e) => e.uuid)
+        );
+
+        // Calcular progreso de cada estudiante
+        const progressMap: Record<string, number> = {};
+        studentList.forEach((student) => {
+          if (!student.uuid) return;
+
+          const finishedCount =
+            student.progress_list?.filter(
+              (p) => entryUuids.includes(p.entry_uuid) && p.finished
+            ).length || 0;
+
+          progressMap[student.uuid] = entryUuids.length
+            ? Math.round((finishedCount / entryUuids.length) * 100)
+            : 0;
+        });
+
+        setStudents(studentList);
+        setStudentProgressMap(progressMap);
       } catch (err) {
-        console.log("Error al cargar estudiantes: ", err);
+        console.error("Error al cargar estudiantes: ", err);
       } finally {
         setLoading(false);
       }
     };
+
     fetchStudents();
   }, [course.uuid]);
 
-  if (loading) {
-    return <div className={style.loader}>Cargando alumnos...</div>;
-  }
+  if (loading) return <div className={style.loader}>Cargando alumnos...</div>;
 
-  if (!students.length) {
+  if (!students.length)
     return (
       <div className={style.emptyState}>
-        <p>No hay alumnos incristos en el curso</p>
+        <p>No hay alumnos inscritos en el curso</p>
       </div>
     );
-  }
 
   return (
     <>
       <div className={style.studentsContainer}>
         <h3 className={style.title}>Lista de estudiantes</h3>
-
         <div className={style.tableWrapper}>
           <table className={style.studentsTable}>
             <thead>
@@ -55,27 +81,26 @@ export default function CourseStudentsTab({ course }: Props) {
               </tr>
             </thead>
             <tbody>
-              {students.map((student, i) => (
-                <tr key={i}>
+              {students.map((student) => (
+                <tr key={student.uuid}>
                   <td>{student.name}</td>
                   <td>
                     <div className={style.progressBar}>
                       <div
                         className={style.progressFill}
-                        style={{ width: `${student.completion_percentage}%` }}
-                      ></div>
+                        style={{
+                          width: `${studentProgressMap[student.uuid] || 0}%`,
+                        }}
+                      />
                     </div>
                     <span className={style.progressText}>
-                      {student.completion_percentage}%
+                      {studentProgressMap[student.uuid] || 0}%
                     </span>
                   </td>
                   <td className={style.tdActions}>
                     <button
                       className={style.actionButton}
-                      onClick={() => {
-                        console.log("Click en revisar student: ", student.uuid);
-                        setSelectedStudent(student.name);
-                      }}
+                      onClick={() => setSelectedStudent(student.uuid)}
                     >
                       <IoEyeOutline />
                       Revisar
@@ -89,11 +114,13 @@ export default function CourseStudentsTab({ course }: Props) {
 
         {selectedStudent && (
           <StudentReviewPanel
-            studentName={selectedStudent}
+            studentUuid={selectedStudent}
+            courseUuid={course.uuid}
             onClose={() => setSelectedStudent(null)}
           />
         )}
       </div>
+
       <div className={style.exportButtons}>
         <button
           className={`${style.exportButton} ${style.excelButton}`}

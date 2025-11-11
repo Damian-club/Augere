@@ -1,18 +1,23 @@
 import { useEffect, useState } from "react";
 import styles from "./DashboardHome.module.css";
-import { authService, courseService } from "../../../services";
+import {
+  authService,
+  courseService,
+  progressService,
+  schemaService,
+} from "../../../services";
 
-type OverviewData = {
+type CourseWithProgress = {
+  uuid: string;
+  name: string;
   completion_percentage: number;
-  completed_count: number;
-  total_count: number;
-  course_list: { name: string; completion_percentage: number }[];
 };
 
 export default function DashboardHome() {
-  const [user, setUser] = useState<{ name: string } | null>(null);
-  const [overview, setOverview] = useState<OverviewData | null>(null);
+  const [user, setUser] = useState<{ name: string; uuid: string } | null>(null);
+  const [courses, setCourses] = useState<CourseWithProgress[]>([]);
   const [loading, setLoading] = useState(true);
+  const [globalProgress, setGlobalProgress] = useState(0);
 
   useEffect(() => {
     const loadData = async () => {
@@ -20,10 +25,54 @@ export default function DashboardHome() {
         const userData = await authService.getCurrentUser();
         setUser(userData);
 
-        const overviewData = await courseService.getOverview();
-        setOverview(overviewData);
+        const [created, enrolled] = await Promise.all([
+          courseService.getCreatedCourses(),
+          courseService.getEnrolledCourses(),
+        ]);
+
+        const courseMap = new Map<string, string>();
+        const allCourses = [...created, ...enrolled].filter((c) => {
+          if (courseMap.has(c.uuid)) return false;
+          courseMap.set(c.uuid, c.title);
+          return true;
+        });
+
+        const progresses = await progressService.listByStudent(userData.uuid);
+        const coursesWithProgress: CourseWithProgress[] = [];
+
+        for (const course of allCourses) {
+          const schema = await schemaService.getFullSchemaByCourse(course.uuid);
+          const entryUuids = schema.category_list.flatMap((cat) =>
+            cat.entry_list.map((e) => e.uuid)
+          );
+
+          const total = entryUuids.length;
+          const finished = progresses.filter(
+            (p) => entryUuids.includes(p.entry_uuid) && p.finished
+          ).length;
+          const completion =
+            total > 0 ? Math.round((finished / total) * 100) : 0;
+
+          coursesWithProgress.push({
+            uuid: course.uuid,
+            name: course.title,
+            completion_percentage: completion,
+          });
+        }
+
+        setCourses(coursesWithProgress);
+
+        const global = coursesWithProgress.length
+          ? Math.round(
+              coursesWithProgress.reduce(
+                (acc, c) => acc + c.completion_percentage,
+                0
+              ) / coursesWithProgress.length
+            )
+          : 0;
+        setGlobalProgress(global);
       } catch (err) {
-        console.error("Error al cargar datos del dashboard:", err);
+        console.error("Error al cargar dashboard:", err);
       } finally {
         setLoading(false);
       }
@@ -32,19 +81,12 @@ export default function DashboardHome() {
     loadData();
   }, []);
 
-  if (loading) {
-    return <div className={styles.loader}>Cargando datos...</div>;
-  }
+  if (loading) return <div className={styles.loader}>Cargando datos...</div>;
 
-  if (!overview) {
-    return (
-      <div className={styles.emptyState}>
-        <p>No hay datos disponibles aún.</p>
-      </div>
-    );
-  }
-
-  const progress = overview.completion_percentage || 0;
+  const completedCourses = courses.filter(
+    (c) => c.completion_percentage === 100
+  ).length;
+  const totalCourses = courses.length;
 
   return (
     <div className={styles.dashboardHome}>
@@ -56,22 +98,23 @@ export default function DashboardHome() {
         <div className={styles.progressCard}>
           <div
             className={styles.circle}
-            style={{ "--progress": `${progress}%` } as React.CSSProperties}
+            style={
+              { "--progress": `${globalProgress}%` } as React.CSSProperties
+            }
           >
-            <span>{progress}%</span>
+            <span>{globalProgress}%</span>
           </div>
           <p>
             <strong>
-              {overview.completed_count}/{overview.total_count}
+              {completedCourses}/{totalCourses}
             </strong>{" "}
             completados
           </p>
           <p>Tu progreso total en los cursos</p>
         </div>
 
-        {/* Lista de cursos con progreso */}
         <div className={styles.courseList}>
-          {overview.course_list.map((course, i) => (
+          {courses.map((course, i) => (
             <div key={i} className={styles.courseRow}>
               <span>{course.name}</span>
               <div className={styles.bar}>
@@ -82,10 +125,9 @@ export default function DashboardHome() {
         </div>
       </div>
 
-      {/* Sección Resumen */}
       <div className={styles.summary}>
         <div className={styles.summaryCard}>
-          <h3>{overview.total_count}</h3>
+          <h3>{totalCourses}</h3>
           <p>Cursos activos</p>
         </div>
       </div>

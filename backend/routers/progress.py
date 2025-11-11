@@ -1,11 +1,14 @@
 from core.db import get_db
 from uuid import UUID
 from sqlalchemy.orm import Session
+from services import progress as progress_service
+from models.progress import Progress
 
 # API ------------------
 from fastapi import (
     APIRouter,
-    Depends
+    Depends,
+    HTTPException
 )
 #-----------------------
 
@@ -48,3 +51,16 @@ def r_update_progress(uuid: UUID, progress_update: ProgressUpdate, db: Session =
 @router.delete("/{uuid}", response_model=Message)
 def r_delete_progress(uuid: UUID, db: Session = Depends(get_db)) -> Message:
     return delete_progress(uuid, db=db)
+
+@router.get("/by_student/{student_uuid}", response_model=list[ProgressOut])
+def get_progress_by_student(student_uuid: UUID, db: Session = Depends(get_db)):
+    progresses = progress_service.get_by_student(db, student_uuid)
+    if progresses is None:
+        raise HTTPException(status_code=404, detail="No se encontraron progresos para este estudiante.")
+    return progresses
+
+@router.delete("/reset/{student_uuid}", response_model=Message)
+def r_reset_progress(student_uuid: UUID, db: Session = Depends(get_db)):
+    deleted = db.query(Progress).filter(Progress.student_uuid == student_uuid).delete()
+    db.commit()
+    return Message(detail=f"Se eliminaron {deleted} progresos del estudiante {student_uuid}.")

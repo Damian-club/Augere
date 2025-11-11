@@ -11,12 +11,13 @@ import CourseSchemaView from "../../general/courseSchema/CourseSchemaView";
 import type { FullSchema, Entry } from "../../../schemas/schema";
 import style from "./CourseDashboard.module.css";
 import AIChatWidget from "../../general/AIChatWidget/AIChatWidget";
-import { authService, courseService, schemaService } from "../../../services";
+import { authService, schemaService, courseService } from "../../../services";
 import type { Course } from "../../../schemas/course";
 import type { User } from "../../../schemas/auth";
 import { progressService } from "../../../services";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+// import { useUser } from "../../../hooks/useUser";
 
 export default function CourseDashboard() {
   const { uuid } = useParams();
@@ -25,68 +26,16 @@ export default function CourseDashboard() {
   const [user, setUser] = useState<User | null>(null);
   const [selectedEntry, setSelectedEntry] = useState<Entry | null>(null);
   const [progressUuid, setProgressUuid] = useState<string | null>(null);
-
-  const mockSchema: FullSchema = {
-    course_uuid: "course-uuid-demo",
-    uuid: "schema-uuid-demo",
-    category_list: [
-      {
-        name: "Introducción a Algoritmos",
-        position: 0,
-        schema_uuid: "schema-uuid-demo",
-        uuid: "cat-intro",
-        entry_list: [
-          {
-            name: "¿Qué es un algoritmo?",
-            body: "Contenido introductorio...",
-            context: "Contexto inicial...",
-            entry_type: "topic",
-            position: 0,
-            category_uuid: "cat-intro",
-            uuid: "entry-intro-1",
-          },
-          {
-            name: "Notación Big O",
-            body: "Explicación de complejidad temporal.",
-            context: "Comparación entre algoritmos...",
-            entry_type: "topic",
-            position: 1,
-            category_uuid: "cat-intro",
-            uuid: "entry-intro-2",
-          },
-          {
-            name: "Tarea: Análisis de Complejidad",
-            body: "Resuelve ejercicios sobre Big O.",
-            context: "Aplicación práctica de complejidad.",
-            entry_type: "assignment",
-            position: 2,
-            category_uuid: "cat-intro",
-            uuid: "entry-intro-3",
-          },
-        ],
-      },
-      {
-        name: "Estructuras de Datos",
-        position: 1,
-        schema_uuid: "schema-uuid-demo",
-        uuid: "cat-ds",
-        entry_list: [
-          {
-            name: "Listas y Pilas",
-            body: "Contenido sobre estructuras lineales.",
-            context: "Uso en algoritmos clásicos.",
-            entry_type: "topic",
-            position: 0,
-            category_uuid: "cat-ds",
-            uuid: "entry-ds-1",
-          },
-        ],
-      },
-    ],
-  };
-  // const [schema] = useState<FullSchema>(mockSchema);
   const [schema, setSchema] = useState<FullSchema | null>(null);
+  const [progressMap, setProgressMap] = useState<
+    Record<string, { finished: boolean; uuid?: string }>
+  >({});
 
+  const [courseProgress, setCourseProgress] = useState<Record<string, number>>(
+    {}
+  );
+
+  // CARGAR USUARIO
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -99,6 +48,7 @@ export default function CourseDashboard() {
     fetchUser();
   }, []);
 
+  // CARGAR ESQUEMA
   useEffect(() => {
     if (!uuid) return;
 
@@ -114,25 +64,81 @@ export default function CourseDashboard() {
     loadSchema();
   }, [uuid]);
 
-  // Crear progreso al seleccionar un Entry
+  // CARGAR DETALLES DEL CURSO
   useEffect(() => {
-    if (!selectedEntry || !user) return;
+    if (!uuid) return;
 
-    const loadProgress = async () => {
+    const loadCourse = async () => {
       try {
-        const progress = await progressService.create({
-          entry_uuid: selectedEntry.uuid!,
-          student_uuid: user.uuid,
-          finished: false,
-        });
-        setProgressUuid(progress.uuid);
+        const courseData = await courseService.getCourse(uuid);
+        setCourse(courseData);
       } catch (err) {
-        console.error("Error al crear progreso:", err);
+        console.error("Error cargando curso:", err);
       }
     };
 
+    loadCourse();
+  }, [uuid]);
+
+  useEffect(() => {
+    async function loadProgress() {
+      if (!user?.uuid) return;
+
+      try {
+        const progresses = await progressService.listByStudent(user.uuid);
+        console.log("Progresos del usuario:", progresses);
+
+        // === 1. Mapear para CourseSchemaView ===
+        const map: Record<string, { finished: boolean; uuid?: string }> = {};
+        progresses.forEach((p) => {
+          map[p.entry_uuid] = { finished: p.finished, uuid: p.uuid };
+        });
+        setProgressMap(map);
+
+        // === 2. Calcular % de progreso por curso ===
+        const progressByCourse: Record<
+          string,
+          { total: number; finished: number }
+        > = {};
+
+        progresses.forEach((p) => {
+          // ⚠️ Aquí no podemos usar split("-")[0], sino basarnos en schema.entries
+          // Este cálculo se haría mejor en la página de cursos, no en el dashboard.
+          // Pero lo dejamos simple:
+          const courseUuid = p.entry_uuid.split("-")[0];
+          if (!progressByCourse[courseUuid]) {
+            progressByCourse[courseUuid] = { total: 0, finished: 0 };
+          }
+          progressByCourse[courseUuid].total++;
+          if (p.finished) progressByCourse[courseUuid].finished++;
+        });
+
+        const result: Record<string, number> = {};
+        Object.entries(progressByCourse).forEach(
+          ([courseUuid, { total, finished }]) => {
+            result[courseUuid] =
+              total > 0 ? Math.round((finished / total) * 100) : 0;
+          }
+        );
+
+        setCourseProgress(result);
+      } catch (err) {
+        console.error("Error cargando progresos:", err);
+      }
+    }
+
     loadProgress();
-  }, [selectedEntry, user]);
+  }, [user?.uuid, uuid]);
+
+  useEffect(() => {
+    if (!selectedEntry) {
+      setProgressUuid(null);
+      return;
+    }
+
+    const found = progressMap[selectedEntry.uuid!];
+    setProgressUuid(found?.uuid || null);
+  }, [selectedEntry, progressMap]);
 
   return (
     <div className={style.dashboard}>
@@ -168,6 +174,9 @@ export default function CourseDashboard() {
               setSidebarOpen(false);
             }}
             editable={false}
+            user={user}
+            progressMap={progressMap}
+            setProgressMap={setProgressMap}
           />
         </div>
 

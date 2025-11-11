@@ -80,4 +80,15 @@ export class ProgressService {
       throw new Error(responseData?.detail || "Error al eliminar progreso");
     }
   }
+
+  // listar progresos por estudiante
+  async listByStudent(student_uuid: string): Promise<Progress[]> {
+    const res = await fetch(`${this.baseUrl}/by_student/${student_uuid}`, {
+      headers: this.getHeaders(),
+    });
+    const responseData = await this.handleResp(res);
+    if (!res.ok)
+      throw new Error(responseData?.detail || "Error al obtener progresos");
+    return responseData as Progress[];
+  }
 }

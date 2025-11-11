@@ -5,10 +5,16 @@ import toast from "react-hot-toast";
 import CourseCard from "../../general/course/CourseCard";
 import AddCourseCard from "../../general/course/AddCourseCard";
 import CourseConfigPanel from "../../general/courseConfig/CourseConfigPanel";
-import { courseService, studentService } from "../../../services";
+import {
+  courseService,
+  studentService,
+  progressService,
+  schemaService,
+} from "../../../services";
 import { pastelGradientFromString } from "../../../utils/colors";
 import type { Course } from "../../../schemas/course";
 import styles from "./CoursesPage.module.css";
+import useUser from "../../../hooks/useUser";
 
 export default function CoursePage() {
   const [created, setCreated] = useState<Course[]>([]);
@@ -16,6 +22,10 @@ export default function CoursePage() {
   const [loading, setLoading] = useState(true);
   const [configCourseId, setConfigCourseId] = useState<string | null>(null);
   const navigate = useNavigate();
+  const [courseProgress, setCourseProgress] = useState<Record<string, number>>(
+    {}
+  );
+  const { user } = useUser();
 
   const fetchLists = async () => {
     try {
@@ -32,10 +42,64 @@ export default function CoursePage() {
       setLoading(false);
     }
   };
+  const fetchProgress = async () => {
+    try {
+      if (!user?.uuid) return;
+
+      const progresses = await progressService.listByStudent(user.uuid);
+
+      const uniqueProgressMap = new Map<string, any>();
+      for (const p of progresses) {
+        const existing = uniqueProgressMap.get(p.entry_uuid);
+        if (!existing || (!existing.finished && p.finished)) {
+          uniqueProgressMap.set(p.entry_uuid, p);
+        }
+      }
+      const uniqueProgresses = Array.from(uniqueProgressMap.values());
+
+      const allCourses = [...created, ...enrolled];
+      const progressByCourse: Record<
+        string,
+        { total: number; finished: number }
+      > = {};
+
+      for (const course of allCourses) {
+        const schema = await schemaService.getFullSchemaByCourse(course.uuid);
+        const entryUuids = schema.category_list.flatMap((cat) =>
+          cat.entry_list.map((e) => e.uuid)
+        );
+
+        const total = entryUuids.length;
+        const finished = uniqueProgresses.filter(
+          (p) => entryUuids.includes(p.entry_uuid) && p.finished
+        ).length;
+
+        progressByCourse[course.uuid] = { total, finished };
+      }
+
+      const progressPercent: Record<string, number> = {};
+      Object.entries(progressByCourse).forEach(
+        ([courseUuid, { total, finished }]) => {
+          progressPercent[courseUuid] =
+            total > 0 ? Math.round((finished / total) * 100) : 0;
+        }
+      );
+
+      setCourseProgress(progressPercent);
+    } catch (err) {
+      console.error("Error al obtener progreso:", err);
+    }
+  };
 
   useEffect(() => {
     fetchLists();
   }, []);
+
+  useEffect(() => {
+    if (user?.uuid) {
+      fetchProgress();
+    }
+  }, [user]);
 
   const handleCourseCreated = (newCourse: Course) => {
     setCreated((prev) => [newCourse, ...prev]);
@@ -101,7 +165,7 @@ export default function CoursePage() {
               title={c.title}
               author={`Por: ${"Tú"}`}
               description={c.description}
-              progress={30}
+              progress={courseProgress[c.uuid] || 0}
               color={pastelGradientFromString(c.title)}
               logo_path={c.logo_path}
               icon="settings"
@@ -127,7 +191,7 @@ export default function CoursePage() {
               title={c.title}
               author={`Por: ${c.tutor?.name || "Tutor"}`}
               description={c.description}
-              progress={0}
+              progress={courseProgress[c.uuid] || 0}
               color={pastelGradientFromString(c.title)}
               logo_path={c.logo_path}
               icon="close"

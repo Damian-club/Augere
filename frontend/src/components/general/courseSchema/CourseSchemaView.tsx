@@ -11,7 +11,13 @@ import {
 } from "react-icons/io5";
 import type { FullSchema, Entry } from "../../../schemas/schema";
 import style from "./CourseSchemaView.module.css";
-import { schemaCategoryService, schemaEntryService } from "../../../services";
+import {
+  progressService,
+  schemaCategoryService,
+  schemaEntryService,
+} from "../../../services";
+import { useState } from "react";
+import type { User } from "../../../schemas/auth";
 
 type Props = {
   schema: FullSchema | null;
@@ -22,6 +28,11 @@ type Props = {
   onAddCategory?: () => void;
   onAddEntry?: (catUuid: string) => void;
   editable?: boolean;
+  user?: User | null;
+  progressMap?: Record<string, { finished: boolean; uuid?: string }>;
+  setProgressMap?: React.Dispatch<
+    React.SetStateAction<Record<string, { finished: boolean; uuid?: string }>>
+  >;
 };
 
 export default function CourseSchemaView({
@@ -33,7 +44,11 @@ export default function CourseSchemaView({
   onAddCategory,
   onAddEntry,
   editable = true,
+  user,
+  progressMap = {},
+  setProgressMap,
 }: Props) {
+  const [loadingEntry, setLoadingEntry] = useState<string | null>(null);
   const getIcon = (entryType: string) => {
     switch (entryType) {
       case "assignment":
@@ -42,6 +57,46 @@ export default function CourseSchemaView({
         return <IoDocumentTextOutline className={style.icon} />;
       default:
         return <IoCodeSlashOutline className={style.icon} />;
+    }
+  };
+
+  // MANEJAR PROCESO
+  const handleToggleProgress = async (entryUuid: string, checked: boolean) => {
+    if (!user || !setProgressMap) return;
+
+    setLoadingEntry(entryUuid);
+    try {
+      const current = progressMap[entryUuid];
+
+      if (!current?.uuid) {
+        // Crear nuevo progreso
+        const created = await progressService.create({
+          entry_uuid: entryUuid,
+          student_uuid: user.uuid,
+          finished: checked,
+        });
+
+        setProgressMap((prev) => ({
+          ...prev,
+          [entryUuid]: { finished: checked, uuid: created.uuid },
+        }));
+      } else {
+        // Actualizar progreso existente
+        await progressService.update(current.uuid, {
+          entry_uuid: entryUuid,
+          student_uuid: user.uuid,
+          finished: checked,
+        });
+
+        setProgressMap((prev) => ({
+          ...prev,
+          [entryUuid]: { ...prev[entryUuid], finished: checked },
+        }));
+      }
+    } catch (err) {
+      console.error("Error al actualizar progreso:", err);
+    } finally {
+      setLoadingEntry(null);
     }
   };
 
@@ -323,7 +378,12 @@ export default function CourseSchemaView({
                   <input
                     type="checkbox"
                     className={style.entryCheckbox}
-                    onClick={(e) => e.stopPropagation()}
+                    checked={progressMap?.[entry.uuid!]?.finished || false}
+                    disabled={loadingEntry === entry.uuid}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      handleToggleProgress(entry.uuid!, e.target.checked);
+                    }}
                   />
                   {getIcon(entry.entry_type)}
                   <span className={style.entryName}>{entry.name}</span>
