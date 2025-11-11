@@ -61,13 +61,22 @@ Crear una estructura de curso completa y bien organizada basada en la siguiente 
    - **context**: Información adicional, objetivos de aprendizaje, o conceptos clave que el estudiante debe dominar
    - **entry_type**: Usa "topic" para contenido teórico, "exercise" para prácticas, "quiz" para evaluaciones
 
-3. **Principios pedagógicos:**
+3. **Instrucciones de Markdown avanzado para `body`:**
+   - Usa títulos (`#`, `##`, `###`) para secciones y subsecciones
+   - Resalta conceptos importantes con **negrita** y *cursiva*
+   - Usa listas con `-` o numeradas para pasos, ejemplos o conceptos
+   - Bloques de código con ``` cuando sea necesario
+   - Agrega saltos de línea claros entre párrafos
+   - Incluye ejemplos, ejercicios, o comparaciones cuando sea útil
+   - Mantén el Markdown limpio y legible; evita HTML o caracteres especiales innecesarios
+
+4. **Principios pedagógicos:**
    - Progresión lógica: cada tema construye sobre el anterior
    - Balance entre teoría y práctica
    - Incluye ejemplos concretos en el `body`
    - El `context` debe servir como guía para el tutor AI, pues para calificar y responder preguntas solo podra ver el contexto y la pregunta del usuario.
 
-4. **Calidad del contenido:**
+5. **Calidad del contenido:**
    - El `body` debe ser exhaustivo y educativo
    - Debe salir en formato markdown
    - Usa lenguaje claro y apropiado para el nivel

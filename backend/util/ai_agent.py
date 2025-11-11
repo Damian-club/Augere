@@ -44,6 +44,41 @@ class AIAgent():
         except Exception as e:
             raise HTTPException(status_code=403, detail=f'Error al hacer inferencia: {e}')
     
+    # def generate_schema(self, prompt: str) -> PromptSchemaFull:
+    #     try:
+    #         response: ParsedChatCompletion[PromptSchemaFull] = self.client.beta.chat.completions.parse(
+    #             model=ai_agent_config.DEFAULT_MODEL,
+    #             messages=[
+    #                 {"role": "developer", "content": prompts.SCHEMA_PROMPT},
+    #                 {"role": "user", "content": prompt},
+    #             ],
+    #             response_format=PromptSchemaFull
+    #         )
+
+    #         asserted: PromptSchemaFull | None = response.choices[0].message.parsed
+
+    #         assert asserted is not None
+
+    #         # 🧩 FIX: Forzar decodificación UTF-8 en todos los campos string
+    #         def fix_encoding(obj):
+    #             if isinstance(obj, str):
+    #                 try:
+    #                     return obj.encode("latin1").decode("utf-8")
+    #                 except Exception:
+    #                     return obj
+    #             elif isinstance(obj, list):
+    #                 return [fix_encoding(o) for o in obj]
+    #             elif isinstance(obj, dict):
+    #                 return {k: fix_encoding(v) for k, v in obj.items()}
+    #             else:
+    #                 return obj
+            
+    #         asserted = fix_encoding(asserted)
+                
+    #         return asserted
+    #     except Exception as e:
+    #         raise HTTPException(status_code=403, detail=f'Error al hacer inferencia: {e}')
+        
     def generate_schema(self, prompt: str) -> PromptSchemaFull:
         try:
             response: ParsedChatCompletion[PromptSchemaFull] = self.client.beta.chat.completions.parse(
@@ -56,14 +91,37 @@ class AIAgent():
             )
 
             asserted: PromptSchemaFull | None = response.choices[0].message.parsed
-
             assert asserted is not None
 
+            # 🧩 FIX SEGURO: Detectar y corregir solo si hay caracteres mal decodificados
+            def fix_encoding(obj):
+                if isinstance(obj, str):
+                    try:
+                        # Si contiene caracteres "�" o secuencias típicas mal decodificadas (m�, �f3, etc)
+                        if any(bad in obj for bad in ["�", "Ã", "Â", "ð", "f3", "e9", "ed"]):
+                            # Intentar re-decodificar correctamente
+                            try:
+                                return obj.encode("latin1").decode("utf-8")
+                            except Exception:
+                                return obj.encode("utf-8", errors="ignore").decode("utf-8", errors="ignore")
+                        return obj
+                    except Exception:
+                        return obj
+                elif isinstance(obj, list):
+                    return [fix_encoding(o) for o in obj]
+                elif isinstance(obj, dict):
+                    return {k: fix_encoding(v) for k, v in obj.items()}
+                else:
+                    return obj
+
+            asserted = fix_encoding(asserted)
             return asserted
+
         except Exception as e:
             raise HTTPException(status_code=403, detail=f'Error al hacer inferencia: {e}')
-        
 
+        
+        
     def generate_feedback(self, prompt: str, context: str) -> PromptAssignmentData:
         try:
             response: ParsedChatCompletion[PromptAssignmentData] = self.client.beta.chat.completions.parse(
