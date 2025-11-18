@@ -70,7 +70,7 @@ export default function CourseDashboard() {
 
     const loadCourse = async () => {
       try {
-        const courseData = await courseService.getCourse(uuid);
+        const courseData = await courseService.getPublicSummary(uuid);
         setCourse(courseData);
       } catch (err) {
         console.error("Error cargando curso:", err);
