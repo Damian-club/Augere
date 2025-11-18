@@ -81,40 +81,46 @@ export default function CourseStudentsTab({ course }: Props) {
               </tr>
             </thead>
             <tbody>
-              {students.map((student) => (
-                <tr key={student.uuid}>
-                  <td>{student.name}</td>
-                  <td>
-                    <div className={style.progressBar}>
-                      <div
-                        className={style.progressFill}
-                        style={{
-                          width: `${studentProgressMap[student.uuid] || 0}%`,
-                        }}
-                      />
-                    </div>
-                    <span className={style.progressText}>
-                      {studentProgressMap[student.uuid] || 0}%
-                    </span>
-                  </td>
-                  <td className={style.tdActions}>
-                    <button
-                      className={style.actionButton}
-                      onClick={() => setSelectedStudent(student.uuid)}
-                    >
-                      <IoEyeOutline />
-                      Revisar
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {students.map((student, index) => {
+                const percentage = Math.round(
+                  (student.completion_percentage || 0) * 100
+                );
+
+                return (
+                  <tr key={student.name + index}>
+                    <td>{student.name}</td>
+                    <td>
+                      <div className={style.progressBar}>
+                        <div
+                          className={style.progressFill}
+                          style={{
+                            width: `${percentage}%`,
+                          }}
+                        />
+                      </div>
+                      <span className={style.progressText}>
+                        {percentage}%
+                      </span>
+                    </td>
+                    <td className={style.tdActions}>
+                      <button
+                        className={style.actionButton}
+                        onClick={() => setSelectedStudent(student.name)}
+                      >
+                        <IoEyeOutline />
+                        Revisar
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
 
         {selectedStudent && (
           <StudentReviewPanel
-            studentUuid={selectedStudent}
+            studentName={selectedStudent}
             courseUuid={course.uuid}
             onClose={() => setSelectedStudent(null)}
           />

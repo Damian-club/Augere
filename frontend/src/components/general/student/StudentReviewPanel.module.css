@@ -1,85 +1,4 @@
-.overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.45);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 99999;
-  backdrop-filter: blur(3px);
-  animation: fadeIn 0.25s ease-in-out;
-}
-
-.panel {
-  background: #ffffff;
-  border-radius: 16px;
-  width: 85%;
-  max-width: 700px;
-  max-height: 80vh;
-  overflow-y: auto;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.15);
-  padding: 1.75rem;
-  position: relative;
-  animation: slideUp 0.3s ease-out;
-}
-
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1.5px solid #f1f1f1;
-  padding-bottom: 0.75rem;
-  margin-bottom: 1rem;
-}
-
-.header h2 {
-  font-size: 1.4rem;
-  font-weight: 600;
-  color: #222;
-}
-
-.closeBtn {
-  background: #f0f0f0;
-  border: none;
-  color: #444;
-  border-radius: 50%;
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.closeBtn:hover {
-  background: #e53e3e;
-  color: #fff;
-  transform: scale(1.05);
-}
-
-.content {
-  text-align: center;
-  padding: 1rem 0;
-}
-
-.studentName {
-  font-size: 1.3rem;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 0.75rem;
-}
-
-.infoText {
-  color: #666;
-  font-size: 1rem;
-  background: #f9fafb;
-  padding: 1rem;
-  border-radius: 12px;
-  display: inline-block;
-  max-width: 90%;
-}
-
+/* Animaciones */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -91,11 +10,185 @@
 
 @keyframes slideUp {
   from {
-    transform: translateY(25px);
+    transform: translateY(30px) scale(0.95);
     opacity: 0;
   }
   to {
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
     opacity: 1;
   }
+}
+
+/* Overlay */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* Panel */
+.panel {
+  background: #ffffff;
+  border-radius: 20px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  animation: slideUp 0.3s ease-out;
+}
+
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid #e5e7eb;
+  background: #fafafa;
+}
+
+.headerTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+}
+
+.closeBtn {
+  background: transparent;
+  border: none;
+  color: #6b7280;
+  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.closeBtn:hover {
+  background: #f3f4f6;
+  color: #ef4444;
+}
+
+/* Content */
+.content {
+  padding: 2rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Student */
+.studentName {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+/* Stats Bar */
+.statsBar {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  padding: 1rem;
+  background: #f9fafb;
+  border-radius: 12px;
+}
+
+.statItem {
+  flex: 1;
+  text-align: center;
+}
+
+.statValue {
+  font-size: 1.75rem;
+  font-weight: 700;
+  display: block;
+}
+
+.statLabel {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+  display: block;
+}
+
+/* Colores dinámicos */
+.finished {
+  color: #10b981;
+}
+
+.pending {
+  color: #f59e0b;
+}
+
+/* Entry List */
+.entryList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.entryItem {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  border-radius: 10px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  transition: all 0.2s ease;
+}
+
+.entryItemFinished {
+  background: #f0fdf4;
+  border-color: #86efac;
+}
+
+.entryItemPending {
+  background: #fefce8;
+  border-color: #fde047;
+}
+
+.entryIcon {
+  flex-shrink: 0;
+  font-size: 1.25rem;
+}
+
+.entryName {
+  flex: 1;
+  font-size: 0.95rem;
+  color: #374151;
+  font-weight: 500;
+}
+
+/* Empty & Loader */
+.emptyState,
+.loader {
+  text-align: center;
+  padding: 3rem 1rem;
+}
+
+.emptyState {
+  color: #9ca3af;
+}
+
+.loader {
+  color: #6b7280;
+  font-size: 0.95rem;
 }

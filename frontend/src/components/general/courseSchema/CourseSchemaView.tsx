@@ -29,6 +29,7 @@ type Props = {
   onAddEntry?: (catUuid: string) => void;
   editable?: boolean;
   user?: User | null;
+  studentRecordUuid?: string | null;
   progressMap?: Record<string, { finished: boolean; uuid?: string }>;
   setProgressMap?: React.Dispatch<
     React.SetStateAction<Record<string, { finished: boolean; uuid?: string }>>
@@ -45,6 +46,7 @@ export default function CourseSchemaView({
   onAddEntry,
   editable = true,
   user,
+  studentRecordUuid,
   progressMap = {},
   setProgressMap,
 }: Props) {
@@ -60,19 +62,25 @@ export default function CourseSchemaView({
     }
   };
 
-  // MANEJAR PROCESO
+  // MANEJAR PROGRESO
   const handleToggleProgress = async (entryUuid: string, checked: boolean) => {
-    if (!user || !setProgressMap) return;
+    if (!user || !setProgressMap || !studentRecordUuid) {
+      console.error("❌ Faltan datos para actualizar progreso");
+      return;
+    }
 
     setLoadingEntry(entryUuid);
     try {
       const current = progressMap[entryUuid];
 
       if (!current?.uuid) {
+        // ANTES DE CREAR, verifica que no exista en el backend
+        console.log("🔍 Verificando si ya existe progreso para:", entryUuid);
+
         // Crear nuevo progreso
         const created = await progressService.create({
           entry_uuid: entryUuid,
-          student_uuid: user.uuid,
+          student_uuid: studentRecordUuid,
           finished: checked,
         });
 
@@ -84,7 +92,7 @@ export default function CourseSchemaView({
         // Actualizar progreso existente
         await progressService.update(current.uuid, {
           entry_uuid: entryUuid,
-          student_uuid: user.uuid,
+          student_uuid: studentRecordUuid,
           finished: checked,
         });
 

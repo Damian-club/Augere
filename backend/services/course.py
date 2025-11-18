@@ -63,7 +63,9 @@ def _map_private_summary(course: Course) -> PrivateSummaryCourseOut:
     completion_sum: float = 0.0
     for student, user in zip(student_model_list, user_model_list):
         progress_model_list: list[Progress] = student.progress_records
-
+        print(f"🔍 Estudiante: {user.name}")
+        print(f"🔍 UUID del estudiante: {student.student_uuid}")
+        print(f"🔍 Total de progresos: {len(progress_model_list)}")
         progress_count: int = len(progress_model_list)
         progress_true_count: int = sum(1 for progress in progress_model_list if progress.finished)
 

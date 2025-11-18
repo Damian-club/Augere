@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
 import toast from "react-hot-toast";
 import CourseCard from "../../general/course/CourseCard";
 import AddCourseCard from "../../general/course/AddCourseCard";
@@ -15,6 +14,7 @@ import { pastelGradientFromString } from "../../../utils/colors";
 import type { Course } from "../../../schemas/course";
 import styles from "./CoursesPage.module.css";
 import useUser from "../../../hooks/useUser";
+import { environment } from "../../../config/environment";
 
 export default function CoursePage() {
   const [created, setCreated] = useState<Course[]>([]);
@@ -42,48 +42,84 @@ export default function CoursePage() {
       setLoading(false);
     }
   };
+
   const fetchProgress = async () => {
     try {
       if (!user?.uuid) return;
 
-      const progresses = await progressService.listByStudent(user.uuid);
-
-      const uniqueProgressMap = new Map<string, any>();
-      for (const p of progresses) {
-        const existing = uniqueProgressMap.get(p.entry_uuid);
-        if (!existing || (!existing.finished && p.finished)) {
-          uniqueProgressMap.set(p.entry_uuid, p);
-        }
-      }
-      const uniqueProgresses = Array.from(uniqueProgressMap.values());
-
       const allCourses = [...created, ...enrolled];
-      const progressByCourse: Record<
-        string,
-        { total: number; finished: number }
-      > = {};
-
-      for (const course of allCourses) {
-        const schema = await schemaService.getFullSchemaByCourse(course.uuid);
-        const entryUuids = schema.category_list.flatMap((cat) =>
-          cat.entry_list.map((e) => e.uuid)
-        );
-
-        const total = entryUuids.length;
-        const finished = uniqueProgresses.filter(
-          (p) => entryUuids.includes(p.entry_uuid) && p.finished
-        ).length;
-
-        progressByCourse[course.uuid] = { total, finished };
-      }
-
       const progressPercent: Record<string, number> = {};
-      Object.entries(progressByCourse).forEach(
-        ([courseUuid, { total, finished }]) => {
-          progressPercent[courseUuid] =
+
+      // Para cada curso, obtén el Student Record UUID y calcula el progreso
+      for (const course of allCourses) {
+        try {
+          // 1. Obtener Student Record UUID
+          const response = await fetch(
+            `${environment.api}/student/by-user-course/${user.uuid}/${course.uuid}`,
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+
+          let studentRecordUuid: string;
+
+          if (response.ok) {
+            // Es estudiante, usa el Student Record UUID
+            const studentRecord = await response.json();
+            studentRecordUuid = studentRecord.uuid;
+          } else {
+            // Es tutor o no está inscrito, usa directamente
+            // Para tutores, el progreso será 0 o calculado de otra forma
+            progressPercent[course.uuid] = 0;
+            continue;
+          }
+
+          // 2. Obtener progresos con el Student Record UUID correcto
+          const progresses = await progressService.listByStudent(
+            studentRecordUuid
+          );
+
+          // 3. Eliminar duplicados
+          const uniqueProgressMap = new Map<string, any>();
+          for (const p of progresses) {
+            const existing = uniqueProgressMap.get(p.entry_uuid);
+            if (!existing || (!existing.finished && p.finished)) {
+              uniqueProgressMap.set(p.entry_uuid, p);
+            }
+          }
+          const uniqueProgresses = Array.from(uniqueProgressMap.values());
+
+          // 4. Obtener esquema del curso
+          const schema = await schemaService.getFullSchemaByCourse(course.uuid);
+          const entryUuids = schema.category_list.flatMap((cat) =>
+            cat.entry_list.map((e) => e.uuid)
+          );
+
+          // 5. Calcular progreso
+          const total = entryUuids.length;
+          const finished = uniqueProgresses.filter(
+            (p) => entryUuids.includes(p.entry_uuid) && p.finished
+          ).length;
+
+          progressPercent[course.uuid] =
             total > 0 ? Math.round((finished / total) * 100) : 0;
+
+          console.log(
+            `📊 Curso ${course.title}: ${finished}/${total} = ${
+              progressPercent[course.uuid]
+            }%`
+          );
+        } catch (err) {
+          console.error(
+            `Error calculando progreso para curso ${course.uuid}:`,
+            err
+          );
+          progressPercent[course.uuid] = 0;
         }
-      );
+      }
 
       setCourseProgress(progressPercent);
     } catch (err) {
@@ -96,10 +132,10 @@ export default function CoursePage() {
   }, []);
 
   useEffect(() => {
-    if (user?.uuid) {
+    if (created.length > 0 || enrolled.length > 0) {
       fetchProgress();
     }
-  }, [user]);
+  }, [created, enrolled, user?.uuid]);
 
   const handleCourseCreated = (newCourse: Course) => {
     setCreated((prev) => [newCourse, ...prev]);
@@ -148,7 +184,6 @@ export default function CoursePage() {
     <div className={styles.page}>
       <h1>Mis cursos</h1>
 
-      {/* Cursos Creados */}
       <section className={styles.section}>
         <div className={styles["section-header"]}>
           <h2>Creados</h2>
@@ -178,7 +213,6 @@ export default function CoursePage() {
 
       <hr />
 
-      {/* Cursos Inscritos */}
       <section className={styles.section}>
         <div className={styles["section-header"]}>
           <h2>Inscritos</h2>

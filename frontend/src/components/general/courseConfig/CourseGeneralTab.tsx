@@ -148,7 +148,7 @@ export default function CourseGeneralTab({
         <div className={styles.infoRow}>
           <span className={styles.infoLabel}>Promedio progreso:</span>
           <span className={styles.infoValue}>
-            {stats.completion_percentage}%
+            {stats.completion_percentage*100}%
           </span>
         </div>
       </div>

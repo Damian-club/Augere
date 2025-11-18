@@ -6,6 +6,7 @@ import {
   progressService,
   schemaService,
 } from "../../../services";
+import { environment } from "../../../config/environment";
 
 type CourseWithProgress = {
   uuid: string;
@@ -37,27 +38,79 @@ export default function DashboardHome() {
           return true;
         });
 
-        const progresses = await progressService.listByStudent(userData.uuid);
         const coursesWithProgress: CourseWithProgress[] = [];
 
+        // Para cada curso, obtén el progreso correcto
         for (const course of allCourses) {
-          const schema = await schemaService.getFullSchemaByCourse(course.uuid);
-          const entryUuids = schema.category_list.flatMap((cat) =>
-            cat.entry_list.map((e) => e.uuid)
-          );
+          try {
+            // 1. Obtener Student Record UUID
+            const response = await fetch(
+              `${environment.api}/student/by-user-course/${userData.uuid}/${course.uuid}`,
+              {
+                headers: {
+                  Authorization: `Bearer ${localStorage.getItem("token")}`,
+                  "Content-Type": "application/json",
+                },
+              }
+            );
 
-          const total = entryUuids.length;
-          const finished = progresses.filter(
-            (p) => entryUuids.includes(p.entry_uuid) && p.finished
-          ).length;
-          const completion =
-            total > 0 ? Math.round((finished / total) * 100) : 0;
+            let studentRecordUuid: string;
 
-          coursesWithProgress.push({
-            uuid: course.uuid,
-            name: course.title,
-            completion_percentage: completion,
-          });
+            if (response.ok) {
+              // Es estudiante
+              const studentRecord = await response.json();
+              studentRecordUuid = studentRecord.uuid;
+            } else {
+              // Es tutor o no inscrito, progreso = 0
+              coursesWithProgress.push({
+                uuid: course.uuid,
+                name: course.title,
+                completion_percentage: 0,
+              });
+              continue;
+            }
+
+            // 2. Obtener progresos con el Student Record UUID correcto
+            const progresses = await progressService.listByStudent(studentRecordUuid);
+
+            // 3. Eliminar duplicados
+            const uniqueProgressMap = new Map<string, any>();
+            for (const p of progresses) {
+              const existing = uniqueProgressMap.get(p.entry_uuid);
+              if (!existing || (!existing.finished && p.finished)) {
+                uniqueProgressMap.set(p.entry_uuid, p);
+              }
+            }
+            const uniqueProgresses = Array.from(uniqueProgressMap.values());
+
+            // 4. Obtener esquema del curso
+            const schema = await schemaService.getFullSchemaByCourse(course.uuid);
+            const entryUuids = schema.category_list.flatMap((cat) =>
+              cat.entry_list.map((e) => e.uuid)
+            );
+
+            // 5. Calcular progreso
+            const total = entryUuids.length;
+            const finished = uniqueProgresses.filter(
+              (p) => entryUuids.includes(p.entry_uuid) && p.finished
+            ).length;
+            const completion = total > 0 ? Math.round((finished / total) * 100) : 0;
+
+            console.log(`📊 ${course.title}: ${finished}/${total} = ${completion}%`);
+
+            coursesWithProgress.push({
+              uuid: course.uuid,
+              name: course.title,
+              completion_percentage: completion,
+            });
+          } catch (err) {
+            console.error(`Error procesando curso ${course.title}:`, err);
+            coursesWithProgress.push({
+              uuid: course.uuid,
+              name: course.title,
+              completion_percentage: 0,
+            });
+          }
         }
 
         setCourses(coursesWithProgress);
@@ -120,6 +173,9 @@ export default function DashboardHome() {
               <div className={styles.bar}>
                 <div style={{ width: `${course.completion_percentage}%` }} />
               </div>
+              <span className={styles.percentage}>
+                {course.completion_percentage}%
+              </span>
             </div>
           ))}
         </div>

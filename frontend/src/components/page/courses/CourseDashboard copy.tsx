@@ -17,7 +17,7 @@ import type { User } from "../../../schemas/auth";
 import { progressService } from "../../../services";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-// import { useUser } from "../../../hooks/useUser";
+import { environment } from "../../../config/environment";
 
 export default function CourseDashboard() {
   const { uuid } = useParams();
@@ -34,6 +34,9 @@ export default function CourseDashboard() {
   const [courseProgress, setCourseProgress] = useState<Record<string, number>>(
     {}
   );
+  const [studentRecordUuid, setStudentRecordUuid] = useState<string | null>(
+    null
+  ); // ← AÑADE ESTO
 
   // CARGAR USUARIO
   useEffect(() => {
@@ -47,6 +50,38 @@ export default function CourseDashboard() {
     };
     fetchUser();
   }, []);
+
+  useEffect(() => {
+    const fetchStudentRecord = async () => {
+      if (!user?.uuid || !uuid) return;
+
+      try {
+        const response = await fetch(
+          `${environment.api}/student/by-user-course/${user.uuid}/${uuid}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          setStudentRecordUuid(data.uuid);
+          console.log("Student record UUID obtenido:", data.uuid);
+        } else {
+          console.log(
+            "ℹNo hay registro de estudiante (probablemente eres el tutor)"
+          );
+        }
+      } catch (error) {
+        console.error("Error obteniendo Student record:", error);
+      }
+    };
+
+    fetchStudentRecord();
+  }, [user?.uuid, uuid]);
 
   // CARGAR ESQUEMA
   useEffect(() => {
@@ -81,53 +116,70 @@ export default function CourseDashboard() {
   }, [uuid]);
 
   useEffect(() => {
-    async function loadProgress() {
-      if (!user?.uuid) return;
+    async function initialize() {
+      if (!user?.uuid || !uuid) {
+        console.log("⚠️ Faltan datos:", {
+          userUuid: user?.uuid,
+          courseUuid: uuid,
+        });
+        return;
+      }
 
       try {
-        const progresses = await progressService.listByStudent(user.uuid);
-        console.log("Progresos del usuario:", progresses);
+        // 1. OBTENER STUDENT RECORD UUID
+        console.log(
+          `🔍 Obteniendo Student Record: user=${user.uuid}, course=${uuid}`
+        );
 
-        // === 1. Mapear para CourseSchemaView ===
-        const map: Record<string, { finished: boolean; uuid?: string }> = {};
-        progresses.forEach((p) => {
-          map[p.entry_uuid] = { finished: p.finished, uuid: p.uuid };
-        });
-        setProgressMap(map);
-
-        // === 2. Calcular % de progreso por curso ===
-        const progressByCourse: Record<
-          string,
-          { total: number; finished: number }
-        > = {};
-
-        progresses.forEach((p) => {
-          // ⚠️ Aquí no podemos usar split("-")[0], sino basarnos en schema.entries
-          // Este cálculo se haría mejor en la página de cursos, no en el dashboard.
-          // Pero lo dejamos simple:
-          const courseUuid = p.entry_uuid.split("-")[0];
-          if (!progressByCourse[courseUuid]) {
-            progressByCourse[courseUuid] = { total: 0, finished: 0 };
-          }
-          progressByCourse[courseUuid].total++;
-          if (p.finished) progressByCourse[courseUuid].finished++;
-        });
-
-        const result: Record<string, number> = {};
-        Object.entries(progressByCourse).forEach(
-          ([courseUuid, { total, finished }]) => {
-            result[courseUuid] =
-              total > 0 ? Math.round((finished / total) * 100) : 0;
+        const response = await fetch(
+          `${environment.api}/student/by-user-course/${user.uuid}/${uuid}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+              "Content-Type": "application/json",
+            },
           }
         );
 
-        setCourseProgress(result);
-      } catch (err) {
-        console.error("Error cargando progresos:", err);
+        if (!response.ok) {
+          console.log("ℹ️ No hay Student Record (probablemente eres tutor)");
+          return;
+        }
+
+        const studentRecord = await response.json();
+        const recordUuid = studentRecord.uuid;
+
+        console.log("✅ Student Record UUID obtenido:", recordUuid);
+        setStudentRecordUuid(recordUuid);
+
+        // 2. CARGAR PROGRESOS CON STUDENT RECORD UUID
+        console.log("🔄 Cargando progresos con studentRecordUuid:", recordUuid);
+        const progresses = await progressService.listByStudent(recordUuid);
+
+        console.log("📦 Progresos obtenidos:", progresses);
+        console.log(`✅ Total: ${progresses.length} progresos`);
+
+        // 3. CREAR PROGRESS MAP
+        const map: Record<string, { finished: boolean; uuid?: string }> = {};
+
+        progresses.forEach((p) => {
+          // El último del array sobrescribe (asumimos que es el más reciente)
+          map[p.entry_uuid] = { finished: p.finished, uuid: p.uuid };
+        });
+
+        Object.entries(map).forEach(([entryUuid, data]) => {
+          console.log(`  📌 ${entryUuid}: ${data.finished ? "✅" : "⬜"}`);
+        });
+
+        console.log("📊 Progress Map completo:", map);
+        console.log(`📊 Total único: ${Object.keys(map).length} entries`);
+        setProgressMap(map);
+      } catch (error) {
+        console.error("❌ Error en inicialización:", error);
       }
     }
 
-    loadProgress();
+    initialize();
   }, [user?.uuid, uuid]);
 
   useEffect(() => {
@@ -175,6 +227,7 @@ export default function CourseDashboard() {
             }}
             editable={false}
             user={user}
+            studentRecordUuid={studentRecordUuid}
             progressMap={progressMap}
             setProgressMap={setProgressMap}
           />
