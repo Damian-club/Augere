@@ -18,6 +18,7 @@ import { progressService } from "../../../services";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { environment } from "../../../config/environment";
+import AssignmentWidget from "../../general/AssigmentWidget/AssigmentWidget";
 
 export default function CourseDashboard() {
   const { uuid } = useParams();
@@ -36,7 +37,7 @@ export default function CourseDashboard() {
   );
   const [studentRecordUuid, setStudentRecordUuid] = useState<string | null>(
     null
-  ); // ← AÑADE ESTO
+  );
 
   // CARGAR USUARIO
   useEffect(() => {
@@ -118,7 +119,7 @@ export default function CourseDashboard() {
   useEffect(() => {
     async function initialize() {
       if (!user?.uuid || !uuid) {
-        console.log("⚠️ Faltan datos:", {
+        console.log("Faltan datos:", {
           userUuid: user?.uuid,
           courseUuid: uuid,
         });
@@ -126,7 +127,6 @@ export default function CourseDashboard() {
       }
 
       try {
-        // 1. OBTENER STUDENT RECORD UUID
         console.log(
           `🔍 Obteniendo Student Record: user=${user.uuid}, course=${uuid}`
         );
@@ -149,15 +149,15 @@ export default function CourseDashboard() {
         const studentRecord = await response.json();
         const recordUuid = studentRecord.uuid;
 
-        console.log("✅ Student Record UUID obtenido:", recordUuid);
+        console.log("Student Record UUID obtenido:", recordUuid);
         setStudentRecordUuid(recordUuid);
 
         // 2. CARGAR PROGRESOS CON STUDENT RECORD UUID
-        console.log("🔄 Cargando progresos con studentRecordUuid:", recordUuid);
+        console.log("Cargando progresos con studentRecordUuid:", recordUuid);
         const progresses = await progressService.listByStudent(recordUuid);
 
-        console.log("📦 Progresos obtenidos:", progresses);
-        console.log(`✅ Total: ${progresses.length} progresos`);
+        console.log("Progresos obtenidos:", progresses);
+        console.log(`Total: ${progresses.length} progresos`);
 
         // 3. CREAR PROGRESS MAP
         const map: Record<string, { finished: boolean; uuid?: string }> = {};
@@ -171,11 +171,11 @@ export default function CourseDashboard() {
           console.log(`  📌 ${entryUuid}: ${data.finished ? "✅" : "⬜"}`);
         });
 
-        console.log("📊 Progress Map completo:", map);
-        console.log(`📊 Total único: ${Object.keys(map).length} entries`);
+        console.log("Progress Map completo:", map);
+        console.log(`Total único: ${Object.keys(map).length} entries`);
         setProgressMap(map);
       } catch (error) {
-        console.error("❌ Error en inicialización:", error);
+        console.error("Error en inicialización:", error);
       }
     }
 
@@ -191,6 +191,53 @@ export default function CourseDashboard() {
     const found = progressMap[selectedEntry.uuid!];
     setProgressUuid(found?.uuid || null);
   }, [selectedEntry, progressMap]);
+
+  useEffect(() => {
+    async function handleEntrySelection() {
+      if (!selectedEntry || !studentRecordUuid) {
+        setProgressUuid(null);
+        return;
+      }
+
+      console.log(
+        `📝 Entry seleccionado: ${selectedEntry.name} (${selectedEntry.uuid})`
+      );
+
+      // Buscar si ya existe un progreso para este entry
+      const existingProgress = progressMap[selectedEntry.uuid!];
+
+      if (existingProgress?.uuid) {
+        console.log(`✅ Progress UUID encontrado: ${existingProgress.uuid}`);
+        setProgressUuid(existingProgress.uuid);
+      } else {
+        // Si no existe, crear un nuevo progreso
+        console.log(`⚠️ No existe progreso, creando uno nuevo...`);
+
+        try {
+          const newProgress = await progressService.create({
+            student_uuid: studentRecordUuid,
+            entry_uuid: selectedEntry.uuid!,
+            finished: false,
+          });
+
+          console.log(`✅ Nuevo progreso creado: ${newProgress.uuid}`);
+
+          // Actualizar el progressMap
+          setProgressMap((prev) => ({
+            ...prev,
+            [selectedEntry.uuid!]: { finished: false, uuid: newProgress.uuid },
+          }));
+
+          setProgressUuid(newProgress.uuid);
+        } catch (err) {
+          console.error("❌ Error creando progreso:", err);
+          setProgressUuid(null);
+        }
+      }
+    }
+
+    handleEntrySelection();
+  }, [selectedEntry, studentRecordUuid, progressMap]);
 
   return (
     <div className={style.dashboard}>
@@ -276,6 +323,16 @@ export default function CourseDashboard() {
                 {selectedEntry.body || "_Sin contenido_"}
               </ReactMarkdown>
             </div>
+            {/* Mostrar AssignmentWidget si el entry es de tipo "assignment" */}
+            {selectedEntry.entry_type === "assignment" && progressUuid && (
+              <AssignmentWidget
+                progressUuid={progressUuid}
+                instructions={
+                  selectedEntry.context ||
+                  "Responde basándote en el contenido anterior"
+                }
+              />
+            )}
           </div>
         ) : (
           <div className={style.emptyState}>
@@ -297,7 +354,9 @@ export default function CourseDashboard() {
         </NavLink>
       </nav>
       {/* AI CHAT widget */}
-      {progressUuid && <AIChatWidget progressUuid={progressUuid} />}
+      {progressUuid && selectedEntry && (
+        <AIChatWidget progressUuid={progressUuid} />
+      )}
     </div>
   );
 }
