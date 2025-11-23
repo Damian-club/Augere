@@ -17,6 +17,9 @@ import type { User } from "../../../schemas/auth";
 import { progressService } from "../../../services";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
+import "katex/dist/katex.min.css";
 import { environment } from "../../../config/environment";
 import AssignmentWidget from "../../general/AssigmentWidget/AssigmentWidget";
 
@@ -319,11 +322,13 @@ export default function CourseDashboard() {
           <div className={style.entryContent}>
             <h2 className={style.entryTitle}>{selectedEntry.name}</h2>
             <div className={style.entryBody}>
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm, remarkMath]}
+                rehypePlugins={[rehypeKatex]}
+              >
                 {selectedEntry.body || "_Sin contenido_"}
               </ReactMarkdown>
             </div>
-            {/* Mostrar AssignmentWidget si el entry es de tipo "assignment" */}
             {selectedEntry.entry_type === "assignment" && progressUuid && (
               <AssignmentWidget
                 progressUuid={progressUuid}
