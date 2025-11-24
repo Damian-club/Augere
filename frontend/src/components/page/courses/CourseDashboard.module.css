@@ -127,6 +127,26 @@
   margin: 0.75rem 0;
 }
 
+.entryBody pre {
+  background: #0f172a; /* dark background */
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  padding: 1rem;
+  overflow-x: auto;
+  margin: 1.25rem 0;
+}
+
+.entryBody code {
+  font-family: "JetBrains Mono", "Fira Code", "Source Code Pro", monospace;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.entryBody pre code.hljs {
+  display: block;
+  white-space: pre;
+}
+
 .entryBody a {
   color: #3b82f6;
   text-decoration: underline;
