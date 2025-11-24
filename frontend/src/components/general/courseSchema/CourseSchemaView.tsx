@@ -23,6 +23,7 @@ type Props = {
   schema: FullSchema | null;
   setSchema?: (s: FullSchema) => void;
   selectedEntry: Entry | null;
+  isTutor?: boolean;
   setSelectedEntry: (e: Entry | null) => void;
   onDragEnd?: (result: DropResult) => void;
   onAddCategory?: () => void;
@@ -49,6 +50,7 @@ export default function CourseSchemaView({
   studentRecordUuid,
   progressMap = {},
   setProgressMap,
+  isTutor,
 }: Props) {
   const [loadingEntry, setLoadingEntry] = useState<string | null>(null);
   const getIcon = (entryType: string) => {
@@ -383,16 +385,22 @@ export default function CourseSchemaView({
                   }`}
                   onClick={() => setSelectedEntry(entry)}
                 >
-                  <input
-                    type="checkbox"
-                    className={style.entryCheckbox}
-                    checked={progressMap?.[entry.uuid!]?.finished || false}
-                    disabled={loadingEntry === entry.uuid}
-                    onChange={(e) => {
-                      e.stopPropagation();
-                      handleToggleProgress(entry.uuid!, e.target.checked);
-                    }}
-                  />
+                  {!isTutor && (
+                    <input
+                      type="checkbox"
+                      className={style.entryCheckbox}
+                      checked={progressMap?.[entry.uuid!]?.finished || false}
+                      disabled={
+                        loadingEntry === entry.uuid ||
+                        entry.entry_type === "assignment"
+                      }
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        if (entry.entry_type === "assignment") return;
+                        handleToggleProgress(entry.uuid!, e.target.checked);
+                      }}
+                    />
+                  )}
                   {getIcon(entry.entry_type)}
                   <span className={style.entryName}>{entry.name}</span>
                 </div>

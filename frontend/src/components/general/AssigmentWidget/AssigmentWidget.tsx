@@ -179,13 +179,11 @@ const styles = {
 interface Props {
   progressUuid: string;
   instructions?: string;
-  onSuccess?: () => void;
 }
 
 export default function AssignmentWidget({
   progressUuid,
   instructions,
-  onSuccess,
 }: Props) {
   const [answer, setAnswer] = useState("");
   const [loading, setLoading] = useState(false);
@@ -233,8 +231,6 @@ export default function AssignmentWidget({
         } catch (err) {
           console.error("Error actualizando progreso:", err);
         }
-
-        if (onSuccess) onSuccess();
       }
     } catch (err: any) {
       console.error("Error al evaluar respuesta:", err);

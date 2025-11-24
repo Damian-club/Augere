@@ -23,11 +23,24 @@ import "katex/dist/katex.min.css";
 import { environment } from "../../../config/environment";
 import AssignmentWidget from "../../general/AssigmentWidget/AssigmentWidget";
 
+function sortSchema(schema: FullSchema): FullSchema {
+  return {
+    ...schema,
+    category_list: [...schema.category_list]
+      .sort((a, b) => a.position - b.position)
+      .map((cat) => ({
+        ...cat,
+        entry_list: [...cat.entry_list].sort((a, b) => a.position - b.position),
+      })),
+  };
+}
+
 export default function CourseDashboard() {
   const { uuid } = useParams();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [course, setCourse] = useState<Course | null>(null);
   const [user, setUser] = useState<User | null>(null);
+  const isTutor = user?.uuid === course?.tutor?.uuid;
   const [selectedEntry, setSelectedEntry] = useState<Entry | null>(null);
   const [progressUuid, setProgressUuid] = useState<string | null>(null);
   const [schema, setSchema] = useState<FullSchema | null>(null);
@@ -35,14 +48,10 @@ export default function CourseDashboard() {
     Record<string, { finished: boolean; uuid?: string }>
   >({});
 
-  const [courseProgress, setCourseProgress] = useState<Record<string, number>>(
-    {}
-  );
   const [studentRecordUuid, setStudentRecordUuid] = useState<string | null>(
     null
   );
 
-  // 1. CARGAR USUARIO
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -55,18 +64,22 @@ export default function CourseDashboard() {
     fetchUser();
   }, []);
 
-  // 2. CARGAR STUDENT RECORD (solo aquí, no duplicado)
   useEffect(() => {
     const fetchStudentRecord = async () => {
-      if (!user?.uuid || !uuid) return;
+      if (!user) return;
+      if (!course) return;
+
+      if (user.uuid === course.tutor?.uuid) {
+        console.log("Eres el tutor, no se carga studentRecord");
+        return;
+      }
 
       try {
         const response = await fetch(
-          `${environment.api}/student/by-user-course/${user.uuid}/${uuid}`,
+          `${environment.api}/student/by-user-course/${user.uuid}/${course.uuid}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
-              "Content-Type": "application/json",
             },
           }
         );
@@ -74,11 +87,8 @@ export default function CourseDashboard() {
         if (response.ok) {
           const data = await response.json();
           setStudentRecordUuid(data.uuid);
-          console.log("Student record UUID obtenido:", data.uuid);
         } else {
-          console.log(
-            "ℹNo hay registro de estudiante (probablemente eres el tutor)"
-          );
+          console.log("No hay registro de estudiante");
         }
       } catch (error) {
         console.error("Error obteniendo Student record:", error);
@@ -86,16 +96,16 @@ export default function CourseDashboard() {
     };
 
     fetchStudentRecord();
-  }, [user?.uuid, uuid]);
+  }, [user, course]);
 
-  // 3. CARGAR ESQUEMA
   useEffect(() => {
     if (!uuid) return;
 
     const loadSchema = async () => {
       try {
         const fullSchema = await schemaService.getFullSchemaByCourse(uuid);
-        setSchema(fullSchema);
+        const ordered = sortSchema(fullSchema);
+        setSchema(ordered);
       } catch (err) {
         console.error("Error cargando esquema completo:", err);
       }
@@ -104,8 +114,8 @@ export default function CourseDashboard() {
     loadSchema();
   }, [uuid]);
 
-  // 4. CARGAR PROGRESOS (cuando ya existe studentRecordUuid)
   useEffect(() => {
+    if (isTutor) return;
     if (!studentRecordUuid) return;
 
     async function loadProgress() {
@@ -135,7 +145,6 @@ export default function CourseDashboard() {
     loadProgress();
   }, [studentRecordUuid]);
 
-  // 5. CARGAR DETALLES DEL CURSO
   useEffect(() => {
     if (!uuid) return;
 
@@ -151,7 +160,6 @@ export default function CourseDashboard() {
     loadCourse();
   }, [uuid]);
 
-  // 6. ACTUALIZAR progressUuid CUANDO CAMBIA selectedEntry
   useEffect(() => {
     if (!selectedEntry) {
       setProgressUuid(null);
@@ -162,8 +170,8 @@ export default function CourseDashboard() {
     setProgressUuid(found?.uuid || null);
   }, [selectedEntry, progressMap]);
 
-  // 7. CREAR PROGRESO SI NO EXISTE
   useEffect(() => {
+    if (isTutor) return;
     async function handleEntrySelection() {
       if (!selectedEntry || !studentRecordUuid) {
         setProgressUuid(null);
@@ -207,6 +215,24 @@ export default function CourseDashboard() {
     handleEntrySelection();
   }, [selectedEntry, studentRecordUuid, progressMap]);
 
+  const flatEntries = schema
+    ? schema.category_list.flatMap((c) =>
+        c.entry_list
+          .map((e) => ({ ...e, category_uuid: c.uuid }))
+          .sort((a, b) => a.position - b.position)
+      )
+    : [];
+
+  const currentIndex = selectedEntry
+    ? flatEntries.findIndex((e) => e.uuid === selectedEntry.uuid)
+    : -1;
+
+  const prevEntry = currentIndex > 0 ? flatEntries[currentIndex - 1] : null;
+  const nextEntry =
+    currentIndex >= 0 && currentIndex < flatEntries.length - 1
+      ? flatEntries[currentIndex + 1]
+      : null;
+
   return (
     <div className={style.dashboard}>
       {/* === SIDEBAR FLOTANTE === */}
@@ -236,15 +262,16 @@ export default function CourseDashboard() {
           <CourseSchemaView
             schema={schema}
             selectedEntry={selectedEntry}
+            isTutor={isTutor}
             setSelectedEntry={(entry) => {
               setSelectedEntry(entry);
               setSidebarOpen(false);
             }}
             editable={false}
             user={user}
-            studentRecordUuid={studentRecordUuid}
-            progressMap={progressMap}
-            setProgressMap={setProgressMap}
+            studentRecordUuid={isTutor ? null : studentRecordUuid}
+            progressMap={isTutor ? {} : progressMap}
+            setProgressMap={isTutor ? () => {} : setProgressMap}
           />
         </div>
 
@@ -285,7 +312,8 @@ export default function CourseDashboard() {
       <main className={style.content}>
         {selectedEntry ? (
           <div className={style.entryContent}>
-            <h2 className={style.entryTitle}>{selectedEntry.name}</h2>
+            {/* <h2 className={style.entryTitle}>{selectedEntry.name}</h2> */}
+
             <div className={style.entryBody}>
               <ReactMarkdown
                 remarkPlugins={[remarkGfm, remarkMath]}
@@ -294,25 +322,80 @@ export default function CourseDashboard() {
                 {selectedEntry.body || "_Sin contenido_"}
               </ReactMarkdown>
             </div>
-            {selectedEntry.entry_type === "assignment" && progressUuid && (
-              <AssignmentWidget
-                progressUuid={progressUuid}
-                instructions={
-                  selectedEntry.context ||
-                  "Responde basándote en el contenido anterior"
-                }
-                onSuccess={() => {
-                  if (!selectedEntry) return;
-                  setProgressMap((prev) => ({
-                    ...prev,
-                    [selectedEntry.uuid!]: {
-                      ...prev[selectedEntry.uuid!],
-                      finished: true,
-                    },
-                  }));
-                }}
-              />
-            )}
+            {!isTutor &&
+              selectedEntry.entry_type === "assignment" &&
+              progressUuid && (
+                <AssignmentWidget
+                  progressUuid={progressUuid}
+                  instructions={
+                    selectedEntry.context ||
+                    "Responde basándote en el contenido anterior"
+                  }
+                />
+              )}
+            <div className={style.buttonsContainer}>
+              {prevEntry && (
+                <button
+                  className={style.navBtn}
+                  onClick={() => setSelectedEntry(prevEntry as Entry)}
+                >
+                  Anterior
+                </button>
+              )}
+
+              {nextEntry && (
+                <button
+                  className={style.navBtn}
+                  onClick={async () => {
+                    if (!selectedEntry) return;
+
+                    if (
+                      selectedEntry.entry_type === "topic" &&
+                      studentRecordUuid
+                    ) {
+                      const existing = progressMap[selectedEntry.uuid!];
+
+                      try {
+                        if (existing?.uuid) {
+                          await progressService.update(existing.uuid, {
+                            finished: true,
+                          });
+                          setProgressMap((prev) => ({
+                            ...prev,
+                            [selectedEntry.uuid!]: {
+                              ...prev[selectedEntry.uuid!],
+                              finished: true,
+                            },
+                          }));
+                        } else {
+                          const created = await progressService.create({
+                            student_uuid: studentRecordUuid,
+                            entry_uuid: selectedEntry.uuid!,
+                            finished: true,
+                          });
+                          setProgressMap((prev) => ({
+                            ...prev,
+                            [selectedEntry.uuid!]: {
+                              finished: true,
+                              uuid: created.uuid,
+                            },
+                          }));
+                        }
+                      } catch (err) {
+                        console.error(
+                          "Error marcando lectura como completada:",
+                          err
+                        );
+                      }
+                    }
+
+                    setSelectedEntry(nextEntry as Entry);
+                  }}
+                >
+                  Siguiente
+                </button>
+              )}
+            </div>
           </div>
         ) : (
           <div className={style.emptyState}>
@@ -334,7 +417,7 @@ export default function CourseDashboard() {
         </NavLink>
       </nav>
       {/* AI CHAT widget */}
-      {progressUuid && selectedEntry && (
+      {!isTutor && progressUuid && selectedEntry && (
         <AIChatWidget progressUuid={progressUuid} />
       )}
     </div>

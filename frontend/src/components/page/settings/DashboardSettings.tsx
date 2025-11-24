@@ -22,7 +22,6 @@ export default function DashboardSettings() {
   const [loadingCourses, setLoadingCourses] = useState(true);
   const [configCourseId, setConfigCourseId] = useState<string | null>(null);
 
-
   const hiddenFileInput = useRef<HTMLInputElement | null>(null);
 
   const promptUpload = () => {
@@ -39,12 +38,11 @@ export default function DashboardSettings() {
       console.log(dataBase64);
       if (typeof dataBase64 != "string") return;
       console.log(dataBase64);
-      setFormData((prev) => ({ ...prev, "avatar_path": dataBase64 }));
+      setFormData((prev) => ({ ...prev, avatar_path: dataBase64 }));
     };
 
     reader.readAsDataURL(file);
-  }
-
+  };
 
   // Cargar usuario actual
   useEffect(() => {
@@ -134,7 +132,12 @@ export default function DashboardSettings() {
 
   return (
     <div className={styles.settings}>
-      <input type="file" ref={hiddenFileInput} className={styles.hidden} onChange={onFileChange}/>
+      <input
+        type="file"
+        ref={hiddenFileInput}
+        className={styles.hidden}
+        onChange={onFileChange}
+      />
       <h1>Configuración</h1>
       <hr />
 
@@ -183,7 +186,17 @@ export default function DashboardSettings() {
           </label>
           <label>
             Avatar
-            <img src={formData.avatar_path} alt="" className={styles.image}/>
+            <img
+              src={
+                formData.avatar_path
+                  ? formData.avatar_path
+                  : `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                      formData.name || "Usuario"
+                    )}&background=random`
+              }
+              alt={formData.name}
+              className={styles.image}
+            />
           </label>
         </div>
       </section>

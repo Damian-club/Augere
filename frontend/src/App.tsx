@@ -13,7 +13,6 @@ import DashboardSettings from "./components/page/settings/DashboardSettings";
 import Contact from "./components/page/contact/Contact";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import { Toaster } from "react-hot-toast";
-import SchemaPreviewTest from "./components/page/test/SchemaPreviewTest";
 import CourseDashboard from "./components/page/courses/CourseDashboard copy";
 
 function App() {
@@ -81,7 +80,6 @@ function App() {
           }
         />
         <Route path="/course/:uuid" element={<CourseDashboard />} />
-        {/* <Route path="/schema-test" element={<SchemaPreviewTest />} /> */}
         {/* 404 */}
         <Route
           path="*"

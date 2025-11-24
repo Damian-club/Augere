@@ -112,12 +112,14 @@ def _map_public_summary(course: Course, user: User, db: Session):
 
     from services.student import get_student_model_by_user_course
     student: Student = get_student_model_by_user_course(user.uuid, course_uuid=course.uuid, db=db)
-    progress_model_list: list[Progress] = student.progress_records
 
-    total_progress_count: int = len(progress_model_list)
-    progress_true_count: int = sum(1 for progress in progress_model_list if progress.finished)
-
-    completion_percentage: float = get_percentage(total=total_progress_count, count=progress_true_count)
+    if student is None:
+        completion_percentage = 0.0 
+    else:
+        progress_model_list: list[Progress] = student.progress_records
+        total_progress_count = len(progress_model_list)
+        progress_true_count = sum(1 for progress in progress_model_list if progress.finished)
+        completion_percentage = get_percentage(total=total_progress_count, count=progress_true_count)
 
     return PublicSummaryCourseOut(
         uuid=course.uuid,
