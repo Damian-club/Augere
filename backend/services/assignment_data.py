@@ -163,7 +163,7 @@ def answer_assignment_data(
 
     assignment_data: AssignmentDataOut = create_assignment_data(
         AssignmentDataCreate(
-            answer=prompt,
+            answer=prompt.prompt,
             feedback=prompt_assignment_data.feedback,
             success=prompt_assignment_data.success,
             progress_uuid=progress_uuid

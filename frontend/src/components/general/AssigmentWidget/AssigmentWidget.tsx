@@ -6,7 +6,7 @@ import {
   IoRefreshOutline,
   IoSparklesOutline,
 } from "react-icons/io5";
-import { assignmentDataService } from "../../../services";
+import { assignmentDataService, progressService } from "../../../services";
 import type { AssignmentData } from "../../../services/AssigmentDataService";
 
 const styles = {
@@ -179,11 +179,13 @@ const styles = {
 interface Props {
   progressUuid: string;
   instructions?: string;
+  onSuccess?: () => void;
 }
 
 export default function AssignmentWidget({
   progressUuid,
   instructions,
+  onSuccess,
 }: Props) {
   const [answer, setAnswer] = useState("");
   const [loading, setLoading] = useState(false);
@@ -224,9 +226,15 @@ export default function AssignmentWidget({
       // Recargar intentos previos
       await loadPreviousAttempts();
 
-      // Limpiar respuesta si fue exitosa
       if (data.success) {
         setAnswer("");
+        try {
+          await progressService.update(progressUuid, { finished: true });
+        } catch (err) {
+          console.error("Error actualizando progreso:", err);
+        }
+
+        if (onSuccess) onSuccess();
       }
     } catch (err: any) {
       console.error("Error al evaluar respuesta:", err);

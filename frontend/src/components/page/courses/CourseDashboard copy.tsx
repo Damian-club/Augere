@@ -42,7 +42,7 @@ export default function CourseDashboard() {
     null
   );
 
-  // CARGAR USUARIO
+  // 1. CARGAR USUARIO
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -55,6 +55,7 @@ export default function CourseDashboard() {
     fetchUser();
   }, []);
 
+  // 2. CARGAR STUDENT RECORD (solo aquí, no duplicado)
   useEffect(() => {
     const fetchStudentRecord = async () => {
       if (!user?.uuid || !uuid) return;
@@ -87,7 +88,7 @@ export default function CourseDashboard() {
     fetchStudentRecord();
   }, [user?.uuid, uuid]);
 
-  // CARGAR ESQUEMA
+  // 3. CARGAR ESQUEMA
   useEffect(() => {
     if (!uuid) return;
 
@@ -103,7 +104,38 @@ export default function CourseDashboard() {
     loadSchema();
   }, [uuid]);
 
-  // CARGAR DETALLES DEL CURSO
+  // 4. CARGAR PROGRESOS (cuando ya existe studentRecordUuid)
+  useEffect(() => {
+    if (!studentRecordUuid) return;
+
+    async function loadProgress() {
+      try {
+        console.log("Cargando progresos para", studentRecordUuid);
+
+        const progresses = await progressService.listByStudent(
+          studentRecordUuid!
+        );
+
+        const map: Record<string, { finished: boolean; uuid?: string }> = {};
+
+        for (const p of progresses) {
+          map[p.entry_uuid] = {
+            finished: p.finished,
+            uuid: p.uuid,
+          };
+        }
+
+        console.log("ProgressMap final:", map);
+        setProgressMap(map);
+      } catch (err) {
+        console.error("Error cargando progresos", err);
+      }
+    }
+
+    loadProgress();
+  }, [studentRecordUuid]);
+
+  // 5. CARGAR DETALLES DEL CURSO
   useEffect(() => {
     if (!uuid) return;
 
@@ -119,72 +151,7 @@ export default function CourseDashboard() {
     loadCourse();
   }, [uuid]);
 
-  useEffect(() => {
-    async function initialize() {
-      if (!user?.uuid || !uuid) {
-        console.log("Faltan datos:", {
-          userUuid: user?.uuid,
-          courseUuid: uuid,
-        });
-        return;
-      }
-
-      try {
-        console.log(
-          `🔍 Obteniendo Student Record: user=${user.uuid}, course=${uuid}`
-        );
-
-        const response = await fetch(
-          `${environment.api}/student/by-user-course/${user.uuid}/${uuid}`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-
-        if (!response.ok) {
-          console.log("ℹ️ No hay Student Record (probablemente eres tutor)");
-          return;
-        }
-
-        const studentRecord = await response.json();
-        const recordUuid = studentRecord.uuid;
-
-        console.log("Student Record UUID obtenido:", recordUuid);
-        setStudentRecordUuid(recordUuid);
-
-        // 2. CARGAR PROGRESOS CON STUDENT RECORD UUID
-        console.log("Cargando progresos con studentRecordUuid:", recordUuid);
-        const progresses = await progressService.listByStudent(recordUuid);
-
-        console.log("Progresos obtenidos:", progresses);
-        console.log(`Total: ${progresses.length} progresos`);
-
-        // 3. CREAR PROGRESS MAP
-        const map: Record<string, { finished: boolean; uuid?: string }> = {};
-
-        progresses.forEach((p) => {
-          // El último del array sobrescribe (asumimos que es el más reciente)
-          map[p.entry_uuid] = { finished: p.finished, uuid: p.uuid };
-        });
-
-        Object.entries(map).forEach(([entryUuid, data]) => {
-          console.log(`  📌 ${entryUuid}: ${data.finished ? "✅" : "⬜"}`);
-        });
-
-        console.log("Progress Map completo:", map);
-        console.log(`Total único: ${Object.keys(map).length} entries`);
-        setProgressMap(map);
-      } catch (error) {
-        console.error("Error en inicialización:", error);
-      }
-    }
-
-    initialize();
-  }, [user?.uuid, uuid]);
-
+  // 6. ACTUALIZAR progressUuid CUANDO CAMBIA selectedEntry
   useEffect(() => {
     if (!selectedEntry) {
       setProgressUuid(null);
@@ -195,6 +162,7 @@ export default function CourseDashboard() {
     setProgressUuid(found?.uuid || null);
   }, [selectedEntry, progressMap]);
 
+  // 7. CREAR PROGRESO SI NO EXISTE
   useEffect(() => {
     async function handleEntrySelection() {
       if (!selectedEntry || !studentRecordUuid) {
@@ -206,14 +174,12 @@ export default function CourseDashboard() {
         `📝 Entry seleccionado: ${selectedEntry.name} (${selectedEntry.uuid})`
       );
 
-      // Buscar si ya existe un progreso para este entry
       const existingProgress = progressMap[selectedEntry.uuid!];
 
       if (existingProgress?.uuid) {
         console.log(`✅ Progress UUID encontrado: ${existingProgress.uuid}`);
         setProgressUuid(existingProgress.uuid);
       } else {
-        // Si no existe, crear un nuevo progreso
         console.log(`⚠️ No existe progreso, creando uno nuevo...`);
 
         try {
@@ -225,7 +191,6 @@ export default function CourseDashboard() {
 
           console.log(`✅ Nuevo progreso creado: ${newProgress.uuid}`);
 
-          // Actualizar el progressMap
           setProgressMap((prev) => ({
             ...prev,
             [selectedEntry.uuid!]: { finished: false, uuid: newProgress.uuid },
@@ -336,6 +301,16 @@ export default function CourseDashboard() {
                   selectedEntry.context ||
                   "Responde basándote en el contenido anterior"
                 }
+                onSuccess={() => {
+                  if (!selectedEntry) return;
+                  setProgressMap((prev) => ({
+                    ...prev,
+                    [selectedEntry.uuid!]: {
+                      ...prev[selectedEntry.uuid!],
+                      finished: true,
+                    },
+                  }));
+                }}
               />
             )}
           </div>
