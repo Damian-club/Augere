@@ -5,7 +5,6 @@ import {
   IoHomeOutline,
   IoBookOutline,
   IoSettingsOutline,
-  IoSearchOutline,
   IoLogOutOutline,
 } from "react-icons/io5";
 import { useEffect, useState } from "react";
@@ -47,12 +46,6 @@ export default function Sidebar() {
       </div>
 
       <div className={styles.linkAndSearch}>
-        {/* Buscador */}
-        <div className={styles.search}>
-          <IoSearchOutline size={18} className={styles.searchIcon} />
-          <input type="text" placeholder="Buscar..." />
-        </div>
-
         {/* Menu */}
         <nav className={styles.menu}>
           <NavLink

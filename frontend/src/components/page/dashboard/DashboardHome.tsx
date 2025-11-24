@@ -71,7 +71,9 @@ export default function DashboardHome() {
             }
 
             // 2. Obtener progresos con el Student Record UUID correcto
-            const progresses = await progressService.listByStudent(studentRecordUuid);
+            const progresses = await progressService.listByStudent(
+              studentRecordUuid
+            );
 
             // 3. Eliminar duplicados
             const uniqueProgressMap = new Map<string, any>();
@@ -84,7 +86,9 @@ export default function DashboardHome() {
             const uniqueProgresses = Array.from(uniqueProgressMap.values());
 
             // 4. Obtener esquema del curso
-            const schema = await schemaService.getFullSchemaByCourse(course.uuid);
+            const schema = await schemaService.getFullSchemaByCourse(
+              course.uuid
+            );
             const entryUuids = schema.category_list.flatMap((cat) =>
               cat.entry_list.map((e) => e.uuid)
             );
@@ -94,9 +98,12 @@ export default function DashboardHome() {
             const finished = uniqueProgresses.filter(
               (p) => entryUuids.includes(p.entry_uuid) && p.finished
             ).length;
-            const completion = total > 0 ? Math.round((finished / total) * 100) : 0;
+            const completion =
+              total > 0 ? Math.round((finished / total) * 100) : 0;
 
-            console.log(`📊 ${course.title}: ${finished}/${total} = ${completion}%`);
+            console.log(
+              `📊 ${course.title}: ${finished}/${total} = ${completion}%`
+            );
 
             coursesWithProgress.push({
               uuid: course.uuid,
@@ -167,17 +174,21 @@ export default function DashboardHome() {
         </div>
 
         <div className={styles.courseList}>
-          {courses.map((course, i) => (
-            <div key={i} className={styles.courseRow}>
-              <span>{course.name}</span>
-              <div className={styles.bar}>
-                <div style={{ width: `${course.completion_percentage}%` }} />
+          {courses.length > 0 ? (
+            courses.map((course, i) => (
+              <div key={i} className={styles.courseRow}>
+                <span>{course.name}</span>
+                <div className={styles.bar}>
+                  <div style={{ width: `${course.completion_percentage}%` }} />
+                </div>
+                <span className={styles.percentage}>
+                  {course.completion_percentage}%
+                </span>
               </div>
-              <span className={styles.percentage}>
-                {course.completion_percentage}%
-              </span>
-            </div>
-          ))}
+            ))
+          ) : (
+            <span>No hay cursos todavia</span>
+          )}
         </div>
       </div>
 
