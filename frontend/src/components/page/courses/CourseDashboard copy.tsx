@@ -43,11 +43,11 @@ export default function CourseDashboard() {
   const location = useLocation();
   const params = new URLSearchParams(location.search);
   const forcedMode = params.get("mode");
+  const isTutor = forcedMode === "tutor";
+
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [course, setCourse] = useState<Course | null>(null);
   const [user, setUser] = useState<User | null>(null);
-  const isRealTutor = user?.uuid === course?.tutor?.uuid;
-  const isTutor = forcedMode === "tutor" ? true : isRealTutor;
 
   const [selectedEntry, setSelectedEntry] = useState<Entry | null>(null);
   const [progressUuid, setProgressUuid] = useState<string | null>(null);
