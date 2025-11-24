@@ -20,9 +20,11 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
+import rehypeHighlight from "rehype-highlight";
 import "katex/dist/katex.min.css";
 import { environment } from "../../../config/environment";
 import AssignmentWidget from "../../general/AssigmentWidget/AssigmentWidget";
+import "highlight.js/styles/github-dark.css";
 
 function sortSchema(schema: FullSchema): FullSchema {
   return {
@@ -324,7 +326,7 @@ export default function CourseDashboard() {
             <div className={style.entryBody}>
               <ReactMarkdown
                 remarkPlugins={[remarkGfm, remarkMath]}
-                rehypePlugins={[rehypeKatex]}
+                rehypePlugins={[rehypeKatex, rehypeHighlight]}
               >
                 {selectedEntry.body || "_Sin contenido_"}
               </ReactMarkdown>
