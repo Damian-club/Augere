@@ -7,6 +7,7 @@ import {
   IoChevronBackOutline,
   IoChevronForwardOutline,
 } from "react-icons/io5";
+import { useLocation } from "react-router-dom";
 import CourseSchemaView from "../../general/courseSchema/CourseSchemaView";
 import type { FullSchema, Entry } from "../../../schemas/schema";
 import style from "./CourseDashboard.module.css";
@@ -39,10 +40,16 @@ function sortSchema(schema: FullSchema): FullSchema {
 
 export default function CourseDashboard() {
   const { uuid } = useParams();
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  const forcedMode = params.get("mode");
+
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [course, setCourse] = useState<Course | null>(null);
   const [user, setUser] = useState<User | null>(null);
-  const isTutor = user?.uuid === course?.tutor?.uuid;
+  const isRealTutor = user?.uuid === course?.tutor?.uuid;
+  const isTutor = forcedMode === "tutor" ? true : isRealTutor;
+
   const [selectedEntry, setSelectedEntry] = useState<Entry | null>(null);
   const [progressUuid, setProgressUuid] = useState<string | null>(null);
   const [schema, setSchema] = useState<FullSchema | null>(null);
