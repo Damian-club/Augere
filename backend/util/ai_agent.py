@@ -33,7 +33,7 @@ class AIAgent():
                 model=ai_agent_config.DEFAULT_MODEL,
                 messages=[
                     {"role": "developer", "content": prompts.HINT_PROMPT},
-                    {"role": "developer", "content": f"Contexto: {context}"},
+                    {"role": "developer", "content": f"Context: {context}"},
                     *message_hint
                 ]
             )
@@ -90,7 +90,7 @@ class AIAgent():
                 model=ai_agent_config.DEFAULT_MODEL,
                 messages=[
                     {"role": "developer", "content": prompts.FEEDBACK_PROMPT},
-                    {"role": "user", "content": f'Contexto: {context}\nRespuesta: {prompt}'},
+                    {"role": "user", "content": f'Context: {context}\nAnswer: {prompt}'},
                 ],
                 response_format=PromptAssignmentData
             )
