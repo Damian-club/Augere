@@ -367,6 +367,7 @@ export default function CourseSchemaView({
   );
 
   if (!editable) {
+    console.log("Que contiene editable: " + editable);
     return (
       <div className={style.schemaReadOnly}>
         {categories.map((category) => (

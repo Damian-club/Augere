@@ -43,7 +43,6 @@ export default function CourseDashboard() {
   const location = useLocation();
   const params = new URLSearchParams(location.search);
   const forcedMode = params.get("mode");
-
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [course, setCourse] = useState<Course | null>(null);
   const [user, setUser] = useState<User | null>(null);
@@ -74,15 +73,15 @@ export default function CourseDashboard() {
   }, []);
 
   useEffect(() => {
+    if (!user || !course) return;
+    console.log(forcedMode);
+
+    if (forcedMode === "tutor") {
+      console.log("Modo forzado: tutor — no se carga studentRecord");
+      return;
+    }
+
     const fetchStudentRecord = async () => {
-      if (!user) return;
-      if (!course) return;
-
-      if (user.uuid === course.tutor?.uuid) {
-        console.log("Eres el tutor, no se carga studentRecord");
-        return;
-      }
-
       try {
         const response = await fetch(
           `${environment.api}/student/by-user-course/${user.uuid}/${course.uuid}`,
@@ -96,6 +95,7 @@ export default function CourseDashboard() {
         if (response.ok) {
           const data = await response.json();
           setStudentRecordUuid(data.uuid);
+          console.log("✅ Student record cargado:", data.uuid);
         } else {
           console.log("No hay registro de estudiante");
         }
@@ -105,7 +105,7 @@ export default function CourseDashboard() {
     };
 
     fetchStudentRecord();
-  }, [user, course]);
+  }, [user, course, forcedMode]);
 
   useEffect(() => {
     if (!uuid) return;
@@ -124,35 +124,26 @@ export default function CourseDashboard() {
   }, [uuid]);
 
   useEffect(() => {
-    if (isTutor) return;
-    if (!studentRecordUuid) return;
+    if (!studentRecordUuid || isTutor) return;
 
-    async function loadProgress() {
+    const loadProgress = async () => {
       try {
-        console.log("Cargando progresos para", studentRecordUuid);
-
         const progresses = await progressService.listByStudent(
-          studentRecordUuid!
+          studentRecordUuid
         );
-
         const map: Record<string, { finished: boolean; uuid?: string }> = {};
-
-        for (const p of progresses) {
-          map[p.entry_uuid] = {
-            finished: p.finished,
-            uuid: p.uuid,
-          };
-        }
-
+        progresses.forEach(
+          (p) => (map[p.entry_uuid] = { finished: p.finished, uuid: p.uuid })
+        );
         console.log("ProgressMap final:", map);
         setProgressMap(map);
       } catch (err) {
         console.error("Error cargando progresos", err);
       }
-    }
+    };
 
     loadProgress();
-  }, [studentRecordUuid]);
+  }, [studentRecordUuid, isTutor]);
 
   useEffect(() => {
     if (!uuid) return;

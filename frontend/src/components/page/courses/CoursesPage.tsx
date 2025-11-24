@@ -230,7 +230,7 @@ export default function CoursePage() {
               logo_path={c.logo_path}
               icon="close"
               onDelete={() => handleUnenroll(c)}
-              onClick={() => navigate(`/course/${c.uuid}`)}
+              onClick={() => navigate(`/course/${c.uuid}?mode=student`)}
             />
           ))}
         </div>
