@@ -226,6 +226,7 @@
 }
 
 /* === CAMPOS DE EDICIÓN === */
+/* Estilos originales */
 .editorField {
   display: flex;
   flex-direction: column;
@@ -304,6 +305,17 @@
   box-shadow: 0 6px 14px rgba(37, 99, 235, 0.3);
 }
 
+/* === ESTILO PARA BOTÓN DESHABILITADO === */
+.generateContextBtnDisabled {
+  /* Cambia el color a un gris suave (similar al d1d5db de los bordes) */
+  background: #e5e7eb; /* Fondo más claro */
+  color: #9ca3af; /* Texto en gris oscuro/pálido */
+  cursor: not-allowed;
+  /* Elimina los efectos de hover para que se vea deshabilitado */
+  transform: none;
+  box-shadow: none;
+  pointer-events: none; /* Asegura que no haya eventos de mouse */
+}
 /* === RESPONSIVE === */
 @media (max-width: 768px) {
   .schemaContainer {

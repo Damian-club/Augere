@@ -323,7 +323,7 @@ export default function CourseSchemaTab2({ course }: Props) {
       setLoading(false);
     }
   };
-  
+
   const saveType = (value: string) => {
     if (!value.trim()) {
       setEditingType(false);
@@ -522,7 +522,7 @@ export default function CourseSchemaTab2({ course }: Props) {
                     </div>
                   </div>
                 </div>
-
+                {/* Contexto IA */}
                 <div className={style.editorField}>
                   <label className={style.fieldLabel}>
                     <IoSparklesOutline />
@@ -552,10 +552,12 @@ export default function CourseSchemaTab2({ course }: Props) {
                     rows={4}
                   />
                   <button
-                    className={style.generateContextBtn}
+                    className={`${style.generateContextBtn} ${style.generateContextBtnDisabled}`}
                     onClick={handleGenerateContext}
+                    disabled={true}
+                    title="Funcionalidad de generación automática de contexto disponible próximamente."
                   >
-                    <IoSparklesOutline /> Generar con IA
+                    <IoSparklesOutline /> Generar con IA (Próximamente)
                   </button>
                 </div>
               </div>
