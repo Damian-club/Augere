@@ -107,3 +107,4 @@ def get_schema_entry(uuid: UUID, db: Session) -> SchemaEntryOut:
     schema_entry: SchemaEntry = _get_entry_by_uuid(uuid, db)
 
     return map_model_to_schema(schema_entry)
+

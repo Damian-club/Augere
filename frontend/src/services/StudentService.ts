@@ -98,4 +98,19 @@ export class StudentService {
       throw new Error(error?.detail || "Error al desinscribirse del curso");
     }
   }
+
+  /** Obtener todos los estudiantes inscritos a un curso */
+  async getByCourse(course_uuid: string): Promise<Student[]> {
+    const res = await fetch(`${this.baseUrl}/by-course/${course_uuid}`, {
+      method: "GET",
+      headers: this.getHeaders(),
+    });
+
+    if (!res.ok) {
+      const error = await res.json().catch(() => ({}));
+      throw new Error(error.detail || "Error al obtener estudiantes del curso");
+    }
+
+    return res.json();
+  }
 }

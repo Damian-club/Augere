@@ -79,7 +79,6 @@ def get_student_by_user_course(
     course_uuid: UUID,
     db: Session = Depends(get_db)
 ):
-    """Obtiene el registro Student por user_uuid y course_uuid"""
     student = db.query(Student).filter(
         Student.student_uuid == user_uuid,
         Student.course_uuid == course_uuid
@@ -89,7 +88,23 @@ def get_student_by_user_course(
         raise HTTPException(status_code=404, detail="Estudiante no encontrado")
     
     return {
-        "uuid": student.uuid,  # ← Este es el UUID que necesitas
+        "uuid": student.uuid,
         "student_uuid": student.student_uuid,
         "course_uuid": student.course_uuid
     }
+    
+@router.get("/by-course/{course_uuid}", summary="Listar estudiantes inscritos a un curso")
+def get_students_by_course(
+    course_uuid: UUID,
+    db: Session = Depends(get_db)
+):
+    students = db.query(Student).filter(Student.course_uuid == course_uuid).all()
+
+    return [
+        {
+            "uuid": s.uuid,
+            "student_uuid": s.student_uuid,
+            "course_uuid": s.course_uuid
+        }
+        for s in students
+    ]

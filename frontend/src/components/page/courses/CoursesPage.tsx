@@ -22,6 +22,9 @@ export default function CoursePage() {
   const [loading, setLoading] = useState(true);
   const [configCourseId, setConfigCourseId] = useState<string | null>(null);
   const navigate = useNavigate();
+  const [progressCreatedState, setProgressCreated] = useState<Record<string, number>>({});
+  const [progressEnrolledState, setProgressEnrolled] = useState<Record<string, number>>({});
+
   const [courseProgress, setCourseProgress] = useState<Record<string, number>>(
     {}
   );
@@ -47,14 +50,97 @@ export default function CoursePage() {
     try {
       if (!user?.uuid) return;
 
-      const allCourses = [...created, ...enrolled];
-      const progressPercent: Record<string, number> = {};
+      const progressCreated: Record<string, number> = {};
+      const progressEnrolled: Record<string, number> = {};
 
-      // Para cada curso, obtén el Student Record UUID y calcula el progreso
-      for (const course of allCourses) {
+      // ================================
+      // 🔵 1. CALCULAR PROMEDIO (CREADOS)
+      // ================================
+      for (const course of created) {
         try {
-          // 1. Obtener Student Record UUID
-          const response = await fetch(
+          // Obtener esquema
+          const schema = await schemaService.getFullSchemaByCourse(course.uuid);
+          const entryUuids = schema.category_list.flatMap((cat) =>
+            cat.entry_list.map((e) => e.uuid)
+          );
+          const total = entryUuids.length;
+
+          // Obtener estudiantes inscritos
+          const students = await studentService.getByCourse(course.uuid);
+          if (!students || students.length === 0) {
+            progressCreated[course.uuid] = 0;
+            continue;
+          }
+
+          const percentages: number[] = [];
+
+          for (const s of students) {
+            // Obtener el student record real
+            const srResp = await fetch(
+              `${environment.api}/student/by-user-course/${s.student_uuid}/${course.uuid}`,
+              {
+                headers: {
+                  Authorization: `Bearer ${localStorage.getItem("token")}`,
+                  "Content-Type": "application/json",
+                },
+              }
+            );
+
+            if (!srResp.ok) {
+              percentages.push(0);
+              continue;
+            }
+
+            const srData = await srResp.json();
+            const realStudentRecordUuid = srData.uuid;
+
+            const progresses = await progressService.listByStudent(
+              realStudentRecordUuid
+            );
+
+            // Normalize progress → quedarnos con el último por entry
+            const unique = new Map<string, any>();
+            for (const p of progresses) {
+              const existing = unique.get(p.entry_uuid);
+              if (!existing || (!existing.finished && p.finished)) {
+                unique.set(p.entry_uuid, p);
+              }
+            }
+
+            const uniqueProgresses = [...unique.values()];
+            const finished = uniqueProgresses.filter(
+              (p) => entryUuids.includes(p.entry_uuid) && p.finished
+            ).length;
+
+            const percent = total > 0 ? (finished / total) * 100 : 0;
+            percentages.push(percent);
+          }
+
+          // Promedio final del curso
+          const average =
+            percentages.length > 0
+              ? Math.round(
+                  percentages.reduce((a, b) => a + b, 0) / percentages.length
+                )
+              : 0;
+
+          progressCreated[course.uuid] = average;
+        } catch (err) {
+          console.error(
+            `Error en progreso de curso creado ${course.uuid}:`,
+            err
+          );
+          progressCreated[course.uuid] = 0;
+        }
+      }
+
+      // =======================================
+      // 🟢 2. CALCULAR PROGRESO PERSONAL (INSCRITOS)
+      // =======================================
+      for (const course of enrolled) {
+        try {
+          // Obtener student record REAL del usuario
+          const srResp = await fetch(
             `${environment.api}/student/by-user-course/${user.uuid}/${course.uuid}`,
             {
               headers: {
@@ -64,66 +150,66 @@ export default function CoursePage() {
             }
           );
 
-          let studentRecordUuid: string;
-
-          if (response.ok) {
-            // Es estudiante, usa el Student Record UUID
-            const studentRecord = await response.json();
-            studentRecordUuid = studentRecord.uuid;
-          } else {
-            // Es tutor o no está inscrito, usa directamente
-            // Para tutores, el progreso será 0 o calculado de otra forma
-            progressPercent[course.uuid] = 0;
+          if (!srResp.ok) {
+            progressEnrolled[course.uuid] = 0;
             continue;
           }
 
-          // 2. Obtener progresos con el Student Record UUID correcto
+          const studentRecord = await srResp.json();
+          const studentRecordUuid = studentRecord.uuid;
+
           const progresses = await progressService.listByStudent(
             studentRecordUuid
           );
 
-          // 3. Eliminar duplicados
-          const uniqueProgressMap = new Map<string, any>();
+          // Normalizar
+          const unique = new Map<string, any>();
           for (const p of progresses) {
-            const existing = uniqueProgressMap.get(p.entry_uuid);
+            const existing = unique.get(p.entry_uuid);
             if (!existing || (!existing.finished && p.finished)) {
-              uniqueProgressMap.set(p.entry_uuid, p);
+              unique.set(p.entry_uuid, p);
             }
           }
-          const uniqueProgresses = Array.from(uniqueProgressMap.values());
+          const uniqueProgresses = [...unique.values()];
 
-          // 4. Obtener esquema del curso
+          // Obtener entries
           const schema = await schemaService.getFullSchemaByCourse(course.uuid);
           const entryUuids = schema.category_list.flatMap((cat) =>
             cat.entry_list.map((e) => e.uuid)
           );
 
-          // 5. Calcular progreso
           const total = entryUuids.length;
           const finished = uniqueProgresses.filter(
             (p) => entryUuids.includes(p.entry_uuid) && p.finished
           ).length;
 
-          progressPercent[course.uuid] =
+          progressEnrolled[course.uuid] =
             total > 0 ? Math.round((finished / total) * 100) : 0;
-
-          console.log(
-            `📊 Curso ${course.title}: ${finished}/${total} = ${
-              progressPercent[course.uuid]
-            }%`
-          );
         } catch (err) {
-          console.error(
-            `Error calculando progreso para curso ${course.uuid}:`,
-            err
-          );
-          progressPercent[course.uuid] = 0;
+          console.error(`Error en progreso de inscrito ${course.uuid}:`, err);
+          progressEnrolled[course.uuid] = 0;
         }
       }
 
-      setCourseProgress(progressPercent);
+      // Unimos ambos resultados
+      // al final de fetchProgress()
+      console.log(
+        "CREATED:",
+        created.map((c) => c.uuid)
+      );
+      console.log(
+        "ENROLLED:",
+        enrolled.map((c) => c.uuid)
+      );
+
+      console.log("progressCreated (promedio):", progressCreated);
+      console.log("progressEnrolled (personal):", progressEnrolled);
+
+      setProgressCreated(progressCreated);
+      setProgressEnrolled(progressEnrolled);
+      setCourseProgress({ ...progressEnrolled, ...progressCreated });
     } catch (err) {
-      console.error("Error al obtener progreso:", err);
+      console.error("Error general en fetchProgress:", err);
     }
   };
 
@@ -200,7 +286,7 @@ export default function CoursePage() {
               title={c.title}
               author={`Por: ${"Tú"}`}
               description={c.description}
-              progress={courseProgress[c.uuid] || 0}
+              progress={progressCreatedState[c.uuid] || 0}
               color={pastelGradientFromString(c.title)}
               logo_path={c.logo_path}
               icon="settings"
@@ -225,7 +311,7 @@ export default function CoursePage() {
               title={c.title}
               author={`Por: ${c.tutor?.name || "Tutor"}`}
               description={c.description}
-              progress={courseProgress[c.uuid] || 0}
+              progress={progressEnrolledState[c.uuid] || 0}
               color={pastelGradientFromString(c.title)}
               logo_path={c.logo_path}
               icon="close"

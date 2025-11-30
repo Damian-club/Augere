@@ -102,7 +102,7 @@ class AIAgent():
             return asserted
         except Exception as e:
             raise HTTPException(status_code=403, detail=f'Error al hacer inferencia: {e}')
-    
+
 if __name__ == '__main__':
     from core.ai_client import ai_client
     ai_agent: AIAgent = AIAgent(ai_client)

@@ -331,6 +331,15 @@ export default function CourseDashboard() {
                     selectedEntry.context ||
                     "Responde basándote en el contenido anterior"
                   }
+                  onCorrect={() => {
+                    setProgressMap((prev) => ({
+                      ...prev,
+                      [selectedEntry.uuid!]: {
+                        ...prev[selectedEntry.uuid!],
+                        finished: true,
+                      },
+                    }));
+                  }}
                 />
               )}
             <div className={style.buttonsContainer}>

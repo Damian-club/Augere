@@ -21,6 +21,48 @@ type Props = {
   course: Course;
 };
 
+const niceLoadingStyles = {
+  container: {
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: "40px 0",
+    flexDirection: "column" as const,
+    gap: "12px",
+    color: "#667eea",
+  },
+  box: {
+    padding: "20px 28px",
+    background: "linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)",
+    borderRadius: "16px",
+    display: "flex",
+    alignItems: "center",
+    gap: "12px",
+    boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+    maxWidth: "320px",
+  },
+  icon: {
+    fontSize: "26px",
+    animation: style.spin + " 1s linear infinite",
+  },
+  text: {
+    fontWeight: 500,
+    fontSize: "1rem",
+  },
+  dots: {
+    display: "inline-flex",
+    gap: "4px",
+    marginLeft: "4px",
+  },
+  dot: {
+    width: "6px",
+    height: "6px",
+    borderRadius: "50%",
+    background: "#667eea",
+    animation: style.bounce + " 1.4s infinite ease-in-out both",
+  },
+};
+
 export default function CourseSchemaTab2({ course }: Props) {
   const [schema, setSchema] = useState<FullSchema | null>(null);
   const [selectedEntry, setSelectedEntry] = useState<Entry | null>(null);
@@ -281,7 +323,7 @@ export default function CourseSchemaTab2({ course }: Props) {
       setLoading(false);
     }
   };
-
+  
   const saveType = (value: string) => {
     if (!value.trim()) {
       setEditingType(false);
@@ -314,7 +356,27 @@ export default function CourseSchemaTab2({ course }: Props) {
     setEditingType(false);
   };
 
-  if (loading) return <p>Cargando esquema...</p>;
+  if (loading) {
+    return (
+      <div style={niceLoadingStyles.container}>
+        <div style={niceLoadingStyles.box}>
+          <IoSparklesOutline style={niceLoadingStyles.icon} />
+          <div>
+            <span style={niceLoadingStyles.text}>Generando esquema</span>
+            <div style={niceLoadingStyles.dots}>
+              <span
+                style={{ ...niceLoadingStyles.dot, animationDelay: "-0.32s" }}
+              ></span>
+              <span
+                style={{ ...niceLoadingStyles.dot, animationDelay: "-0.16s" }}
+              ></span>
+              <span style={niceLoadingStyles.dot}></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={style.schemaContainer}>
@@ -501,6 +563,16 @@ export default function CourseSchemaTab2({ course }: Props) {
           </div>
         </div>
       )}
+      <style>{`
+  @keyframes bounce {
+    0%, 80%, 100% { transform: scale(0); opacity: 0.5; }
+    40% { transform: scale(1); opacity: 1; }
+  }
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+`}</style>
     </div>
   );
 }

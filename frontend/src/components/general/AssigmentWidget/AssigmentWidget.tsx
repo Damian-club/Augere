@@ -179,11 +179,13 @@ const styles = {
 interface Props {
   progressUuid: string;
   instructions?: string;
+  onCorrect?: () => void;
 }
 
 export default function AssignmentWidget({
   progressUuid,
   instructions,
+  onCorrect,
 }: Props) {
   const [answer, setAnswer] = useState("");
   const [loading, setLoading] = useState(false);
@@ -225,6 +227,7 @@ export default function AssignmentWidget({
       await loadPreviousAttempts();
 
       if (data.success) {
+        if (onCorrect) onCorrect();
         setAnswer("");
         try {
           await progressService.update(progressUuid, { finished: true });
