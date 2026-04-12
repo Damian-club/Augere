@@ -52,17 +52,25 @@ def create_assignment_data(
     assignment_data_create: AssignmentDataCreate, db: Session
 ) -> AssignmentDataOut:
 
-    assignment_data: AssignmentData = AssignmentData(
-        progress_uuid=assignment_data_create.progress_uuid,
-        answer=assignment_data_create.answer,
-        feedback=assignment_data_create.feedback,
-        success=assignment_data_create.success,
-    )
-
     try:
+        assignment_data: AssignmentData = AssignmentData(
+            progress_uuid=assignment_data_create.progress_uuid,
+            answer=assignment_data_create.answer,
+            feedback=assignment_data_create.feedback,
+            success=assignment_data_create.success,
+        )
+
+        if assignment_data.success:
+            progress: Progress = _get_progress_by_uuid(
+                assignment_data_create.progress_uuid, db=db
+            )
+            progress.finished = True
+
         db.add(assignment_data)
         db.commit()
+        db.refresh(assignment_data)
     except Exception as e:
+        db.rollback()
         raise HTTPException(
             status_code=400, detail=f"Error al crear el dato de la asignación: {e}"
         )
@@ -163,7 +171,7 @@ def answer_assignment_data(
 
     assignment_data: AssignmentDataOut = create_assignment_data(
         AssignmentDataCreate(
-            answer=prompt,
+            answer=prompt.prompt,
             feedback=prompt_assignment_data.feedback,
             success=prompt_assignment_data.success,
             progress_uuid=progress_uuid

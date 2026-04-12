@@ -33,7 +33,7 @@ class AIAgent():
                 model=ai_agent_config.DEFAULT_MODEL,
                 messages=[
                     {"role": "developer", "content": prompts.HINT_PROMPT},
-                    {"role": "developer", "content": f"Contexto: {context}"},
+                    {"role": "developer", "content": f"Context: {context}"},
                     *message_hint
                 ]
             )
@@ -56,21 +56,41 @@ class AIAgent():
             )
 
             asserted: PromptSchemaFull | None = response.choices[0].message.parsed
-
             assert asserted is not None
 
+            def fix_encoding(obj):
+                if isinstance(obj, str):
+                    try:
+                        if any(bad in obj for bad in ["�", "Ã", "Â", "ð", "f3", "e9", "ed"]):
+                            try:
+                                return obj.encode("latin1").decode("utf-8")
+                            except Exception:
+                                return obj.encode("utf-8", errors="ignore").decode("utf-8", errors="ignore")
+                        return obj
+                    except Exception:
+                        return obj
+                elif isinstance(obj, list):
+                    return [fix_encoding(o) for o in obj]
+                elif isinstance(obj, dict):
+                    return {k: fix_encoding(v) for k, v in obj.items()}
+                else:
+                    return obj
+
+            asserted = fix_encoding(asserted)
             return asserted
+
         except Exception as e:
             raise HTTPException(status_code=403, detail=f'Error al hacer inferencia: {e}')
-        
 
+        
+        
     def generate_feedback(self, prompt: str, context: str) -> PromptAssignmentData:
         try:
             response: ParsedChatCompletion[PromptAssignmentData] = self.client.beta.chat.completions.parse(
                 model=ai_agent_config.DEFAULT_MODEL,
                 messages=[
                     {"role": "developer", "content": prompts.FEEDBACK_PROMPT},
-                    {"role": "user", "content": f'Contexto: {context}\nRespuesta: {prompt}'},
+                    {"role": "user", "content": f'Context: {context}\nAnswer: {prompt}'},
                 ],
                 response_format=PromptAssignmentData
             )
@@ -82,7 +102,7 @@ class AIAgent():
             return asserted
         except Exception as e:
             raise HTTPException(status_code=403, detail=f'Error al hacer inferencia: {e}')
-    
+
 if __name__ == '__main__':
     from core.ai_client import ai_client
     ai_agent: AIAgent = AIAgent(ai_client)

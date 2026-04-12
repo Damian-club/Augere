@@ -22,4 +22,4 @@ class AssignmentData(Base):
     feedback: Mapped[str] = mapped_column(String, nullable=False)
     success: Mapped[bool] = mapped_column(Boolean, nullable=False)
 
-    progress: Mapped["Progress"] = relationship(back_populates="assignment_data_record")
+    progress: Mapped["Progress"] = relationship(back_populates="assignment_data_records")

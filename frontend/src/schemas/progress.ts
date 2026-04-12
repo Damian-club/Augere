@@ -12,7 +12,7 @@ export interface ProgressCreate {
 }
 
 export interface ProgressUpdate {
-  entry_uuid: string;
-  student_uuid: string;
-  finished: boolean;
+  entry_uuid?: string;
+  student_uuid?: string;
+  finished?: boolean;
 }

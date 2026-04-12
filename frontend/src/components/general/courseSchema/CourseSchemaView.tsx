@@ -11,16 +11,30 @@ import {
 } from "react-icons/io5";
 import type { FullSchema, Entry } from "../../../schemas/schema";
 import style from "./CourseSchemaView.module.css";
+import {
+  progressService,
+  schemaCategoryService,
+  schemaEntryService,
+} from "../../../services";
+import { useState } from "react";
+import type { User } from "../../../schemas/auth";
 
 type Props = {
   schema: FullSchema | null;
   setSchema?: (s: FullSchema) => void;
   selectedEntry: Entry | null;
+  isTutor?: boolean;
   setSelectedEntry: (e: Entry | null) => void;
   onDragEnd?: (result: DropResult) => void;
   onAddCategory?: () => void;
   onAddEntry?: (catUuid: string) => void;
   editable?: boolean;
+  user?: User | null;
+  studentRecordUuid?: string | null;
+  progressMap?: Record<string, { finished: boolean; uuid?: string }>;
+  setProgressMap?: React.Dispatch<
+    React.SetStateAction<Record<string, { finished: boolean; uuid?: string }>>
+  >;
 };
 
 export default function CourseSchemaView({
@@ -32,7 +46,13 @@ export default function CourseSchemaView({
   onAddCategory,
   onAddEntry,
   editable = true,
+  user,
+  studentRecordUuid,
+  progressMap = {},
+  setProgressMap,
+  isTutor,
 }: Props) {
+  const [loadingEntry, setLoadingEntry] = useState<string | null>(null);
   const getIcon = (entryType: string) => {
     switch (entryType) {
       case "assignment":
@@ -41,6 +61,52 @@ export default function CourseSchemaView({
         return <IoDocumentTextOutline className={style.icon} />;
       default:
         return <IoCodeSlashOutline className={style.icon} />;
+    }
+  };
+
+  // MANEJAR PROGRESO
+  const handleToggleProgress = async (entryUuid: string, checked: boolean) => {
+    if (!user || !setProgressMap || !studentRecordUuid) {
+      console.error("❌ Faltan datos para actualizar progreso");
+      return;
+    }
+
+    setLoadingEntry(entryUuid);
+    try {
+      const current = progressMap[entryUuid];
+
+      if (!current?.uuid) {
+        // ANTES DE CREAR, verifica que no exista en el backend
+        console.log("🔍 Verificando si ya existe progreso para:", entryUuid);
+
+        // Crear nuevo progreso
+        const created = await progressService.create({
+          entry_uuid: entryUuid,
+          student_uuid: studentRecordUuid,
+          finished: checked,
+        });
+
+        setProgressMap((prev) => ({
+          ...prev,
+          [entryUuid]: { finished: checked, uuid: created.uuid },
+        }));
+      } else {
+        // Actualizar progreso existente
+        await progressService.update(current.uuid, {
+          entry_uuid: entryUuid,
+          student_uuid: studentRecordUuid,
+          finished: checked,
+        });
+
+        setProgressMap((prev) => ({
+          ...prev,
+          [entryUuid]: { ...prev[entryUuid], finished: checked },
+        }));
+      }
+    } catch (err) {
+      console.error("Error al actualizar progreso:", err);
+    } finally {
+      setLoadingEntry(null);
     }
   };
 
@@ -94,6 +160,20 @@ export default function CourseSchemaView({
                             );
                             if (cat) cat.name = e.target.value;
                             setSchema(newSchema);
+                          }}
+                          onBlur={async () => {
+                            try {
+                              await schemaCategoryService.updateCategory(
+                                category.uuid!,
+                                category.name,
+                                category.position
+                              );
+                            } catch (err) {
+                              console.error("Error guardando categoría:", err);
+                              alert(
+                                "No se pudo guardar el nombre de la categoría"
+                              );
+                            }
                           }}
                         />
                       ) : (
@@ -197,6 +277,22 @@ export default function CourseSchemaView({
                                               setSelectedEntry({ ...ent });
                                             }
                                           }}
+                                          onBlur={async () => {
+                                            try {
+                                              await schemaEntryService.updateEntry(
+                                                entry.uuid!,
+                                                { name: entry.name }
+                                              );
+                                            } catch (err) {
+                                              console.error(
+                                                "Error guardando entry:",
+                                                err
+                                              );
+                                              alert(
+                                                "No se pudo guardar el nombre del entry"
+                                              );
+                                            }
+                                          }}
                                         />
                                       ) : (
                                         <span className={style.entryName}>
@@ -271,6 +367,7 @@ export default function CourseSchemaView({
   );
 
   if (!editable) {
+    console.log("Que contiene editable: " + editable);
     return (
       <div className={style.schemaReadOnly}>
         {categories.map((category) => (
@@ -289,11 +386,22 @@ export default function CourseSchemaView({
                   }`}
                   onClick={() => setSelectedEntry(entry)}
                 >
-                  <input
-                    type="checkbox"
-                    className={style.entryCheckbox}
-                    onClick={(e) => e.stopPropagation()}
-                  />
+                  {!isTutor && (
+                    <input
+                      type="checkbox"
+                      className={style.entryCheckbox}
+                      checked={progressMap?.[entry.uuid!]?.finished || false}
+                      disabled={
+                        loadingEntry === entry.uuid ||
+                        entry.entry_type === "assignment"
+                      }
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        if (entry.entry_type === "assignment") return;
+                        handleToggleProgress(entry.uuid!, e.target.checked);
+                      }}
+                    />
+                  )}
                   {getIcon(entry.entry_type)}
                   <span className={style.entryName}>{entry.name}</span>
                 </div>

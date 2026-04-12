@@ -135,10 +135,14 @@ def delete_schema(uuid: UUID, db: Session) -> Message:
 
 def create_schema_full(full_schema_create: FullSchemaCreate, db: Session) -> FullSchemaOut:
     _delete_existing_schema_for_course(full_schema_create.course_uuid, db)
-    schema: Schema = Schema(course_uuid=full_schema_create.course_uuid)
+    # ✅ Buscar el curso directamente
+    course: Course | None = db.query(Course).filter(Course.uuid == full_schema_create.course_uuid).first()
+    if course is None:
+        raise HTTPException(status_code=404, detail=f"Curso con UUID {full_schema_create.course_uuid} no encontrado")
 
-    course: Course = schema.course
-    student_list: list[Student] = course.students
+    student_list: list[Student] = course.students or []
+
+    schema: Schema = Schema(course_uuid=full_schema_create.course_uuid)
 
     try:
         db.add(schema)

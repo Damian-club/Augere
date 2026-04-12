@@ -69,6 +69,26 @@ export class CourseService {
     return res.json();
   }
 
+  async getPublicSummary(uuid: string): Promise<Course> {
+    const res = await fetch(`${this.baseUrl}/summary/public/${uuid}`, {
+      headers: this.getHeaders(),
+    });
+    if (!res.ok) throw new Error("Error al obtener resumen público del curso");
+    return res.json();
+  }
+
+  async getCourseInfo(uuid: string): Promise<Course> {
+    try {
+      return await this.getCourse(uuid);
+    } catch (error: any) {
+      if (error.message.includes("403") || error.message.includes("permiso")) {
+        console.log("No eres tutor, obteniendo como estudiante...");
+        return await this.getPublicSummary(uuid);
+      }
+      throw error;
+    }
+  }
+
   async deleteCourse(uuid: string): Promise<DeleteCourseResponse> {
     const res = await fetch(`${this.baseUrl}/${uuid}`, {
       method: "DELETE",

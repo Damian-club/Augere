@@ -127,7 +127,7 @@ def prompt_schema_by_course(progress_uuid: UUID, prompt: Prompt, db: Session, cl
 
     chat_history: list[AIChatOut] = get_ai_chat_by_progress(progress_uuid, db=db)
     ai_hint: str = client.generate_hint(
-        prompt=prompt,
+        prompt=prompt.prompt,
         context=schema_entry.context,
         ai_chat_out_list=chat_history
     )

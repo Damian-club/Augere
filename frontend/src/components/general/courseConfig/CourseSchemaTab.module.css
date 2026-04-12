@@ -1,3 +1,24 @@
+@keyframes bounce {
+  0%,
+  80%,
+  100% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .schemaContainer {
   min-height: 100vh;
   background: #f3f6fb;
@@ -205,6 +226,7 @@
 }
 
 /* === CAMPOS DE EDICIÓN === */
+/* Estilos originales */
 .editorField {
   display: flex;
   flex-direction: column;
@@ -283,8 +305,17 @@
   box-shadow: 0 6px 14px rgba(37, 99, 235, 0.3);
 }
 
-
-
+/* === ESTILO PARA BOTÓN DESHABILITADO === */
+.generateContextBtnDisabled {
+  /* Cambia el color a un gris suave (similar al d1d5db de los bordes) */
+  background: #e5e7eb; /* Fondo más claro */
+  color: #9ca3af; /* Texto en gris oscuro/pálido */
+  cursor: not-allowed;
+  /* Elimina los efectos de hover para que se vea deshabilitado */
+  transform: none;
+  box-shadow: none;
+  pointer-events: none; /* Asegura que no haya eventos de mouse */
+}
 /* === RESPONSIVE === */
 @media (max-width: 768px) {
   .schemaContainer {
@@ -582,4 +613,42 @@
   font-weight: 400;
   color: #64748b;
   margin-left: 1.6rem;
+}
+
+/* MARKDWONS */
+.markdownPreview {
+  margin-top: 1rem;
+  padding: 0.5rem 0;
+  border-top: 1px solid #ddd;
+}
+
+.markdownPreview h4 {
+  font-size: 0.9rem;
+  color: #444;
+  margin-bottom: 0.5rem;
+}
+
+.markdownBox {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 1rem;
+  max-height: 300px;
+  overflow-y: auto;
+  font-family: "Inter", sans-serif;
+}
+
+.markdownBox h1,
+.markdownBox h2,
+.markdownBox h3 {
+  margin-top: 0.6rem;
+  margin-bottom: 0.3rem;
+}
+
+.markdownBox p {
+  margin: 0.4rem 0;
+}
+
+.markdownBox ul {
+  margin-left: 1.2rem;
 }
