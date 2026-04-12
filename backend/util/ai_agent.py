@@ -45,7 +45,7 @@ class AIAgent():
             raise HTTPException(status_code=403, detail=f'Error al hacer inferencia: {e}')
     
     def generate_schema(self, prompt: str) -> PromptSchemaFull:
-        try:
+        try: 
             response: ParsedChatCompletion[PromptSchemaFull] = self.client.beta.chat.completions.parse(
                 model=ai_agent_config.DEFAULT_MODEL,
                 messages=[
