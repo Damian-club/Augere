@@ -29,7 +29,7 @@ from models.progress import Progress
 #---------------------------------------------------
 
 query_queue = asyncio.Queue()
-queried_course_schemas: list[UUID] = []
+processing_courses: dict[UUID, bool] = {}
 
 # Util
 def _map_schema_to_full_schema_out(schema: Schema) -> FullSchemaOut:
@@ -199,9 +199,8 @@ def get_full_schema_by_course(course_uuid: UUID, db: Session) -> FullSchemaOut:
     return _map_schema_to_full_schema_out(schema)
 
 def get_full_schema_by_course_or_none(course_uuid: UUID, db: Session) -> FullSchemaOut | None:
-    if course_uuid in queried_course_schemas:
+    if processing_courses.get(course_uuid, False):
         return None
-    
     return get_full_schema_by_course(course_uuid, db=db)
 
 def get_schema_by_course(course_uuid: UUID, db: Session) -> SchemaOut:
@@ -210,12 +209,12 @@ def get_schema_by_course(course_uuid: UUID, db: Session) -> SchemaOut:
     return map_model_to_schema(schema)
 
 def prompt_schema_by_course(course_uuid: UUID, prompt: Prompt, db: Session, client: AIAgent) -> FullSchemaOut:
-    queried_course_schemas.append(course_uuid)
+    processing_courses[course_uuid] = True
     
-    ai_schema: PromptSchemaFull = client.generate_schema(prompt)
+    ai_schema: PromptSchemaFull = client.generate_schema(prompt.prompt)
     
-    queried_course_schemas.remove(course_uuid)
-    query_queue.put_nowait(course_uuid)
+    query_queue.put_nowait(str(course_uuid))
+    processing_courses[course_uuid] = False
 
     return create_schema_full(
         full_schema_create=FullSchemaCreate(
@@ -243,5 +242,5 @@ def prompt_schema_by_course(course_uuid: UUID, prompt: Prompt, db: Session, clie
     
 async def stream_finished_schema_uuids():
     while True:
-        course_uuid: UUID = await query_queue.get()
+        course_uuid: str = await query_queue.get()
         yield course_uuid
