@@ -1,4 +1,4 @@
-from openai import OpenAI
+from openai import OpenAI, AsyncOpenAI
 from openai.types.chat.parsed_chat_completion import ParsedChatCompletion
 from models.ai_chat import Author
 import config.prompts as prompts
@@ -17,8 +17,9 @@ def map_message_author(author: Author) -> str:
     }.get(author.value, "user")
 
 class AIAgent():
-    def __init__(self, client: OpenAI):
+    def __init__(self, client: OpenAI, async_client: AsyncOpenAI):
         self.client: OpenAI = client
+        self.async_client: AsyncOpenAI = async_client
 
     def generate_hint(self, prompt: str, context: str, ai_chat_out_list: list[AIChatOut]) -> str:
         message_hint: list[dict[str, str]] = [
@@ -44,7 +45,7 @@ class AIAgent():
         except Exception as e:
             raise HTTPException(status_code=403, detail=f'Error al hacer inferencia: {e}')
     
-    def generate_schema(self, prompt: str) -> PromptSchemaFull:
+    async def generate_schema(self, prompt: str) -> PromptSchemaFull:
         try: 
             response: ParsedChatCompletion[PromptSchemaFull] = self.client.beta.chat.completions.parse(
                 model=ai_agent_config.DEFAULT_MODEL,
@@ -100,6 +101,92 @@ class AIAgent():
             assert asserted is not None
 
             return asserted
+        except Exception as e:
+            raise HTTPException(status_code=403, detail=f'Error al hacer inferencia: {e}')
+    
+    # Async
+    
+    async def async_generate_hint(
+        self,
+        prompt: str,
+        context: str,
+        ai_chat_out_list: list[AIChatOut]
+    ) -> str:
+        message_hint: list[dict[str, str]] = [
+            {"role": map_message_author(message.author), "content": message.content}
+            for message in ai_chat_out_list
+        ] + [{"role": "user", "content": prompt}]
+
+        try:
+            response: ParsedChatCompletion[PromptSchemaFull] = await self.async_client.beta.chat.completions.parse(
+                model=ai_agent_config.DEFAULT_MODEL,
+                messages=[
+                    {"role": "developer", "content": prompts.HINT_PROMPT},
+                    {"role": "developer", "content": f"Context: {context}"},
+                    *message_hint
+                ]
+            )
+
+            output_message: str = response.choices[0].message.content or "..."
+            return output_message
+
+        except Exception as e:
+            raise HTTPException(status_code=403, detail=f'Error al hacer inferencia: {e}')
+
+    async def async_generate_schema(self, prompt: str) -> PromptSchemaFull:
+        try:
+            response: ParsedChatCompletion[PromptSchemaFull] = await self.async_client.beta.chat.completions.parse(
+                model=ai_agent_config.DEFAULT_MODEL,
+                messages=[
+                    {"role": "developer", "content": prompts.SCHEMA_PROMPT},
+                    {"role": "user", "content": prompt},
+                ],
+                response_format=PromptSchemaFull
+            )
+
+            asserted: PromptSchemaFull | None = response.choices[0].message.parsed
+            assert asserted is not None
+
+            def fix_encoding(obj):
+                if isinstance(obj, str):
+                    try:
+                        if any(bad in obj for bad in ["�", "Ã", "Â", "ð", "f3", "e9", "ed"]):
+                            try:
+                                return obj.encode("latin1").decode("utf-8")
+                            except Exception:
+                                return obj.encode("utf-8", errors="ignore").decode("utf-8", errors="ignore")
+                        return obj
+                    except Exception:
+                        return obj
+                elif isinstance(obj, list):
+                    return [fix_encoding(o) for o in obj]
+                elif isinstance(obj, dict):
+                    return {k: fix_encoding(v) for k, v in obj.items()}
+                else:
+                    return obj
+
+            asserted = fix_encoding(asserted)
+            return asserted
+
+        except Exception as e:
+            raise HTTPException(status_code=403, detail=f'Error al hacer inferencia: {e}')
+
+    async def async_generate_feedback(self, prompt: str, context: str) -> PromptAssignmentData:
+        try:
+            response: ParsedChatCompletion[PromptAssignmentData] = await self.async_client.beta.chat.completions.parse(
+                model=ai_agent_config.DEFAULT_MODEL,
+                messages=[
+                    {"role": "developer", "content": prompts.FEEDBACK_PROMPT},
+                    {"role": "user", "content": f'Context: {context}\nAnswer: {prompt}'},
+                ],
+                response_format=PromptAssignmentData
+            )
+
+            asserted: PromptAssignmentData | None = response.choices[0].message.parsed
+            assert asserted is not None
+
+            return asserted
+
         except Exception as e:
             raise HTTPException(status_code=403, detail=f'Error al hacer inferencia: {e}')
 
