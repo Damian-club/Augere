@@ -208,10 +208,10 @@ def get_schema_by_course(course_uuid: UUID, db: Session) -> SchemaOut:
 
     return map_model_to_schema(schema)
 
-def prompt_schema_by_course(course_uuid: UUID, prompt: Prompt, db: Session, client: AIAgent) -> FullSchemaOut:
+async def prompt_schema_by_course(course_uuid: UUID, prompt: Prompt, db: Session, client: AIAgent) -> FullSchemaOut:
     processing_courses[course_uuid] = True
     
-    ai_schema: PromptSchemaFull = client.generate_schema(prompt.prompt)
+    ai_schema: PromptSchemaFull = await client.async_generate_schema(prompt.prompt)
     
     query_queue.put_nowait(str(course_uuid))
     processing_courses[course_uuid] = False
