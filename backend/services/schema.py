@@ -194,12 +194,15 @@ def get_schema_full(uuid: UUID, db: Session) -> FullSchemaOut:
 
 
 def get_full_schema_by_course(course_uuid: UUID, db: Session) -> FullSchemaOut:
-    if course_uuid in queried_course_schemas:
-        raise HTTPException(status_code=400, detail="Ya se está generando un esquema para este curso. Por favor, espera a que termine el proceso actual.")
     schema: Schema = _get_schema_by_course_uuid(course_uuid, db=db)
 
     return _map_schema_to_full_schema_out(schema)
 
+def get_full_schema_by_course_or_none(course_uuid: UUID, db: Session) -> FullSchemaOut | None:
+    if course_uuid in queried_course_schemas:
+        return None
+    
+    return get_full_schema_by_course(course_uuid, db=db)
 
 def get_schema_by_course(course_uuid: UUID, db: Session) -> SchemaOut:
     schema: Schema = _get_schema_by_course_uuid(course_uuid, db=db)
