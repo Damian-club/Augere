@@ -12,6 +12,9 @@ from fastapi import (
     Depends,
     HTTPException
 )
+
+from fastapi.responses import StreamingResponse
+
 #-----------------------
 
 # SCHEMAS -----------------------------
@@ -89,4 +92,4 @@ def r_prompt_schema_by_course(course_uuid: UUID, prompt: Prompt, db: Session = D
 
 @router.get("/stream/finished_schema_uuids", summary="Stream de UUIDs de esquemas generados por IA")
 def r_stream_finished_schema_uuids():
-    return stream_finished_schema_uuids()
+    return StreamingResponse(stream_finished_schema_uuids())
