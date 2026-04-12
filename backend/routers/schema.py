@@ -34,7 +34,8 @@ from services.schema import (
     create_schema_full,
     get_full_schema_by_course,
     get_schema_by_course,
-    prompt_schema_by_course
+    prompt_schema_by_course,
+    stream_finished_schema_uuids
 )
 #-----------------------------------
 
@@ -74,7 +75,7 @@ def r_get_full_schema(uuid: UUID, db: Session = Depends(get_db)) -> FullSchemaOu
 def r_create_full_schema(full_schema_create: FullSchemaCreate, db: Session = Depends(get_db)) -> FullSchemaOut:
     return create_schema_full(full_schema_create, db=db)
 
-@router.get("/full/by_course/{course_uuid}", summary="Obtener un esquema completo por curso", response_model=FullSchemaOut)
+@router.get("/full/by_course/{course_uuid}", summary="Obtener un esquema completo por curso", response_model=FullSchemaOut | None)
 def r_get_schema_by_course(course_uuid: UUID, db: Session = Depends(get_db)) -> FullSchemaOut:
     return get_full_schema_by_course(course_uuid, db=db)
 
@@ -85,3 +86,7 @@ def r_get_schema_by_course(course_uuid: UUID, db: Session = Depends(get_db)) -> 
 @router.post("/full/by_course/{course_uuid}/prompt", summary="Generar un curso con IA", response_model=FullSchemaOut)
 def r_prompt_schema_by_course(course_uuid: UUID, prompt: Prompt, db: Session = Depends(get_db), client: AIAgent = Depends(get_ai_client)) -> FullSchemaOut:
     return prompt_schema_by_course(course_uuid, prompt=prompt, db=db, client=client)
+
+@router.get("/stream/finished_schema_uuids", summary="Stream de UUIDs de esquemas generados por IA")
+def r_stream_finished_schema_uuids():
+    return stream_finished_schema_uuids()

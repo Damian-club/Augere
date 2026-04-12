@@ -2,6 +2,7 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from uuid import UUID
 from util.ai_agent import AIAgent
+import asyncio
 
 # SCHEMAS -----------------------------------------------
 from schemas.schema import (
@@ -26,6 +27,9 @@ from models.course import Course
 from models.student import Student
 from models.progress import Progress
 #---------------------------------------------------
+
+query_queue = asyncio.Queue()
+queried_course_schemas: list[UUID] = []
 
 # Util
 def _map_schema_to_full_schema_out(schema: Schema) -> FullSchemaOut:
@@ -186,6 +190,8 @@ def get_schema_full(uuid: UUID, db: Session) -> FullSchemaOut:
 
 
 def get_full_schema_by_course(course_uuid: UUID, db: Session) -> FullSchemaOut:
+    if course_uuid in queried_course_schemas:
+        raise HTTPException(status_code=400, detail="Ya se está generando un esquema para este curso. Por favor, espera a que termine el proceso actual.")
     schema: Schema = _get_schema_by_course_uuid(course_uuid, db=db)
 
     return _map_schema_to_full_schema_out(schema)
@@ -197,8 +203,12 @@ def get_schema_by_course(course_uuid: UUID, db: Session) -> SchemaOut:
     return map_model_to_schema(schema)
 
 def prompt_schema_by_course(course_uuid: UUID, prompt: Prompt, db: Session, client: AIAgent) -> FullSchemaOut:
+    queried_course_schemas.append(course_uuid)
+    
     ai_schema: PromptSchemaFull = client.generate_schema(prompt)
-    ai_schema.category_list
+    
+    queried_course_schemas.remove(course_uuid)
+    query_queue.put_nowait(course_uuid)
 
     return create_schema_full(
         full_schema_create=FullSchemaCreate(
@@ -223,3 +233,8 @@ def prompt_schema_by_course(course_uuid: UUID, prompt: Prompt, db: Session, clie
         ),
         db=db
     )
+    
+async def stream_finished_schema_uuids():
+    while True:
+        course_uuid: UUID = await query_queue.get()
+        yield course_uuid
