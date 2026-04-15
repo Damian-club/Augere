@@ -30,3 +30,5 @@ export interface FullSchema extends Schema {
 export interface DeleteSchemaResponse {
   detail: string;
 }
+
+export type FullSchemaOrNull = FullSchema | null;

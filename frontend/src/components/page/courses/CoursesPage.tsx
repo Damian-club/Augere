@@ -15,6 +15,7 @@ import type { Course } from "../../../schemas/course";
 import styles from "./CoursesPage.module.css";
 import useUser from "../../../hooks/useUser";
 import { environment } from "../../../config/environment";
+import SchemaGeneratorSSE from "../../sse/SchemaGeneratorSSE";
 
 export default function CoursePage() {
   const [created, setCreated] = useState<Course[]>([]);
@@ -22,11 +23,15 @@ export default function CoursePage() {
   const [loading, setLoading] = useState(true);
   const [configCourseId, setConfigCourseId] = useState<string | null>(null);
   const navigate = useNavigate();
-  const [progressCreatedState, setProgressCreated] = useState<Record<string, number>>({});
-  const [progressEnrolledState, setProgressEnrolled] = useState<Record<string, number>>({});
+  const [progressCreatedState, setProgressCreated] = useState<
+    Record<string, number>
+  >({});
+  const [progressEnrolledState, setProgressEnrolled] = useState<
+    Record<string, number>
+  >({});
 
   const [courseProgress, setCourseProgress] = useState<Record<string, number>>(
-    {}
+    {},
   );
   const { user } = useUser();
 
@@ -60,8 +65,14 @@ export default function CoursePage() {
         try {
           // Obtener esquema
           const schema = await schemaService.getFullSchemaByCourse(course.uuid);
+
+          if (!schema) {
+            progressCreated[course.uuid] = 0;
+            continue;
+          }
+
           const entryUuids = schema.category_list.flatMap((cat) =>
-            cat.entry_list.map((e) => e.uuid)
+            cat.entry_list.map((e) => e.uuid),
           );
           const total = entryUuids.length;
 
@@ -83,7 +94,7 @@ export default function CoursePage() {
                   Authorization: `Bearer ${localStorage.getItem("token")}`,
                   "Content-Type": "application/json",
                 },
-              }
+              },
             );
 
             if (!srResp.ok) {
@@ -95,7 +106,7 @@ export default function CoursePage() {
             const realStudentRecordUuid = srData.uuid;
 
             const progresses = await progressService.listByStudent(
-              realStudentRecordUuid
+              realStudentRecordUuid,
             );
 
             // Normalize progress → quedarnos con el último por entry
@@ -109,7 +120,7 @@ export default function CoursePage() {
 
             const uniqueProgresses = [...unique.values()];
             const finished = uniqueProgresses.filter(
-              (p) => entryUuids.includes(p.entry_uuid) && p.finished
+              (p) => entryUuids.includes(p.entry_uuid) && p.finished,
             ).length;
 
             const percent = total > 0 ? (finished / total) * 100 : 0;
@@ -120,7 +131,7 @@ export default function CoursePage() {
           const average =
             percentages.length > 0
               ? Math.round(
-                  percentages.reduce((a, b) => a + b, 0) / percentages.length
+                  percentages.reduce((a, b) => a + b, 0) / percentages.length,
                 )
               : 0;
 
@@ -128,7 +139,7 @@ export default function CoursePage() {
         } catch (err) {
           console.error(
             `Error en progreso de curso creado ${course.uuid}:`,
-            err
+            err,
           );
           progressCreated[course.uuid] = 0;
         }
@@ -147,7 +158,7 @@ export default function CoursePage() {
                 Authorization: `Bearer ${localStorage.getItem("token")}`,
                 "Content-Type": "application/json",
               },
-            }
+            },
           );
 
           if (!srResp.ok) {
@@ -158,9 +169,8 @@ export default function CoursePage() {
           const studentRecord = await srResp.json();
           const studentRecordUuid = studentRecord.uuid;
 
-          const progresses = await progressService.listByStudent(
-            studentRecordUuid
-          );
+          const progresses =
+            await progressService.listByStudent(studentRecordUuid);
 
           // Normalizar
           const unique = new Map<string, any>();
@@ -174,13 +184,19 @@ export default function CoursePage() {
 
           // Obtener entries
           const schema = await schemaService.getFullSchemaByCourse(course.uuid);
+
+          if (!schema) {
+            progressEnrolled[course.uuid] = 0;
+            continue;
+          }
+
           const entryUuids = schema.category_list.flatMap((cat) =>
-            cat.entry_list.map((e) => e.uuid)
+            cat.entry_list.map((e) => e.uuid),
           );
 
           const total = entryUuids.length;
           const finished = uniqueProgresses.filter(
-            (p) => entryUuids.includes(p.entry_uuid) && p.finished
+            (p) => entryUuids.includes(p.entry_uuid) && p.finished,
           ).length;
 
           progressEnrolled[course.uuid] =
@@ -195,11 +211,11 @@ export default function CoursePage() {
       // al final de fetchProgress()
       console.log(
         "CREATED:",
-        created.map((c) => c.uuid)
+        created.map((c) => c.uuid),
       );
       console.log(
         "ENROLLED:",
-        enrolled.map((c) => c.uuid)
+        enrolled.map((c) => c.uuid),
       );
 
       console.log("progressCreated (promedio):", progressCreated);
@@ -249,7 +265,7 @@ export default function CoursePage() {
                 try {
                   await studentService.unenrollFromCourse(course.uuid);
                   setEnrolled((prev) =>
-                    prev.filter((c) => c.uuid !== course.uuid)
+                    prev.filter((c) => c.uuid !== course.uuid),
                   );
                   toast.success("Te has desinscrito correctamente");
                 } catch (err: any) {
@@ -262,9 +278,19 @@ export default function CoursePage() {
           </div>
         </div>
       ),
-      { duration: 8000 }
+      { duration: 8000 },
     );
   };
+  const activeGeneration = localStorage.getItem("schema_generation");
+
+  let generatingCourseId: string | null = null;
+  let generatingPrompt: string | null = null;
+
+  if (activeGeneration) {
+    const parsed = JSON.parse(activeGeneration);
+    generatingCourseId = parsed.courseUuid;
+    generatingPrompt = parsed.prompt;
+  }
 
   return (
     <div className={styles.page}>
@@ -280,20 +306,34 @@ export default function CoursePage() {
             onCreated={handleCourseCreated}
             onJoined={fetchLists}
           />
-          {created.map((c) => (
-            <CourseCard
-              key={c.uuid}
-              title={c.title}
-              author={`Por: ${"Tú"}`}
-              description={c.description}
-              progress={progressCreatedState[c.uuid] || 0}
-              color={pastelGradientFromString(c.title)}
-              logo_path={c.logo_path}
-              icon="settings"
-              onIconClick={() => setConfigCourseId(c.uuid)}
-              onClick={() => navigate(`/course/${c.uuid}?mode=tutor`)}
-            />
-          ))}
+          {created.map((c) =>
+            c.uuid === generatingCourseId ? (
+              <SchemaGeneratorSSE
+                courseUuid={c.uuid}
+                prompt={generatingPrompt || ""}
+                onComplete={() => {
+                  localStorage.removeItem("schema_generation");
+                  fetchLists(); // recargar cursos
+                }}
+                onError={() => {
+                  localStorage.removeItem("schema_generation");
+                }}
+              />
+            ) : (
+              <CourseCard
+                key={c.uuid}
+                title={c.title}
+                author={`Por: ${"Tú"}`}
+                description={c.description}
+                progress={progressCreatedState[c.uuid] || 0}
+                color={pastelGradientFromString(c.title)}
+                logo_path={c.logo_path}
+                icon="settings"
+                onIconClick={() => setConfigCourseId(c.uuid)}
+                onClick={() => navigate(`/course/${c.uuid}?mode=tutor`)}
+              />
+            ),
+          )}
         </div>
       </section>
 

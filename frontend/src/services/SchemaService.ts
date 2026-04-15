@@ -2,6 +2,7 @@ import type {
   Schema,
   FullSchema,
   DeleteSchemaResponse,
+  FullSchemaOrNull,
 } from "../schemas/schema";
 
 export class SchemaService {
@@ -71,12 +72,12 @@ export class SchemaService {
   }
 
   // Obtener esquema completo por course_id
-  async getFullSchemaByCourse(courseId: string): Promise<FullSchema> {
+  async getFullSchemaByCourse(courseId: string): Promise<FullSchemaOrNull> {
     const res = await fetch(`${this.baseUrl}/full/by_course/${courseId}`, {
       headers: this.getHeaders(),
     });
     if (!res.ok) throw new Error("Error al obtener esquema completo por curso");
-    return res.json() as Promise<FullSchema>;
+    return res.json() as Promise<FullSchemaOrNull>;
   }
 
   // Crear esquema completo
