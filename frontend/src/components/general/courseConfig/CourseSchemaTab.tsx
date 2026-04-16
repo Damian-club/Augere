@@ -10,6 +10,7 @@ import {
   IoSparklesOutline,
   IoSaveOutline,
 } from "react-icons/io5";
+import SchemaGeneratorSSE from "../../sse/SchemaGeneratorSSE";
 import { type Entry, type FullSchema } from "../../../schemas/schema";
 import style from "./CourseSchemaTab.module.css";
 import type { DropResult } from "@hello-pangea/dnd";
@@ -71,30 +72,45 @@ export default function CourseSchemaTab2({ course }: Props) {
   const [editingType, setEditingType] = useState(false);
   const [typeInput, setTypeInput] = useState(""); // valor del input
   const [customTypes, setCustomTypes] = useState<string[]>([]); // para nuevos tipos
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generationPrompt, setGenerationPrompt] = useState("");
 
   useEffect(() => {
     const loadSchema = async () => {
       try {
         const fullSchema = await schemaService.getFullSchemaByCourse(
-          course.uuid
+          course.uuid,
         );
-        setSchema(fullSchema);
-      } catch (err) {
-        console.warn("No se encontró esquema, creando uno nuevo...");
-        try {
+
+        if (fullSchema) {
+          setSchema(fullSchema); // ✅ SIEMPRE guardar
+        } else {
+          // crear si no existe
           await schemaService.createSchema(course.uuid);
-          const fullSchema = await schemaService.getFullSchemaByCourse(
-            course.uuid
+
+          const newSchema = await schemaService.getFullSchemaByCourse(
+            course.uuid,
           );
-          setSchema(fullSchema);
-        } catch (err2) {
-          console.error("Error creando el esquema: ", err2);
+
+          setSchema(newSchema); // ✅ guardar después de crear
         }
+      } catch (err) {
+        console.error("Error cargando/creando schema:", err);
       } finally {
         setLoading(false);
       }
     };
     loadSchema();
+    const saved = localStorage.getItem("schema_generation");
+
+    if (saved) {
+      const parsed = JSON.parse(saved);
+
+      if (parsed.courseUuid === course.uuid) {
+        setIsGenerating(true);
+        setGenerationPrompt(parsed.prompt);
+      }
+    }
   }, [course.uuid]);
 
   const addCategory = async () => {
@@ -105,7 +121,7 @@ export default function CourseSchemaTab2({ course }: Props) {
       const newCat = await schemaCategoryService.createCategory(
         schema.uuid!,
         "Nueva Categoría",
-        schema.category_list.length
+        schema.category_list.length,
       );
 
       // Crear entry inicial en backend
@@ -181,16 +197,16 @@ export default function CourseSchemaTab2({ course }: Props) {
             schemaCategoryService.updateCategory(
               cat.uuid!,
               cat.name,
-              cat.position
-            )
-          )
+              cat.position,
+            ),
+          ),
         );
       } else if (type === "ENTRY") {
         const sourceCat = newSchema.category_list.find(
-          (c) => c.uuid === source.droppableId
+          (c) => c.uuid === source.droppableId,
         );
         const destCat = newSchema.category_list.find(
-          (c) => c.uuid === destination.droppableId
+          (c) => c.uuid === destination.droppableId,
         );
         if (!sourceCat || !destCat) return;
 
@@ -215,7 +231,7 @@ export default function CourseSchemaTab2({ course }: Props) {
             schemaEntryService.updateEntry(en.uuid!, {
               position: en.position,
               category_uuid: en.category_uuid,
-            })
+            }),
           );
 
         await Promise.all([
@@ -236,19 +252,36 @@ export default function CourseSchemaTab2({ course }: Props) {
     if (!aiPrompt.trim())
       return alert("Escribe un prompt antes de generar el esquema.");
 
-    try {
-      setLoading(true);
-      const response = await schemaService.generateSchemaByPrompt(
-        course.uuid,
-        aiPrompt
-      );
-      setSchema(response); // respuesta del backend (FullSchema)
-    } catch (err) {
-      console.error("Error generando esquema con IA:", err);
-      alert("Hubo un error generando el esquema con IA. Revisa la consola.");
-    } finally {
-      setLoading(false);
-    }
+    setGenerationPrompt(aiPrompt);
+    setIsGenerating(true);
+
+    // try {
+    //   setLoading(true);
+    //   const response = await schemaService.generateSchemaByPrompt(
+    //     course.uuid,
+    //     aiPrompt,
+    //   );
+    //   setSchema(response); // respuesta del backend (FullSchema)
+    // } catch (err) {
+    //   console.error("Error generando esquema con IA:", err);
+    //   alert("Hubo un error generando el esquema con IA. Revisa la consola.");
+    // } finally {
+    //   setLoading(false);
+    // }
+  };
+
+  const handleGenerationComplete = (generatedSchema: any) => {
+    setSchema(generatedSchema);
+    setIsGenerating(false);
+    setAiPrompt("");
+    setGenerationPrompt("");
+  };
+
+  const handleGenerationError = (error: string) => {
+    console.error("Error en generación:", error);
+    setIsGenerating(false);
+    setGenerationPrompt("");
+    alert(`Error generando esquema: ${error}`);
   };
 
   const handleSaveBody = async () => {
@@ -280,7 +313,7 @@ export default function CourseSchemaTab2({ course }: Props) {
       // Usamos el mismo endpoint que ya existe
       const response = await schemaService.generateSchemaByPrompt(
         course.uuid,
-        prompt
+        prompt,
       );
 
       // Sacamos solo la entry correspondiente
@@ -303,11 +336,11 @@ export default function CourseSchemaTab2({ course }: Props) {
       if (schema) {
         const newSchema = { ...schema };
         const cat = newSchema.category_list.find(
-          (c) => c.uuid === selectedEntry.category_uuid
+          (c) => c.uuid === selectedEntry.category_uuid,
         );
         if (cat) {
           const entIdx = cat.entry_list.findIndex(
-            (en) => en.uuid === selectedEntry.uuid
+            (en) => en.uuid === selectedEntry.uuid,
           );
           if (entIdx !== -1)
             cat.entry_list[entIdx].body = updatedEntry.body || "";
@@ -346,7 +379,7 @@ export default function CourseSchemaTab2({ course }: Props) {
     if (schema && selectedEntry) {
       const newSchema = { ...schema };
       const cat = newSchema.category_list.find(
-        (c) => c.uuid === selectedEntry.category_uuid
+        (c) => c.uuid === selectedEntry.category_uuid,
       );
       const ent = cat?.entry_list.find((en) => en.uuid === selectedEntry.uuid);
       if (ent) ent.entry_type = newType;
@@ -355,6 +388,17 @@ export default function CourseSchemaTab2({ course }: Props) {
 
     setEditingType(false);
   };
+
+  if (isGenerating) {
+    return (
+      <SchemaGeneratorSSE
+        courseUuid={course.uuid}
+        prompt={generationPrompt}
+        onComplete={handleGenerationComplete}
+        onError={handleGenerationError}
+      />
+    );
+  }
 
   if (loading) {
     return (
@@ -456,8 +500,8 @@ export default function CourseSchemaTab2({ course }: Props) {
                         selectedEntry.entry_type === "topic"
                           ? style.topic
                           : selectedEntry.entry_type === "assignment"
-                          ? style.assignment
-                          : style.customType
+                            ? style.assignment
+                            : style.customType
                       }`}
                       onClick={() => {
                         setTypeInput(selectedEntry.entry_type);
@@ -499,10 +543,10 @@ export default function CourseSchemaTab2({ course }: Props) {
                       if (schema) {
                         const newSchema = { ...schema };
                         const cat = newSchema.category_list.find(
-                          (c) => c.uuid === selectedEntry.category_uuid
+                          (c) => c.uuid === selectedEntry.category_uuid,
                         );
                         const ent = cat?.entry_list.find(
-                          (en) => en.uuid === selectedEntry.uuid
+                          (en) => en.uuid === selectedEntry.uuid,
                         );
                         if (ent) ent.body = e.target.value;
                         setSchema(newSchema);
@@ -540,10 +584,10 @@ export default function CourseSchemaTab2({ course }: Props) {
                       if (schema) {
                         const newSchema = { ...schema };
                         const cat = newSchema.category_list.find(
-                          (c) => c.uuid === selectedEntry.category_uuid
+                          (c) => c.uuid === selectedEntry.category_uuid,
                         );
                         const ent = cat?.entry_list.find(
-                          (en) => en.uuid === selectedEntry.uuid
+                          (en) => en.uuid === selectedEntry.uuid,
                         );
                         if (ent) ent.context = e.target.value;
                         setSchema(newSchema);
