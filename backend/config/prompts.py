@@ -63,7 +63,7 @@ Create a complete and well-organized course structure based on the following des
    - **body**: Detailed, comprehensive educational content (minimum 3–4 paragraphs)  
    - **context**: Additional information, learning objectives, or key concepts the student must master  
        - **The context MUST include the language in which the schema is written**  
-   - **entry_type**: Use `"topic"` for theory, `"exercise"` for practice, `"quiz"` for evaluations  
+   - **entry_type**: Use `"topic"` for theory, `"assignment"` for assignments
 
 3. **Advanced Markdown instructions for `body`:**
    - Use headers (`#`, `##`, `###`) for sections and subsections  
