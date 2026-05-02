@@ -59,7 +59,7 @@ def r_delete_student(
 @router.get(
     "/{uuid}", summary="Obtener información de un estudiante", response_model=StudentOut
 )
-def r_get_student(uuid: str, db: Session = Depends(get_db)) -> StudentOut:
+def r_get_student(uuid: UUID, db: Session = Depends(get_db)) -> StudentOut:
     return get_student(uuid, db=db)
 
 

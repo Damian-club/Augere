@@ -44,7 +44,7 @@ def r_create_schema_category(schema_category_create: SchemaCategoryCreate, db: S
     summary="Obtener una categoría de esquema por UUID",
     response_model=SchemaCategoryOut,
 )
-def r_get_schema_category(uuid: str, db: Session = Depends(get_db)) -> SchemaCategoryOut:
+def r_get_schema_category(uuid: UUID, db: Session = Depends(get_db)) -> SchemaCategoryOut:
     return get_schema_category(uuid, db=db)
 
 
@@ -53,7 +53,7 @@ def r_get_schema_category(uuid: str, db: Session = Depends(get_db)) -> SchemaCat
     summary="Eliminar una categoría de esquema por UUID",
     response_model=Message,
 )
-def r_delete_schema_category(uuid: str, db: Session = Depends(get_db)) -> Message:
+def r_delete_schema_category(uuid: UUID, db: Session = Depends(get_db)) -> Message:
     return delete_schema_category(uuid, db=db)
 
 
