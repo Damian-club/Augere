@@ -30,7 +30,7 @@ export default function CoursePage() {
     Record<string, number>
   >({});
 
-  const [courseProgress, setCourseProgress] = useState<Record<string, number>>(
+  const [_, setCourseProgress] = useState<Record<string, number>>(
     {},
   );
   const { user } = useUser();

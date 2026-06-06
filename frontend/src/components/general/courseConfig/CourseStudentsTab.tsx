@@ -13,7 +13,7 @@ export default function CourseStudentsTab({ course }: Props) {
   const [students, setStudents] = useState<StudentSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedStudent, setSelectedStudent] = useState<string | null>(null);
-  const [studentProgressMap, setStudentProgressMap] = useState<
+  const [_, setStudentProgressMap] = useState<
     Record<string, number>
   >({});
 
@@ -27,7 +27,7 @@ export default function CourseStudentsTab({ course }: Props) {
 
         // Traer esquema del curso
         const schema = await schemaService.getFullSchemaByCourse(course.uuid);
-        const entryUuids = schema.category_list.flatMap((cat) =>
+        const entryUuids = schema!.category_list.flatMap((cat) =>
           cat.entry_list.map((e) => e.uuid)
         );
 

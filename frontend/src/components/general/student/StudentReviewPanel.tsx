@@ -28,7 +28,7 @@ export default function StudentReviewPanel({
         setLoading(true);
 
         const schema = await schemaService.getFullSchemaByCourse(courseUuid);
-        const entryList = schema.category_list.flatMap((cat) =>
+        const entryList = schema!.category_list.flatMap((cat) =>
           cat.entry_list.map((e) => ({ uuid: e.uuid, name: e.name }))
         );
 

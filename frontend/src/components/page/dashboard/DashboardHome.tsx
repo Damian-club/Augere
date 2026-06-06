@@ -89,7 +89,8 @@ export default function DashboardHome() {
             const schema = await schemaService.getFullSchemaByCourse(
               course.uuid
             );
-            const entryUuids = schema.category_list.flatMap((cat) =>
+            
+            const entryUuids = schema!.category_list.flatMap((cat) =>
               cat.entry_list.map((e) => e.uuid)
             );
 

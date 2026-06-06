@@ -1,4 +1,4 @@
-import type { AiChat, AiChatCreate } from "../schemas/aiChat";
+import type { AiChat } from "../schemas/aiChat";
 
 export class AiChatService {
   private readonly baseUrl: string;

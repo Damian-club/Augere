@@ -113,7 +113,7 @@ export default function CourseDashboard() {
     const loadSchema = async () => {
       try {
         const fullSchema = await schemaService.getFullSchemaByCourse(uuid);
-        const ordered = sortSchema(fullSchema);
+        const ordered = sortSchema(fullSchema!);
         setSchema(ordered);
       } catch (err) {
         console.error("Error cargando esquema completo:", err);
