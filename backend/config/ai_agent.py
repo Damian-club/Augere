@@ -1,1 +1,1 @@
-DEFAULT_MODEL: str = "gpt-5-nano-2025-08-07"
+DEFAULT_MODEL: str = "gpt-5.4-nano-2026-03-17"
